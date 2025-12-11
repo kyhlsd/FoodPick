@@ -35,7 +35,8 @@ let project = Project(
             ],
             settings: .settings(
                 base: [
-                    "DEVELOPMENT_TEAM": .string(teamID)
+                    "DEVELOPMENT_TEAM": .string(teamID),
+                    "SWIFT_VERSION": "6.2"
                 ]
             )
         ),
@@ -51,7 +52,8 @@ let project = Project(
                 dependencies: [.target(name: "FoodPick")],
                 settings: .settings(
                     base: [
-                        "DEVELOPMENT_TEAM": .string(teamID)
+                        "DEVELOPMENT_TEAM": .string(teamID),
+                        "SWIFT_VERSION": "6.2"
                     ]
                 )
             ),
@@ -65,7 +67,8 @@ let project = Project(
                     dependencies: [],
                     settings: .settings(
                         base: [
-                            "DEVELOPMENT_TEAM": .string(teamID)
+                            "DEVELOPMENT_TEAM": .string(teamID),
+                            "SWIFT_VERSION": "6.2"
                         ]
                     )
                    ),
@@ -81,7 +84,8 @@ let project = Project(
                     ],
                     settings: .settings(
                         base: [
-                            "DEVELOPMENT_TEAM": .string(teamID)
+                            "DEVELOPMENT_TEAM": .string(teamID),
+                            "SWIFT_VERSION": "6.2"
                         ]
                     )
                    ),
@@ -92,14 +96,14 @@ let project = Project(
                     bundleId: "com.kyh.Data",
                     deploymentTargets: .iOS(iOSVersion),
                     sources: ["Data/Sources/**"],
-                    resources: ["Data/Resources/**"],
                     dependencies: [
                         .target(name: "Core"),
                         .target(name: "Domain")
                     ],
                     settings: .settings(
                         base: [
-                            "DEVELOPMENT_TEAM": .string(teamID)
+                            "DEVELOPMENT_TEAM": .string(teamID),
+                            "SWIFT_VERSION": "6.2"
                         ]
                     )
                    ),
@@ -118,7 +122,8 @@ let project = Project(
                     ],
                     settings: .settings(
                         base: [
-                            "DEVELOPMENT_TEAM": .string(teamID)
+                            "DEVELOPMENT_TEAM": .string(teamID),
+                            "SWIFT_VERSION": "6.2"
                         ]
                     )
                    ),
