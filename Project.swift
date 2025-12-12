@@ -23,11 +23,7 @@ let project = Project(
                     "UISupportedInterfaceOrientations": [
                         "UIInterfaceOrientationPortrait"
                     ],
-                    "NSLocationWhenInUseUsageDescription": "내 주위 가게 정보를 받아오기 위해 위치 정보를 사용합니다.",
-                    "UIAppFonts": [
-                        "PretendardVariable.ttf",
-                        "JalnanGothicTTF.ttf"
-                    ]
+                    "NSLocationWhenInUseUsageDescription": "내 주위 가게 정보를 받아오기 위해 위치 정보를 사용합니다."
                 ]
             ),
             sources: ["FoodPick/Sources/**"],
