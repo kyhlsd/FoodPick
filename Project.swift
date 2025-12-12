@@ -3,6 +3,20 @@ import ProjectDescription
 let iOSVersion = "16.0"
 let teamID = "4QUWH828P3"
 
+// SwiftLint 스크립트
+let swiftLintScript: TargetScript = .pre(
+    script: """
+    export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+    if which swiftlint >/dev/null; then
+        swiftlint || true
+    else
+        echo "warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint"
+    fi
+    """,
+    name: "SwiftLint",
+    basedOnDependencyAnalysis: false
+)
+
 let project = Project(
     name: "FoodPick",
     targets: [
@@ -28,6 +42,7 @@ let project = Project(
             ),
             sources: ["FoodPick/Sources/**"],
             resources: ["FoodPick/Resources/**"],
+            scripts: [swiftLintScript],
             dependencies: [
                 .target(name: "Presentation"),
                 .target(name: "Domain"),
@@ -64,6 +79,7 @@ let project = Project(
                     bundleId: "com.kyh.Core",
                     deploymentTargets: .iOS(iOSVersion),
                     sources: ["Core/Sources/**"],
+                    scripts: [swiftLintScript],
                     dependencies: [],
                     settings: .settings(
                         base: [
@@ -79,6 +95,7 @@ let project = Project(
                     bundleId: "com.kyh.Domain",
                     deploymentTargets: .iOS(iOSVersion),
                     sources: ["Domain/Sources/**"],
+                    scripts: [swiftLintScript],
                     dependencies: [
                         .target(name: "Core")
                     ],
@@ -96,6 +113,7 @@ let project = Project(
                     bundleId: "com.kyh.Data",
                     deploymentTargets: .iOS(iOSVersion),
                     sources: ["Data/Sources/**"],
+                    scripts: [swiftLintScript],
                     dependencies: [
                         .target(name: "Core"),
                         .target(name: "Domain")
@@ -115,6 +133,7 @@ let project = Project(
                     deploymentTargets: .iOS(iOSVersion),
                     sources: ["Presentation/Sources/**"],
                     resources: ["Presentation/Resources/**"],
+                    scripts: [swiftLintScript],
                     dependencies: [
                         .target(name: "Domain"),
                         .target(name: "Data"),

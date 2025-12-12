@@ -67,11 +67,11 @@ extension Color {
         var rgb: UInt64 = 0
         Scanner(string: hexFormatted).scanHexInt64(&rgb)
         
-        let r = Double((rgb >> 16) & 0xFF) / 255.0
-        let g = Double((rgb >> 8) & 0xFF) / 255.0
-        let b = Double(rgb & 0xFF) / 255.0
+        let red = Double((rgb >> 16) & 0xFF) / 255.0
+        let green = Double((rgb >> 8) & 0xFF) / 255.0
+        let blue = Double(rgb & 0xFF) / 255.0
         
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: opacity)
+        self.init(.sRGB, red: red, green: green, blue: blue, opacity: opacity)
     }
     
     static func custom(_ appColor: AppColor.Family) -> Self {
