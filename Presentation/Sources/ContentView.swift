@@ -7,7 +7,7 @@ public struct ContentView: View {
         VStack {
             Text("글씨 테스트")
                 .font(.custom(.jalnan(.title1)))
-                .padding()
+                .padding(.vertical, .xLarge)
             AppIcon.communityEmpty
                 .foregroundStyle(.custom(.brand(.blackSprout)))
         }
