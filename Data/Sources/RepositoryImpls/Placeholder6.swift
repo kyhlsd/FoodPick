@@ -1,6 +1,6 @@
 //
-//  Placeholder0.swift
-//  FoodPick
+//  Placeholder6.swift
+//  Core
 //
 //  Created by 김영훈 on 12/11/25.
 //
