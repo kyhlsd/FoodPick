@@ -1,6 +1,7 @@
 import ProjectDescription
 
 let iOSVersion = "16.0"
+let swiftVersion = "6.2"
 let teamID = "4QUWH828P3"
 
 // SwiftLint 스크립트
@@ -51,7 +52,7 @@ let project = Project(
             settings: .settings(
                 base: [
                     "DEVELOPMENT_TEAM": .string(teamID),
-                    "SWIFT_VERSION": "6.2"
+                    "SWIFT_VERSION": .string(swiftVersion)
                 ]
             )
         ),
@@ -68,7 +69,7 @@ let project = Project(
                 settings: .settings(
                     base: [
                         "DEVELOPMENT_TEAM": .string(teamID),
-                        "SWIFT_VERSION": "6.2"
+                        "SWIFT_VERSION": .string(swiftVersion)
                     ]
                 )
             ),
@@ -84,7 +85,7 @@ let project = Project(
                     settings: .settings(
                         base: [
                             "DEVELOPMENT_TEAM": .string(teamID),
-                            "SWIFT_VERSION": "6.2"
+                            "SWIFT_VERSION": .string(swiftVersion)
                         ]
                     )
                    ),
@@ -102,7 +103,7 @@ let project = Project(
                     settings: .settings(
                         base: [
                             "DEVELOPMENT_TEAM": .string(teamID),
-                            "SWIFT_VERSION": "6.2"
+                            "SWIFT_VERSION": .string(swiftVersion)
                         ]
                     )
                    ),
@@ -116,12 +117,13 @@ let project = Project(
                     scripts: [swiftLintScript],
                     dependencies: [
                         .target(name: "Core"),
-                        .target(name: "Domain")
+                        .target(name: "Domain"),
+                        .external(name: "Alamofire")
                     ],
                     settings: .settings(
                         base: [
                             "DEVELOPMENT_TEAM": .string(teamID),
-                            "SWIFT_VERSION": "6.2"
+                            "SWIFT_VERSION": .string(swiftVersion)
                         ]
                     )
                    ),
@@ -137,14 +139,15 @@ let project = Project(
                     dependencies: [
                         .target(name: "Domain"),
                         .target(name: "Data"),
-                        .target(name: "Core")
+                        .target(name: "Core"),
+                        .external(name: "ComposableArchitecture")
                     ],
                     settings: .settings(
                         base: [
                             "DEVELOPMENT_TEAM": .string(teamID),
-                            "SWIFT_VERSION": "6.2"
+                            "SWIFT_VERSION": .string(swiftVersion)
                         ]
                     )
-                   ),
+                   )
     ]
 )
