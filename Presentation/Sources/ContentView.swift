@@ -8,8 +8,13 @@ public struct ContentView: View {
             Text("글씨 테스트")
                 .font(.custom(.jalnan(.title1)))
                 .padding(.vertical, .xLarge)
-            AppIcon.communityEmpty
-                .foregroundStyle(.custom(.brand(.blackSprout)))
+            
+            Button {
+                
+            } label: {
+                AppIcon.communityEmpty
+                    .foregroundStyle(.custom(.brand(.blackSprout)))
+            }
         }
     }
 }
