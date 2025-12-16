@@ -23,10 +23,10 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func getStoreInfo(id: String) async throws -> StoreInfo {
+    public func getStoreInfo(id: String) async throws -> StoreDetail {
         guard let response = try await networkManager.request(
             StoreRouter.detail(id: id),
-            responseType: StoreInfoDTO.self
+            responseType: StoreDetailDTO.self
         ) else {
             throw APIError.empty
         }

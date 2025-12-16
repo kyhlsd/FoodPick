@@ -1,5 +1,5 @@
 //
-//  StoreInfoDTO.swift
+//  StoreDetailDTO.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -9,7 +9,7 @@ import Foundation
 import Domain
 import Core
 
-struct StoreInfoDTO: ResponseDTO {
+struct StoreDetailDTO: ResponseDTO {
     private let storeId: String
     private let category: String
     private let name: String
@@ -85,8 +85,8 @@ struct StoreInfoDTO: ResponseDTO {
     }
 }
 
-extension StoreInfoDTO {
-    var toDomain: StoreInfo {
+extension StoreDetailDTO {
+    var toDomain: StoreDetail {
         let formatter = Core.DateFormatterProvider.iso8601
         return .init(storeId: storeId,
                      category: .init(rawValue: category) ?? .etc,

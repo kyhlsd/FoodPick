@@ -1,5 +1,5 @@
 //
-//  StoreInfo.swift
+//  StoreDetail.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct StoreInfo {
+public struct StoreDetail {
     public let storeId: String
     public let category: StoreCategory
     public let name: String
