@@ -1,5 +1,5 @@
 //
-//  ListWithCursorDTO.swift
+//  ResponseListWithCursorDTO.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,7 +7,7 @@
 
 import Domain
 
-struct ListWithCursorDTO<T: ResponseDTO>: ResponseDTO {
+struct ResponseListWithCursorDTO<T: ResponseDTO>: ResponseDTO {
     private let data: [T]
     private let nextCursor: String
     
@@ -23,8 +23,8 @@ struct ListWithCursorDTO<T: ResponseDTO>: ResponseDTO {
     }
 }
 
-extension ListWithCursorDTO {
-    var toDomain: ListWithCursor<T.Entity> {
+extension ResponseListWithCursorDTO {
+    var toDomain: ResponseListWithCursor<T.Entity> {
         return .init(data: data.map { $0.toDomain }, nextCursor: nextCursor)
     }
 }

@@ -1,11 +1,11 @@
 //
-//  ListWithCursor.swift
+//  ResponseListWithCursor.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
 //
 
-public struct ListWithCursor<T> {
+public struct ResponseListWithCursor<T> {
     public let data: [T]
     public let nextCursor: String
     
