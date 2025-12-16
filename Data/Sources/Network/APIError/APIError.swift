@@ -14,6 +14,7 @@ struct APIErrorResponse: Decodable, Sendable {
 enum APIError: LocalizedError {
     case network
     case some(message: String)
+    case empty
     case unknown
     
     var errorDescription: String? {
@@ -22,6 +23,8 @@ enum APIError: LocalizedError {
             return "네트워크 연결이 일시적으로 원활하지 않습니다.\n데이터 또는 Wi-Fi 연결 상태를 확인해주세요."
         case .some(let message):
             return message
+        case .empty:
+            return "응답 값이 없습니다."
         case .unknown:
             return "알 수 없는 에러가 발생했습니다."
         }

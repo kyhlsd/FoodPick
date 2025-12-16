@@ -25,7 +25,6 @@ protocol Router: URLRequestConvertible, URLConvertible {
     var headers: HTTPHeaders { get }
 
     var multipartFormData: ((MultipartFormData) -> Void)? { get }
-    var responseType: (Decodable & Sendable).Type? { get }
 }
 
 extension Router {

@@ -12,44 +12,55 @@ final class NetworkManager: @unchecked Sendable {
     static let shared = NetworkManager()
     private init() {}
 
-    @discardableResult
-    func request<T: Decodable & Sendable>(
+    // Void Response
+    func request(
         _ router: Router,
         onProgress: (@Sendable (Double) -> Void)? = nil,
         onCancel: (@Sendable (() -> Void) -> Void)? = nil
-    ) async throws -> T? {
-        if let responseType = router.responseType as? T.Type {
-            if router.multipartFormData != nil {
-                return try await performUpload(
-                    router,
-                    onProgress: onProgress,
-                    onCancel: onCancel
-                )
-            } else {
-                return try await performRequest(
-                    router,
-                    onCancel: onCancel
-                )
-            }
+    ) async throws {
+        if router.multipartFormData != nil {
+            try await performUpload(
+                router,
+                onProgress: onProgress,
+                onCancel: onCancel
+            )
         } else {
-            if router.multipartFormData != nil {
-                try await performUploadWithoutResponse(
-                    router,
-                    onProgress: onProgress,
-                    onCancel: onCancel
-                )
-            } else {
-                try await performRequestWithoutResponse(
-                    router,
-                    onCancel: onCancel
-                )
-            }
-            return nil
+            try await performRequest(
+                router,
+                onCancel: onCancel
+            )
         }
     }
 
+    // Generic Response
+    @discardableResult
+    func request<T: Decodable & Sendable>(
+        _ router: Router,
+        responseType: T.Type,
+        onProgress: (@Sendable (Double) -> Void)? = nil,
+        onCancel: (@Sendable (() -> Void) -> Void)? = nil
+    ) async throws -> T? {
+        if router.multipartFormData != nil {
+            return try await performUpload(
+                router,
+                responseType: responseType,
+                onProgress: onProgress,
+                onCancel: onCancel
+            )
+        } else {
+            return try await performRequest(
+                router,
+                responseType: responseType,
+                onCancel: onCancel
+            )
+        }
+    }
+
+    // MARK: - Private Methods
     private func performRequest<T: Decodable & Sendable>(
-        _ router: Router, onCancel: (@Sendable (() -> Void) -> Void)?
+        _ router: Router,
+        responseType: T.Type,
+        onCancel: (@Sendable (() -> Void) -> Void)?
     ) async throws -> T {
         var dataRequest: DataRequest?
 
@@ -80,6 +91,7 @@ final class NetworkManager: @unchecked Sendable {
 
     private func performUpload<T: Decodable & Sendable>(
         _ router: Router,
+        responseType: T.Type,
         onProgress: (@Sendable (Double) -> Void)?,
         onCancel: (@Sendable (() -> Void) -> Void)?
     ) async throws -> T {
@@ -125,7 +137,7 @@ final class NetworkManager: @unchecked Sendable {
         }
     }
 
-    private func performRequestWithoutResponse(
+    private func performRequest(
         _ router: Router,
         onCancel: (@Sendable (() -> Void) -> Void)?
     ) async throws {
@@ -155,7 +167,7 @@ final class NetworkManager: @unchecked Sendable {
         }
     }
 
-    private func performUploadWithoutResponse(
+    private func performUpload(
         _ router: Router,
         onProgress: (@Sendable (Double) -> Void)?,
         onCancel: (@Sendable (() -> Void) -> Void)?

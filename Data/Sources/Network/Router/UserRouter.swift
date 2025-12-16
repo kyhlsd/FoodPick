@@ -124,18 +124,4 @@ extension UserRouter: Router {
         }
     }
 
-    var responseType: (Decodable & Sendable).Type? {
-        switch self {
-        case .validate, .logout, .updateDeviceToken:
-            return nil
-        case .join, .emailLogin, .kakaoLogin, .appleLogin:
-            return LoginResponseDTO.self
-        case .getMyProfile, .updateMyProfile:
-            return MyProfileDTO.self
-        case .uploadProfileImage:
-            return UploadProfileImageResponseDTO.self
-        case .search:
-            return SearchUserResponseDTO.self
-        }
-    }
 }
