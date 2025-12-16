@@ -8,20 +8,18 @@
 import Foundation
 import Domain
 
-final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
-    private let networkManager: NetworkManager
+public final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
+    private let networkManager = NetworkManager.shared
 
-    init(networkManager: NetworkManager = .shared) {
-        self.networkManager = networkManager
-    }
+    public init() {}
 
-    func validateEmail(_ email: String) async throws {
+    public func validateEmail(_ email: String) async throws {
         try await networkManager.request(
             UserRouter.validate(email: email)
         )
     }
 
-    func join(_ request: JoinRequest) async throws -> LoginResponse {
+    public func join(_ request: JoinRequest) async throws -> LoginResponse {
         let dto = JoinRequestDTO(from: request)
         guard let response = try await networkManager.request(
             UserRouter.join(dto: dto),
@@ -32,7 +30,7 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func emailLogin(email: String, password: String) async throws -> LoginResponse {
+    public func emailLogin(email: String, password: String) async throws -> LoginResponse {
         guard let response = try await networkManager.request(
             UserRouter.emailLogin(email: email, password: password),
             responseType: LoginResponseDTO.self) else {
@@ -42,7 +40,7 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func kakaoLogin(oauthToken: String) async throws -> LoginResponse {
+    public func kakaoLogin(oauthToken: String) async throws -> LoginResponse {
         guard let response = try await networkManager.request(
             UserRouter.kakaoLogin(oauthToken: oauthToken),
             responseType: LoginResponseDTO.self) else {
@@ -52,7 +50,7 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func appleLogin(idToken: String) async throws -> LoginResponse {
+    public func appleLogin(idToken: String) async throws -> LoginResponse {
         guard let response = try await networkManager.request(
             UserRouter.appleLogin(idToken: idToken),
             responseType: LoginResponseDTO.self) else {
@@ -62,19 +60,19 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func logout() async throws {
+    public func logout() async throws {
         try await networkManager.request(
             UserRouter.logout
         )
     }
 
-    func updateDeviceToken() async throws {
+    public func updateDeviceToken() async throws {
         try await networkManager.request(
             UserRouter.updateDeviceToken
         )
     }
 
-    func getMyProfile() async throws -> MyProfile {
+    public func getMyProfile() async throws -> MyProfile {
         guard let response = try await networkManager.request(
             UserRouter.getMyProfile,
             responseType: MyProfileDTO.self) else {
@@ -84,7 +82,7 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func updateMyProfile(_ request: ProfileRequest) async throws -> MyProfile {
+    public func updateMyProfile(_ request: ProfileRequest) async throws -> MyProfile {
         let dto = ProfileRequestDTO(from: request)
         guard let response = try await networkManager.request(
             UserRouter.updateMyProfile(dto: dto),
@@ -95,7 +93,7 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func uploadProfileImage(_ imageData: Data, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> UploadProfileImageResponse {
+    public func uploadProfileImage(_ imageData: Data, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> UploadProfileImageResponse {
         guard let response = try await networkManager.request(
             UserRouter.uploadProfileImage(image: imageData),
             responseType: UploadProfileImageResponseDTO.self,
@@ -107,7 +105,7 @@ final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    func searchUsers(nickname: String) async throws -> [Profile] {
+    public func searchUsers(nickname: String) async throws -> [Profile] {
         guard let response = try await networkManager.request(
             UserRouter.search(nickname: nickname),
             responseType: SearchUserResponseDTO.self

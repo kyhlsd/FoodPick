@@ -8,15 +8,36 @@
 import Domain
 
 struct MyProfileDTO: Decodable, Sendable {
-    private let user_id: String
+    private let userId: String
     private let email: String
-    private let nick: String
+    private let nickname: String
     private let profileImage: String?
-    private let phoneNum: String
+    private let phoneNumber: String
+    
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case email
+        case nickname = "nick"
+        case profileImage
+        case phoneNumber = "phoneNum"
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.userId = try container.decode(String.self, forKey: .userId)
+        self.email = try container.decode(String.self, forKey: .email)
+        self.nickname = try container.decode(String.self, forKey: .nickname)
+        self.profileImage = try container.decodeIfPresent(String.self, forKey: .profileImage)
+        self.phoneNumber = try container.decode(String.self, forKey: .phoneNumber)
+    }
 }
 
 extension MyProfileDTO {
     var toDomain: MyProfile {
-        return .init(userId: user_id, email: email, nickname: nick, profileImage: profileImage, phoneNumber: phoneNum)
+        return .init(userId: userId,
+                     email: email,
+                     nickname: nickname,
+                     profileImage: profileImage,
+                     phoneNumber: phoneNumber)
     }
 }

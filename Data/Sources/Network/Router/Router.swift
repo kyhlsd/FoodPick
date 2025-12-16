@@ -49,13 +49,13 @@ extension Router {
         case .none:
             break
         }
-
+        
         return urlRequest
     }
     
     func asURL() throws -> URL {
         var url = try baseURL.asURL()
-        url = url.appendingPathExtension("/\(version)\(path)")
+        url = url.appending(path: "\(version)\(path)")
         url = url.appending(queryItems: queryItems)
         return url
     }

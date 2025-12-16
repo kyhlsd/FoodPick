@@ -10,7 +10,7 @@ public struct ProfileRequest {
     public let phoneNumber: String?
     public let profileImage: String?
     
-    public init(nickname: String, phoneNumber: String, profileImage: String) {
+    public init(nickname: String? = nil, phoneNumber: String? = nil, profileImage: String? = nil) {
         self.nickname = nickname
         self.phoneNumber = phoneNumber
         self.profileImage = profileImage

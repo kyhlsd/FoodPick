@@ -96,12 +96,17 @@ extension UserRouter: Router {
         case .uploadProfileImage:
             return .none
         case .search(let nickname):
-            return .plain(["nick": nickname])
+            return .none
         }
     }
     
     var queryItems: [URLQueryItem] {
-        return []
+        switch self {
+        case .search(let nickname):
+            return [URLQueryItem(name: "nick", value: nickname)]
+        default:
+            return []
+        }
     }
     
     var headers: Alamofire.HTTPHeaders {
@@ -117,7 +122,7 @@ extension UserRouter: Router {
         switch self {
         case .uploadProfileImage(let image):
             return { form in
-                form.append(image, withName: "profile", mimeType: "image/jpeg")
+                form.append(image, withName: "profile", fileName: UUID().uuidString, mimeType: "image/jpeg")
             }
         default:
             return nil
