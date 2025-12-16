@@ -69,6 +69,7 @@ extension MenuDTO {
                      tags: tags,
                      menuImageURL: menuImageURL,
                      createdAt: formatter.date(from: createdAt) ?? Date(),
-                     updatedAt: formatter.date(from: updatedAt) ?? Date())
+                     updatedAt: formatter.date(from: updatedAt) ?? Date()
+        )
     }
 }
