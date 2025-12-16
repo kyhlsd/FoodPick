@@ -7,7 +7,7 @@
 
 import Domain
 
-struct UploadProfileImageResponseDTO: Decodable, Sendable {
+struct UploadProfileImageResponseDTO: ResponseDTO {
     private let profileImage: String
 }
 

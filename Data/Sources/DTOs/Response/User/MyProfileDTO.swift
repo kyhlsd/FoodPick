@@ -1,5 +1,5 @@
 //
-//  LoginResponseDTO.swift
+//  MyProfileDTO.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,21 +7,19 @@
 
 import Domain
 
-struct LoginResponseDTO: Decodable, Sendable {
+struct MyProfileDTO: ResponseDTO {
     private let userId: String
     private let email: String
     private let nickname: String
     private let profileImage: String?
-    private let accessToken: String
-    private let refreshToken: String
+    private let phoneNumber: String
     
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case email
         case nickname = "nick"
         case profileImage
-        case accessToken
-        case refreshToken
+        case phoneNumber = "phoneNum"
     }
     
     init(from decoder: any Decoder) throws {
@@ -30,18 +28,16 @@ struct LoginResponseDTO: Decodable, Sendable {
         self.email = try container.decode(String.self, forKey: .email)
         self.nickname = try container.decode(String.self, forKey: .nickname)
         self.profileImage = try container.decodeIfPresent(String.self, forKey: .profileImage)
-        self.accessToken = try container.decode(String.self, forKey: .accessToken)
-        self.refreshToken = try container.decode(String.self, forKey: .refreshToken)
+        self.phoneNumber = try container.decode(String.self, forKey: .phoneNumber)
     }
 }
 
-extension LoginResponseDTO {
-    var toDomain: LoginResponse {
+extension MyProfileDTO {
+    var toDomain: MyProfile {
         return .init(userId: userId,
                      email: email,
                      nickname: nickname,
                      profileImage: profileImage,
-                     accessToken: accessToken,
-                     refreshToken: refreshToken)
+                     phoneNumber: phoneNumber)
     }
 }

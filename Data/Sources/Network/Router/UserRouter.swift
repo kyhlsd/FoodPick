@@ -15,22 +15,23 @@ enum UserRouter {
     case kakaoLogin(oauthToken: String)
     case appleLogin(idToken: String)
     case logout
-    case updateDeviceToken
-    case getMyProfile
-    case updateMyProfile(dto: ProfileRequestDTO)
-    case uploadProfileImage(image: Data)
+    case deviceToken
+    case myProfile(dto: ProfileRequestDTO? = nil)
+    case profileImage(image: Data)
     case search(nickname: String)
 }
 
 extension UserRouter: Router {
     var method: HTTPMethod {
         switch self {
-        case .validate, .join, .emailLogin, .kakaoLogin, .appleLogin, .logout, .uploadProfileImage:
+        case .validate, .join, .emailLogin, .kakaoLogin, .appleLogin, .logout, .profileImage:
             return .post
-        case .updateDeviceToken, .updateMyProfile:
+        case .deviceToken:
             return .put
-        case .getMyProfile, .search:
+        case .search:
             return .get
+        case .myProfile(let dto):
+            return dto == nil ? .get : .put
         }
     }
     
@@ -49,13 +50,11 @@ extension UserRouter: Router {
             return base + "/login/apple"
         case .logout:
             return base + "/logout"
-        case .updateDeviceToken:
+        case .deviceToken:
             return base + "/deviceToken"
-        case .getMyProfile:
+        case .myProfile:
             return base + "/me/profile"
-        case .updateMyProfile:
-            return base + "/me/profile"
-        case .uploadProfileImage:
+        case .profileImage:
             return base + "/profile/image"
         case .search:
             return base + "/search"
@@ -87,15 +86,13 @@ extension UserRouter: Router {
             ])
         case .logout:
             return .none
-        case .updateDeviceToken:
+        case .deviceToken:
             return .plain(["deviceToken": deviceToken])
-        case .getMyProfile:
+        case .myProfile(let dto):
+            return dto == nil ? .none : .encodable(dto)
+        case .profileImage:
             return .none
-        case .updateMyProfile(let dto):
-            return .encodable(dto)
-        case .uploadProfileImage:
-            return .none
-        case .search(let nickname):
+        case .search:
             return .none
         }
     }
@@ -109,18 +106,18 @@ extension UserRouter: Router {
         }
     }
     
-    var headers: Alamofire.HTTPHeaders {
+    var headers: HTTPHeaders {
         switch self {
         case .validate, .join, .emailLogin, .kakaoLogin, .appleLogin:
             return HTTPHeader.asHTTPHeaders([.apiKey])
-        case .logout, .updateDeviceToken, .getMyProfile, .updateMyProfile, .uploadProfileImage, .search:
+        case .logout, .deviceToken, .myProfile, .profileImage, .search:
             return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
         }
     }
     
     var multipartFormData: ((MultipartFormData) -> Void)? {
         switch self {
-        case .uploadProfileImage(let image):
+        case .profileImage(let image):
             return { form in
                 form.append(image, withName: "profile", fileName: UUID().uuidString, mimeType: "image/jpeg")
             }

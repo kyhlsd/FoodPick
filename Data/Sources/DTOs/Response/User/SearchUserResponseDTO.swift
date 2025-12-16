@@ -7,7 +7,7 @@
 
 import Domain
 
-struct SearchUserResponseDTO: Decodable, Sendable {
+struct SearchUserResponseDTO: ResponseDTO {
     private let data: [ProfileDTO]
 }
 

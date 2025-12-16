@@ -68,13 +68,13 @@ public final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
 
     public func updateDeviceToken() async throws {
         try await networkManager.request(
-            UserRouter.updateDeviceToken
+            UserRouter.deviceToken
         )
     }
 
     public func getMyProfile() async throws -> MyProfile {
         guard let response = try await networkManager.request(
-            UserRouter.getMyProfile,
+            UserRouter.myProfile(),
             responseType: MyProfileDTO.self) else {
             throw APIError.empty
         }
@@ -85,7 +85,7 @@ public final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
     public func updateMyProfile(_ request: ProfileRequest) async throws -> MyProfile {
         let dto = ProfileRequestDTO(from: request)
         guard let response = try await networkManager.request(
-            UserRouter.updateMyProfile(dto: dto),
+            UserRouter.myProfile(dto: dto),
             responseType: MyProfileDTO.self) else {
             throw APIError.empty
         }
@@ -95,7 +95,7 @@ public final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
 
     public func uploadProfileImage(_ imageData: Data, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> UploadProfileImageResponse {
         guard let response = try await networkManager.request(
-            UserRouter.uploadProfileImage(image: imageData),
+            UserRouter.profileImage(image: imageData),
             responseType: UploadProfileImageResponseDTO.self,
             onProgress: onProgress
         ) else {
