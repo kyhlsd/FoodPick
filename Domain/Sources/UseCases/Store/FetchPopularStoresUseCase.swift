@@ -17,6 +17,6 @@ public final class FetchPopularStoresUseCaseImpl: FetchPopularStoresUseCase, @un
     }
 
     public func execute(category: StoreCategory?) async throws -> [Store] {
-        return try await storeRepository.getPopularStores(category: category)
+        return try await storeRepository.fetchPopularStores(category: category)
     }
 }

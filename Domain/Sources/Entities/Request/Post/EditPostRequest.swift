@@ -14,7 +14,7 @@ public struct EditPostRequest {
     public let longitude: Float?
     public let files: [String]?
     
-    public init(category: StoreCategory, title: String, content: String, storeId: String, latitude: Float, longitude: Float, files: [String]) {
+    public init(category: StoreCategory? = nil, title: String? = nil, content: String? = nil, storeId: String? = nil, latitude: Float? = nil, longitude: Float? = nil, files: [String]? = nil) {
         self.category = category
         self.title = title
         self.content = content

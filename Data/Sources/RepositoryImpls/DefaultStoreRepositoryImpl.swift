@@ -12,7 +12,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
 
     public init() {}
 
-    public func getStores(request: ByLocationRequest) async throws -> ResponseListWithCursor<Store> {
+    public func fetchStores(request: ByLocationRequest) async throws -> ResponseListWithCursor<Store> {
         let dto = ByLocationRequestDTO(from: request)
         guard let response = try await networkManager.request(
             StoreRouter.stores(dto: dto),
@@ -23,7 +23,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func getStoreInfo(id: String) async throws -> StoreDetail {
+    public func fetchStoreInfo(id: String) async throws -> StoreDetail {
         guard let response = try await networkManager.request(
             StoreRouter.detail(id: id),
             responseType: StoreDetailDTO.self
@@ -53,7 +53,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func getPopularStores(category: StoreCategory?) async throws -> [Store] {
+    public func fetchPopularStores(category: StoreCategory?) async throws -> [Store] {
         guard let response = try await networkManager.request(
             StoreRouter.popularStores(category: category?.rawValue),
             responseType: ResponseListDTO<StoreDTO>.self
@@ -63,7 +63,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func getPopularSearches() async throws -> [String] {
+    public func fetchPopularSearches() async throws -> [String] {
         guard let response = try await networkManager.request(
             StoreRouter.popularSearches,
             responseType: PopularSearchDTO.self
@@ -73,7 +73,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func getMyLikes(request: BasicRequest) async throws -> ResponseListWithCursor<Store> {
+    public func fetchMyLikes(request: BasicRequest) async throws -> ResponseListWithCursor<Store> {
         let dto = BasicRequestDTO(from: request)
         guard let response = try await networkManager.request(
             StoreRouter.myLikes(dto: dto),
@@ -84,7 +84,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func getReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review> {
+    public func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review> {
         let dto = BasicRequestDTO(from: request)
         guard let response = try await networkManager.request(
             StoreRouter.reviews(id: userId, dto: dto),

@@ -17,6 +17,6 @@ public final class FetchReviewsUseCaseImpl: FetchReviewsUseCase, @unchecked Send
     }
 
     public func execute(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review> {
-        return try await storeRepository.getReviews(userId: userId, request: request)
+        return try await storeRepository.fetchReviews(userId: userId, request: request)
     }
 }

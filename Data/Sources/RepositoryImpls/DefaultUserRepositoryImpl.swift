@@ -73,7 +73,7 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         )
     }
 
-    public func getMyProfile() async throws -> MyProfile {
+    public func fetchMyProfile() async throws -> MyProfile {
         guard let response = try await networkManager.request(
             UserRouter.myProfile(),
             responseType: MyProfileDTO.self) else {

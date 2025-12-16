@@ -16,7 +16,7 @@ public protocol UserRepository {
     func appleLogin(idToken: String) async throws -> LoginResponse
     func logout() async throws
     func updateDeviceToken() async throws
-    func getMyProfile() async throws -> MyProfile
+    func fetchMyProfile() async throws -> MyProfile
     func updateMyProfile(_ request: ProfileRequest) async throws -> MyProfile
     func uploadProfileImage(_ imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse
     func searchUsers(nickname: String) async throws -> [Profile]

@@ -17,6 +17,6 @@ public final class FetchMyLikesUseCaseImpl: FetchMyLikesUseCase, @unchecked Send
     }
 
     public func execute(request: BasicRequest) async throws -> ResponseListWithCursor<Store> {
-        return try await storeRepository.getMyLikes(request: request)
+        return try await storeRepository.fetchMyLikes(request: request)
     }
 }

@@ -17,6 +17,6 @@ public final class FetchPopularSearchesUseCaseImpl: FetchPopularSearchesUseCase,
     }
 
     public func execute() async throws -> [String] {
-        return try await storeRepository.getPopularSearches()
+        return try await storeRepository.fetchPopularSearches()
     }
 }

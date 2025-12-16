@@ -17,6 +17,6 @@ public final class FetchMyProfileUseCaseImpl: FetchMyProfileUseCase, @unchecked 
     }
 
     public func execute() async throws -> MyProfile {
-        return try await userRepository.getMyProfile()
+        return try await userRepository.fetchMyProfile()
     }
 }

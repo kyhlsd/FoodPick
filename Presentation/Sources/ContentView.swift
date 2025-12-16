@@ -1,29 +1,34 @@
 import SwiftUI
 import Data
 import Domain
+import Core
 
 public struct ContentView: View {
-    let repository: StoreRepository
-    let fetchMyLikesUseCase: FetchMyLikesUseCase
-    let fetchPopularSearchUseCase: FetchPopularSearchesUseCase
-    let fetchPopularStoreUseCase: FetchPopularStoresUseCase
-    let fetchReviewsUseCase: FetchReviewsUseCase
-    let fetchStoreInfoUseCase: FetchStoreInfoUseCase
-    let fetchStoresUseCase: FetchStoresUseCase
-    let searchStoresUseCase: SearchStoresUseCase
-    let toggleStoreLikeUseCase: ToggleStoreLikeUseCase
-    
+    let postRepository: PostRepository
+    let uploadFilesUseCase: UploadFilesUseCase
+    let createPostUseCase: CreatePostUseCase
+    let fetchPostsUseCase: FetchPostsUseCase
+    let searchPostsUseCase: SearchPostsUseCase
+    let fetchPostDetailUseCase: FetchPostDetailUseCase
+    let editPostUseCase: EditPostUseCase
+    let deletePostUseCase: DeletePostUseCase
+    let likePostUseCase: LikePostUseCase
+    let fetchUserPostsUseCase: FetchUserPostsUseCase
+    let fetchMyLikedPostsUseCase: FetchMyLikedPostsUseCase
+
     public init() {
-        let repository = DefaultStoreRepositoryImpl()
-        self.repository = repository
-        self.fetchMyLikesUseCase = FetchMyLikesUseCaseImpl(storeRepository: repository)
-        self.fetchPopularSearchUseCase = FetchPopularSearchesUseCaseImpl(storeRepository: repository)
-        self.fetchPopularStoreUseCase = FetchPopularStoresUseCaseImpl(storeRepository: repository)
-        self.fetchReviewsUseCase = FetchReviewsUseCaseImpl(storeRepository: repository)
-        self.fetchStoresUseCase = FetchStoresUseCaseImpl(storeRepository: repository)
-        self.fetchStoreInfoUseCase = FetchStoreInfoUseCaseImpl(storeRepository: repository)
-        self.searchStoresUseCase = SearchStoresUseCaseImpl(storeRepository: repository)
-        self.toggleStoreLikeUseCase = ToggleStoreLikeUseCaseImpl(storeRepository: repository)
+        let postRepository = DefaultPostRepositoryImpl()
+        self.postRepository = postRepository
+        self.uploadFilesUseCase = UploadFilesUseCaseImpl(postRepository: postRepository)
+        self.createPostUseCase = CreatePostUseCaseImpl(postRepository: postRepository)
+        self.fetchPostsUseCase = FetchPostsUseCaseImpl(postRepository: postRepository)
+        self.searchPostsUseCase = SearchPostsUseCaseImpl(postRepository: postRepository)
+        self.fetchPostDetailUseCase = FetchPostDetailUseCaseImpl(postRepository: postRepository)
+        self.editPostUseCase = EditPostUseCaseImpl(postRepository: postRepository)
+        self.deletePostUseCase = DeletePostUseCaseImpl(postRepository: postRepository)
+        self.likePostUseCase = LikePostUseCaseImpl(postRepository: postRepository)
+        self.fetchUserPostsUseCase = FetchUserPostsUseCaseImpl(postRepository: postRepository)
+        self.fetchMyLikedPostsUseCase = FetchMyLikedPostsUseCaseImpl(postRepository: postRepository)
     }
     
     public var body: some View {
@@ -35,7 +40,13 @@ public struct ContentView: View {
             Button {
                 Task {
                     do {
-                        let response = try await searchStoresUseCase.execute(name: "새싹")
+                        let data = UIImage(systemName: "star")?.jpegData(compressionQuality: 0.8)
+                        guard let data else { return }
+                        let response = try await uploadFilesUseCase.execute(datas: [
+                            (data, .jpeg)
+                        ]) { progress in
+                            print(progress)
+                        }
                         print(response)
                     } catch {
                         print("error: \(error.localizedDescription)")

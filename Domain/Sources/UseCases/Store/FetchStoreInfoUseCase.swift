@@ -17,6 +17,6 @@ public final class FetchStoreInfoUseCaseImpl: FetchStoreInfoUseCase, @unchecked 
     }
 
     public func execute(id: String) async throws -> StoreDetail {
-        return try await storeRepository.getStoreInfo(id: id)
+        return try await storeRepository.fetchStoreInfo(id: id)
     }
 }
