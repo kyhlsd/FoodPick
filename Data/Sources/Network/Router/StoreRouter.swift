@@ -10,8 +10,8 @@ import Alamofire
 
 enum StoreRouter {
     case stores(dto: ByLocationRequestDTO)
-    case storeInfo(id: String)
-    case toggleStoreLike(id: String, like: Bool)
+    case detail(id: String)
+    case like(id: String, like: Bool)
     case search(name: String)
     case popularStores(category: String? = nil)
     case popularSearches
@@ -22,9 +22,9 @@ enum StoreRouter {
 extension StoreRouter: Router {
     var method: HTTPMethod {
         switch self {
-        case .stores, .storeInfo, .search, .popularStores, .popularSearches, .myLikes, .reviews:
+        case .stores, .detail, .search, .popularStores, .popularSearches, .myLikes, .reviews:
             return .get
-        case .toggleStoreLike:
+        case .like:
             return .post
         }
     }
@@ -34,9 +34,9 @@ extension StoreRouter: Router {
         switch self {
         case .stores:
             return base
-        case .storeInfo(let id):
+        case .detail(let id):
             return base + "/\(id)"
-        case .toggleStoreLike(let id, _):
+        case .like(let id, _):
             return base + "/\(id)/like"
         case .search:
             return base + "/search"
@@ -53,7 +53,7 @@ extension StoreRouter: Router {
     
     var body: RequestBody {
         switch self {
-        case .toggleStoreLike(_, let like):
+        case .like(_, let like):
             return .plain(["like_status": like])
         default:
             return .none
@@ -64,7 +64,7 @@ extension StoreRouter: Router {
         switch self {
         case .stores(let dto):
             return dto.toQueryItems
-        case .storeInfo, .toggleStoreLike, .popularSearches:
+        case .detail, .like, .popularSearches:
             return []
         case .search(let name):
             return [.init(name: "name", value: name)]
@@ -83,7 +83,7 @@ extension StoreRouter: Router {
         return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
     }
     
-    var multipartFormData: ((Alamofire.MultipartFormData) -> Void)? {
+    var multipartFormData: ((MultipartFormData) -> Void)? {
         return nil
     }
 }

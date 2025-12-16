@@ -7,6 +7,7 @@
 
 import Foundation
 import Domain
+import Core
 
 public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendable {
     private let networkManager = NetworkManager.shared
@@ -93,10 +94,10 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func uploadProfileImage(_ imageData: Data, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> UploadProfileImageResponse {
+    public func uploadProfileImage(_ imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> ProfileImageResponse {
         guard let response = try await networkManager.request(
-            UserRouter.profileImage(image: imageData),
-            responseType: UploadProfileImageResponseDTO.self,
+            UserRouter.profileImage(data: imageData, mediaType: imageType.toMediaType),
+            responseType: ProfileImageResponseDTO.self,
             onProgress: onProgress
         ) else {
             throw APIError.empty

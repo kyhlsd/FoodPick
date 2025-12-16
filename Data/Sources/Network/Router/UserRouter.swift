@@ -7,6 +7,7 @@
 
 import Foundation
 import Alamofire
+import Core
 
 enum UserRouter {
     case validate(email: String)
@@ -17,7 +18,7 @@ enum UserRouter {
     case logout
     case deviceToken
     case myProfile(dto: ProfileRequestDTO? = nil)
-    case profileImage(image: Data)
+    case profileImage(data: Data, mediaType: MediaType)
     case search(nickname: String)
 }
 
@@ -117,9 +118,10 @@ extension UserRouter: Router {
     
     var multipartFormData: ((MultipartFormData) -> Void)? {
         switch self {
-        case .profileImage(let image):
+        case .profileImage(let data, let mediaType):
             return { form in
-                form.append(image, withName: "profile", fileName: UUID().uuidString, mimeType: "image/jpeg")
+                let fileName = "\(UUID().uuidString).\(mediaType.fileExtension)"
+                form.append(data, withName: "profile", fileName: fileName, mimeType: mediaType.mimeType)
             }
         default:
             return nil

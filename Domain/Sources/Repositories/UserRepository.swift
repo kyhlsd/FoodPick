@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Core
 
 public protocol UserRepository {
     func validateEmail(_ email: String) async throws
@@ -17,6 +18,6 @@ public protocol UserRepository {
     func updateDeviceToken() async throws
     func getMyProfile() async throws -> MyProfile
     func updateMyProfile(_ request: ProfileRequest) async throws -> MyProfile
-    func uploadProfileImage(_ imageData: Data, onProgress: (@Sendable (Double) -> Void)?) async throws -> UploadProfileImageResponse
+    func uploadProfileImage(_ imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse
     func searchUsers(nickname: String) async throws -> [Profile]
 }

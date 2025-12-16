@@ -25,7 +25,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
 
     public func getStoreInfo(id: String) async throws -> StoreInfo {
         guard let response = try await networkManager.request(
-            StoreRouter.storeInfo(id: id),
+            StoreRouter.detail(id: id),
             responseType: StoreInfoDTO.self
         ) else {
             throw APIError.empty
@@ -35,7 +35,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
 
     public func toggleStoreLike(id: String, like: Bool) async throws -> LikeStatus {
         guard let response = try await networkManager.request(
-            StoreRouter.toggleStoreLike(id: id, like: like),
+            StoreRouter.like(id: id, like: like),
             responseType: LikeStatusDTO.self
         ) else {
             throw APIError.empty
