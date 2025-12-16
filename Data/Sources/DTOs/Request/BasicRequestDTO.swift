@@ -19,6 +19,8 @@ extension BasicRequestDTO {
         let limit: String?
         if let domainLimit = domain.limit {
             limit = String(domainLimit)
+        } else {
+            limit = nil
         }
         self.init(category: domain.category?.rawValue, next: domain.next, limit: limit)
     }

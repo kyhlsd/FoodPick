@@ -12,5 +12,8 @@ public enum StoreCategory: String {
     case chinese = "중식"
     case chicken = "치킨"
     case pizza = "피자"
+    case desert = "디저트"
+    case bakery = "베이커리"
+    case fastfood = "패스트푸드"
     case etc = "기타"
 }

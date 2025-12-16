@@ -15,7 +15,7 @@ public protocol LoginUseCase: Sendable {
     func execute(type: LoginType) async throws -> LoginResponse
 }
 
-public final class DefaultLoginUseCase: LoginUseCase, @unchecked Sendable {
+public final class LoginUseCaseImpl: LoginUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {

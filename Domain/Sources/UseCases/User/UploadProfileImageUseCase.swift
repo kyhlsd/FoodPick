@@ -11,7 +11,7 @@ public protocol UploadProfileImageUseCase: Sendable {
     func execute(imageData: Data, onProgress: (@Sendable (Double) -> Void)?) async throws -> UploadProfileImageResponse
 }
 
-public final class DefaultUploadProfileImageUseCase: UploadProfileImageUseCase, @unchecked Sendable {
+public final class UploadProfileImageUseCaseImpl: UploadProfileImageUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {

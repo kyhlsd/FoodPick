@@ -20,12 +20,12 @@ public struct Store {
     public let totalRating: Float
     public let totalOrderCount: Int
     public let totalReviewCount: Int
-    public let geoLocation: GeoLocation
-    public let distance: Float
+    public let geolocation: Geolocation
+    public let distance: Float?
     public let createdAt: Date
     public let updatedAt: Date
     
-    public init(storeId: String, category: StoreCategory, name: String, close: String, storeImageURLs: [String], isPicchelin: Bool, isPick: Bool, pickCount: Int, hashTags: [String], totalRating: Float, totalOrderCount: Int, totalReviewCount: Int, geoLocation: GeoLocation, distance: Float, createdAt: Date, updatedAt: Date) {
+    public init(storeId: String, category: StoreCategory, name: String, close: String, storeImageURLs: [String], isPicchelin: Bool, isPick: Bool, pickCount: Int, hashTags: [String], totalRating: Float, totalOrderCount: Int, totalReviewCount: Int, geolocation: Geolocation, distance: Float?, createdAt: Date, updatedAt: Date) {
         self.storeId = storeId
         self.category = category
         self.name = name
@@ -38,7 +38,7 @@ public struct Store {
         self.totalRating = totalRating
         self.totalOrderCount = totalOrderCount
         self.totalReviewCount = totalReviewCount
-        self.geoLocation = geoLocation
+        self.geolocation = geolocation
         self.distance = distance
         self.createdAt = createdAt
         self.updatedAt = updatedAt

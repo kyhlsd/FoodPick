@@ -28,7 +28,7 @@ struct StoreInfoDTO: ResponseDTO {
     private let totalOrderCount: Int
     private let totalRating: Float
     private let creator: ProfileDTO
-    private let geoLocation: GeoLocationDTO
+    private let geolocation: GeolocationDTO
     private let menuList: [MenuDTO]
     private let createdAt: String
     private let updatedAt: String
@@ -52,7 +52,7 @@ struct StoreInfoDTO: ResponseDTO {
         case totalOrderCount = "total_order_count"
         case totalRating = "total_rating"
         case creator
-        case geoLocation
+        case geolocation
         case menuList = "menu_list"
         case createdAt
         case updatedAt
@@ -78,7 +78,7 @@ struct StoreInfoDTO: ResponseDTO {
         self.totalOrderCount = try container.decode(Int.self, forKey: .totalOrderCount)
         self.totalRating = try container.decode(Float.self, forKey: .totalRating)
         self.creator = try container.decode(ProfileDTO.self, forKey: .creator)
-        self.geoLocation = try container.decode(GeoLocationDTO.self, forKey: .geoLocation)
+        self.geolocation = try container.decode(GeolocationDTO.self, forKey: .geolocation)
         self.menuList = try container.decode([MenuDTO].self, forKey: .menuList)
         self.createdAt = try container.decode(String.self, forKey: .createdAt)
         self.updatedAt = try container.decode(String.self, forKey: .updatedAt)
@@ -106,7 +106,7 @@ extension StoreInfoDTO {
                      totalOrderCount: totalOrderCount,
                      totalRating: totalRating,
                      creator: creator.toDomain,
-                     geoLocation: geoLocation.toDomain,
+                     geoLocation: geolocation.toDomain,
                      menuList: menuList.map { $0.toDomain },
                      createdAt: formatter.date(from: createdAt) ?? Date(),
                      updatedAt: formatter.date(from: updatedAt) ?? Date()

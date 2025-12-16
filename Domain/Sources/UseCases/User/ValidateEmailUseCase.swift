@@ -9,7 +9,7 @@ public protocol ValidateEmailUseCase: Sendable {
     func execute(email: String) async throws
 }
 
-public final class DefaultValidateEmailUseCase: ValidateEmailUseCase, @unchecked Sendable {
+public final class ValidateEmailUseCaseImpl: ValidateEmailUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {

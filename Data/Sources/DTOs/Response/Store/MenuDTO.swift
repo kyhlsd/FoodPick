@@ -59,7 +59,8 @@ extension MenuDTO {
     var toDomain: Menu {
         let formatter = Core.DateFormatterProvider.iso8601
         return .init(menuId: menuId,
-                     storeId: storeId, category: .init(rawValue: category) ?? .etc,
+                     storeId: storeId,
+                     category: category,
                      name: name,
                      description: description,
                      originInfo: originInfo,

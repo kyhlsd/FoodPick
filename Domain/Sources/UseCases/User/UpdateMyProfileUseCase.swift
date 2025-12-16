@@ -9,7 +9,7 @@ public protocol UpdateMyProfileUseCase: Sendable {
     func execute(request: ProfileRequest) async throws -> MyProfile
 }
 
-public final class DefaultUpdateMyProfileUseCase: UpdateMyProfileUseCase, @unchecked Sendable {
+public final class UpdateMyProfileUseCaseImpl: UpdateMyProfileUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {

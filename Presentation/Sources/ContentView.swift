@@ -3,27 +3,27 @@ import Data
 import Domain
 
 public struct ContentView: View {
-    let repository: UserRepository
-    let getMyProfileUseCase: GetMyProfileUseCase
-    let joinUseCase: JoinUseCase
-    let loginUseCase: LoginUseCase
-    let logoutUseCase: LogoutUseCase
-    let searchUsersUseCase: SearchUsersUseCase
-    let updateMyProfileUseCase: UpdateMyProfileUseCase
-    let uploadProfileImageUseCase: UploadProfileImageUseCase
-    let validateEmailUseCase: ValidateEmailUseCase
+    let repository: StoreRepository
+    let fetchMyLikesUseCase: FetchMyLikesUseCase
+    let fetchPopularSearchUseCase: FetchPopularSearchesUseCase
+    let fetchPopularStoreUseCase: FetchPopularStoresUseCase
+    let fetchReviewsUseCase: FetchReviewsUseCase
+    let fetchStoreInfoUseCase: FetchStoreInfoUseCase
+    let fetchStoresUseCase: FetchStoresUseCase
+    let searchStoresUseCase: SearchStoresUseCase
+    let toggleStoreLikeUseCase: ToggleStoreLikeUseCase
     
     public init() {
-        let repository = UserRepositoryImpl()
+        let repository = DefaultStoreRepositoryImpl()
         self.repository = repository
-        self.getMyProfileUseCase = DefaultGetMyProfileUseCase(userRepository: repository)
-        self.joinUseCase = DefaultJoinUseCase(userRepository: repository)
-        self.loginUseCase = DefaultLoginUseCase(userRepository: repository)
-        self.logoutUseCase = DefaultLogoutUseCase(userRepository: repository)
-        self.searchUsersUseCase = DefaultSearchUsersUseCase(userRepository: repository)
-        self.updateMyProfileUseCase = DefaultUpdateMyProfileUseCase(userRepository: repository)
-        self.uploadProfileImageUseCase = DefaultUploadProfileImageUseCase(userRepository: repository)
-        self.validateEmailUseCase = DefaultValidateEmailUseCase(userRepository: repository)
+        self.fetchMyLikesUseCase = FetchMyLikesUseCaseImpl(storeRepository: repository)
+        self.fetchPopularSearchUseCase = FetchPopularSearchesUseCaseImpl(storeRepository: repository)
+        self.fetchPopularStoreUseCase = FetchPopularStoresUseCaseImpl(storeRepository: repository)
+        self.fetchReviewsUseCase = FetchReviewsUseCaseImpl(storeRepository: repository)
+        self.fetchStoresUseCase = FetchStoresUseCaseImpl(storeRepository: repository)
+        self.fetchStoreInfoUseCase = FetchStoreInfoUseCaseImpl(storeRepository: repository)
+        self.searchStoresUseCase = SearchStoresUseCaseImpl(storeRepository: repository)
+        self.toggleStoreLikeUseCase = ToggleStoreLikeUseCaseImpl(storeRepository: repository)
     }
     
     public var body: some View {
@@ -35,7 +35,7 @@ public struct ContentView: View {
             Button {
                 Task {
                     do {
-                        let response = try await getMyProfileUseCase.execute()
+                        let response = try await searchStoresUseCase.execute(name: "새싹")
                         print(response)
                     } catch {
                         print("error: \(error.localizedDescription)")

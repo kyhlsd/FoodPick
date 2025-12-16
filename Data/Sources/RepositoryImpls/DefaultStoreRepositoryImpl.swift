@@ -1,5 +1,5 @@
 //
-//  StoreRepositoryImpl.swift
+//  DefaultStoreRepositoryImpl.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,7 +7,7 @@
 
 import Domain
 
-public final class StoreRepositoryImpl: StoreRepository, @unchecked Sendable {
+public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Sendable {
     private let networkManager = NetworkManager.shared
 
     public init() {}
@@ -33,9 +33,9 @@ public final class StoreRepositoryImpl: StoreRepository, @unchecked Sendable {
         return response.toDomain
     }
 
-    public func toggleStoreLike(id: String) async throws -> LikeStatus {
+    public func toggleStoreLike(id: String, like: Bool) async throws -> LikeStatus {
         guard let response = try await networkManager.request(
-            StoreRouter.toggleStoreLike(id: id),
+            StoreRouter.toggleStoreLike(id: id, like: like),
             responseType: LikeStatusDTO.self
         ) else {
             throw APIError.empty
@@ -56,11 +56,11 @@ public final class StoreRepositoryImpl: StoreRepository, @unchecked Sendable {
     public func getPopularStores(category: StoreCategory?) async throws -> [Store] {
         guard let response = try await networkManager.request(
             StoreRouter.popularStores(category: category?.rawValue),
-            responseType: [StoreDTO].self
+            responseType: ResponseListDTO<StoreDTO>.self
         ) else {
             throw APIError.empty
         }
-        return response.map { $0.toDomain }
+        return response.toDomain
     }
 
     public func getPopularSearches() async throws -> [String] {

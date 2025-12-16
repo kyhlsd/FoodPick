@@ -9,7 +9,7 @@ public protocol JoinUseCase: Sendable {
     func execute(request: JoinRequest) async throws -> LoginResponse
 }
 
-public final class DefaultJoinUseCase: JoinUseCase, @unchecked Sendable {
+public final class JoinUseCaseImpl: JoinUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {

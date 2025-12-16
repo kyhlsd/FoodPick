@@ -1,5 +1,5 @@
 //
-//  UserRepositoryImpl.swift
+//  DefaultUserRepositoryImpl.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -8,7 +8,7 @@
 import Foundation
 import Domain
 
-public final class UserRepositoryImpl: UserRepository, @unchecked Sendable {
+public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendable {
     private let networkManager = NetworkManager.shared
 
     public init() {}

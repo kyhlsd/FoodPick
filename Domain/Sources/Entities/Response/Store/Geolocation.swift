@@ -1,11 +1,11 @@
 //
-//  GeoLocation.swift
+//  Geolocation.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
 //
 
-public struct GeoLocation {
+public struct Geolocation {
     public let longitude: Float
     public let latitude: Float
     

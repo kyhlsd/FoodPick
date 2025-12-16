@@ -11,7 +11,7 @@ import Alamofire
 enum StoreRouter {
     case stores(dto: ByLocationRequestDTO)
     case storeInfo(id: String)
-    case toggleStoreLike(id: String)
+    case toggleStoreLike(id: String, like: Bool)
     case search(name: String)
     case popularStores(category: String? = nil)
     case popularSearches
@@ -36,7 +36,7 @@ extension StoreRouter: Router {
             return base
         case .storeInfo(let id):
             return base + "/\(id)"
-        case .toggleStoreLike(let id):
+        case .toggleStoreLike(let id, _):
             return base + "/\(id)/like"
         case .search:
             return base + "/search"
@@ -52,7 +52,12 @@ extension StoreRouter: Router {
     }
     
     var body: RequestBody {
-        return .none
+        switch self {
+        case .toggleStoreLike(_, let like):
+            return .plain(["like_status": like])
+        default:
+            return .none
+        }
     }
     
     var queryItems: [URLQueryItem] {

@@ -75,7 +75,8 @@ final class NetworkManager: @unchecked Sendable {
                     switch response.result {
                     case .success(let data):
                         continuation.resume(returning: data)
-                    case .failure:
+                    case .failure(let error):
+                        print(error)
                         let error = self.handleError(response: response.response, data: response.data)
                         continuation.resume(throwing: error)
                     }

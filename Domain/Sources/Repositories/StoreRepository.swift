@@ -8,7 +8,7 @@
 public protocol StoreRepository {
     func getStores(request: ByLocationRequest) async throws -> ResponseListWithCursor<Store>
     func getStoreInfo(id: String) async throws -> StoreInfo
-    func toggleStoreLike(id: String) async throws -> LikeStatus
+    func toggleStoreLike(id: String, like: Bool) async throws -> LikeStatus
     func searchStores(name: String) async throws -> [Store]
     func getPopularStores(category: StoreCategory?) async throws -> [Store]
     func getPopularSearches() async throws -> [String]

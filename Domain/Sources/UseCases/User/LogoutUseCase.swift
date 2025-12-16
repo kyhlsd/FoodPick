@@ -9,7 +9,7 @@ public protocol LogoutUseCase: Sendable {
     func execute() async throws
 }
 
-public final class DefaultLogoutUseCase: LogoutUseCase, @unchecked Sendable {
+public final class LogoutUseCaseImpl: LogoutUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {

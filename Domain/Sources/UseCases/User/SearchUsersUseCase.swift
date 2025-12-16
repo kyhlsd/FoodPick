@@ -9,7 +9,7 @@ public protocol SearchUsersUseCase: Sendable {
     func execute(nickname: String) async throws -> [Profile]
 }
 
-public final class DefaultSearchUsersUseCase: SearchUsersUseCase, @unchecked Sendable {
+public final class SearchUsersUseCaseImpl: SearchUsersUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {
