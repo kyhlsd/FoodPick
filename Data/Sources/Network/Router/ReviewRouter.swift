@@ -40,7 +40,8 @@ extension ReviewRouter: Router {
             return base + "/\(id)/reviews/files"
         case .review(let id, _), .reviewList(let id, _):
             return base + "/\(id)/reviews"
-        case .detail(let storeId, let reviewId), .edit(let storeId, let reviewId, _), .delete(let storeId, let reviewId):
+        case .detail(let storeId, let reviewId), .edit(let storeId, let reviewId, _),
+                .delete(let storeId, let reviewId):
             return base + "/\(storeId)/reviews/\(reviewId)"
         case .statistics(let id):
             return base + "/\(id)/reviews/reviews-ratings"
@@ -51,7 +52,7 @@ extension ReviewRouter: Router {
         switch self {
         case .files, .reviewList, .detail, .delete, .statistics:
             return .none
-        case .review(let id, let dto):
+        case .review(_, let dto):
             return .encodable(dto)
         case .edit(_, _, let dto):
             return .encodable(dto)
