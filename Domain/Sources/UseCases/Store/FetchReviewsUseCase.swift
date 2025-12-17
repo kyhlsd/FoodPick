@@ -6,7 +6,7 @@
 //
 
 public protocol FetchReviewsUseCase: Sendable {
-    func execute(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review>
+    func execute(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<ReviewForStore>
 }
 
 public final class FetchReviewsUseCaseImpl: FetchReviewsUseCase, @unchecked Sendable {
@@ -16,7 +16,7 @@ public final class FetchReviewsUseCaseImpl: FetchReviewsUseCase, @unchecked Send
         self.storeRepository = storeRepository
     }
 
-    public func execute(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review> {
+    public func execute(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<ReviewForStore> {
         return try await storeRepository.fetchReviews(userId: userId, request: request)
     }
 }

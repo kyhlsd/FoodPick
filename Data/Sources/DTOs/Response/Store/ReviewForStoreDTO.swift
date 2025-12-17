@@ -1,5 +1,5 @@
 //
-//  ReviewDTO.swift
+//  ReviewForStoreDTO.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -9,7 +9,7 @@ import Foundation
 import Domain
 import Core
 
-struct ReviewDTO: ResponseDTO {
+struct ReviewForStoreDTO: ResponseDTO {
     private let reviewId: String
     private let content: String
     private let rating: Int
@@ -33,8 +33,8 @@ struct ReviewDTO: ResponseDTO {
     }
 }
 
-extension ReviewDTO {
-    var toDomain: Review {
+extension ReviewForStoreDTO {
+    var toDomain: ReviewForStore {
         let formatter = Core.DateFormatterProvider.iso8601
         return .init(reviewId: reviewId,
                      content: content,

@@ -84,11 +84,11 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review> {
+    public func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<ReviewForStore> {
         let dto = BasicRequestDTO(from: request)
         guard let response = try await networkManager.request(
             StoreRouter.reviews(id: userId, dto: dto),
-            responseType: ResponseListWithCursorDTO<ReviewDTO>.self
+            responseType: ResponseListWithCursorDTO<ReviewForStoreDTO>.self
         ) else {
             throw APIError.empty
         }

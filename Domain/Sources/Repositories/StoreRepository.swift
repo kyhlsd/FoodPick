@@ -13,5 +13,5 @@ public protocol StoreRepository {
     func fetchPopularStores(category: StoreCategory?) async throws -> [Store]
     func fetchPopularSearches() async throws -> [String]
     func fetchMyLikes(request: BasicRequest) async throws -> ResponseListWithCursor<Store>
-    func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<Review>
+    func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<ReviewForStore>
 }

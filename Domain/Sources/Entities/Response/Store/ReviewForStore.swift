@@ -1,5 +1,5 @@
 //
-//  Review.swift
+//  ReviewForStore.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Review {
+public struct ReviewForStore {
     public let reviewId: String
     public let content: String
     public let rating: Int
