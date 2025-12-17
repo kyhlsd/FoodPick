@@ -31,3 +31,20 @@ extension OrderStatusDTO: ResponseDTO {
         }
     }
 }
+
+extension OrderStatusDTO {
+    init(from domain: OrderStatus) {
+        switch domain {
+        case .pending:
+            self = .pending
+        case .approved:
+            self = .approved
+        case .inProgress:
+            self = .inProgress
+        case .ready:
+            self = .ready
+        case .pickedUp:
+            self = .pickedUp
+        }
+    }
+}

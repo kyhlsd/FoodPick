@@ -4,20 +4,16 @@ import Domain
 import Core
 
 public struct ContentView: View {
-    let repository: ChatRepository
-    let fetchChatListUseCase: FetchChatListUseCase
-    let fetchChatRoomUseCase: FetchChatRoomUseCase
-    let fetchChatRoomListUseCase: FetchChatRoomListUseCase
-    let sendMessageUseCase: SendMessageUseCase
-    let uploadChatFilesUseCase: UploadChatFilesUseCase
+    let repository: OrderRepository
+    let createOrderUseCase: CreateOrderUseCase
+    let fetchOrderUseCase: FetchOrdersUseCase
+    let updateOrderStatus: UpdateOrderStatusUseCase
 
     public init() {
-        self.repository = DefaultChatRepositoryImpl()
-        self.fetchChatListUseCase = FetchChatListUseCaseImpl(chatRepository: repository)
-        self.fetchChatRoomUseCase = FetchChatRoomUseCaseImpl(chatRepository: repository)
-        self.fetchChatRoomListUseCase = FetchChatRoomListUseCaseImpl(chatRepository: repository)
-        self.sendMessageUseCase = SendMessageUseCaseImpl(chatRepository: repository)
-        self.uploadChatFilesUseCase = UploadChatFilesUseCaseImpl(chatRepository: repository)
+        self.repository = DefaultOrderRepositoryImpl()
+        self.createOrderUseCase = CreateOrderUseCaseImpl(orderRepository: repository)
+        self.fetchOrderUseCase = FetchOrdersUseCaseImpl(orderRepository: repository)
+        self.updateOrderStatus = UpdateOrderStatusUseCaseImpl(orderRepository: repository)
     }
     
     public var body: some View {
@@ -29,13 +25,7 @@ public struct ContentView: View {
             Button {
                 Task {
                     do {
-                        let data = UIImage(systemName: "star")?.jpegData(compressionQuality: 0.8)
-                        guard let data else { return }
-                        let response = try await uploadChatFilesUseCase.execute(roomId: "694256de0d0a7a65b929e3db", files: [
-                            (data, .jpeg)
-                        ]) { progress in
-                            print(progress)
-                        }
+                        let response = try await updateOrderStatus.execute(code: "LBAI688545", status: .inProgress)
                         print(response)
                     } catch {
                         print("error: \(error.localizedDescription)")
