@@ -4,37 +4,20 @@ import Domain
 import Core
 
 public struct ContentView: View {
-    let postRepository: PostRepository
-    let uploadFilesUseCase: UploadFilesUseCase
-    let createPostUseCase: CreatePostUseCase
-    let fetchPostsUseCase: FetchPostsUseCase
-    let searchPostsUseCase: SearchPostsUseCase
-    let fetchPostDetailUseCase: FetchPostDetailUseCase
-    let editPostUseCase: EditPostUseCase
-    let deletePostUseCase: DeletePostUseCase
-    let likePostUseCase: LikePostUseCase
-    let fetchUserPostsUseCase: FetchUserPostsUseCase
-    let fetchMyLikedPostsUseCase: FetchMyLikedPostsUseCase
-    let createCommentUseCase: CreateCommentUseCase
-    let editCommentUseCase: EditCommentUseCase
-    let deleteCommentUseCase: DeleteCommentUseCase
+    let repository: ChatRepository
+    let fetchChatListUseCase: FetchChatListUseCase
+    let fetchChatRoomUseCase: FetchChatRoomUseCase
+    let fetchChatRoomListUseCase: FetchChatRoomListUseCase
+    let sendMessageUseCase: SendMessageUseCase
+    let uploadChatFilesUseCase: UploadChatFilesUseCase
 
     public init() {
-        let postRepository = DefaultPostRepositoryImpl()
-        self.postRepository = postRepository
-        self.uploadFilesUseCase = UploadFilesUseCaseImpl(postRepository: postRepository)
-        self.createPostUseCase = CreatePostUseCaseImpl(postRepository: postRepository)
-        self.fetchPostsUseCase = FetchPostsUseCaseImpl(postRepository: postRepository)
-        self.searchPostsUseCase = SearchPostsUseCaseImpl(postRepository: postRepository)
-        self.fetchPostDetailUseCase = FetchPostDetailUseCaseImpl(postRepository: postRepository)
-        self.editPostUseCase = EditPostUseCaseImpl(postRepository: postRepository)
-        self.deletePostUseCase = DeletePostUseCaseImpl(postRepository: postRepository)
-        self.likePostUseCase = LikePostUseCaseImpl(postRepository: postRepository)
-        self.fetchUserPostsUseCase = FetchUserPostsUseCaseImpl(postRepository: postRepository)
-        self.fetchMyLikedPostsUseCase = FetchMyLikedPostsUseCaseImpl(postRepository: postRepository)
-        self.createCommentUseCase = CreateCommentUseCaseImpl(postRepository: postRepository)
-        self.editCommentUseCase = EditCommentUseCaseImpl(postRepository: postRepository)
-        self.deleteCommentUseCase = DeleteCommentUseCaseImpl(postRepository: postRepository)
+        self.repository = DefaultChatRepositoryImpl()
+        self.fetchChatListUseCase = FetchChatListUseCaseImpl(chatRepository: repository)
+        self.fetchChatRoomUseCase = FetchChatRoomUseCaseImpl(chatRepository: repository)
+        self.fetchChatRoomListUseCase = FetchChatRoomListUseCaseImpl(chatRepository: repository)
+        self.sendMessageUseCase = SendMessageUseCaseImpl(chatRepository: repository)
+        self.uploadChatFilesUseCase = UploadChatFilesUseCaseImpl(chatRepository: repository)
     }
     
     public var body: some View {
@@ -46,7 +29,13 @@ public struct ContentView: View {
             Button {
                 Task {
                     do {
-                        let response = try await deleteCommentUseCase.execute(postId: "69418edc41c87a75edccc2e6", commentId: "694240a50d0a7a65b929e2b4")
+                        let data = UIImage(systemName: "star")?.jpegData(compressionQuality: 0.8)
+                        guard let data else { return }
+                        let response = try await uploadChatFilesUseCase.execute(roomId: "694256de0d0a7a65b929e3db", files: [
+                            (data, .jpeg)
+                        ]) { progress in
+                            print(progress)
+                        }
                         print(response)
                     } catch {
                         print("error: \(error.localizedDescription)")

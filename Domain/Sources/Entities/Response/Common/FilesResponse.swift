@@ -1,11 +1,11 @@
 //
-//  PostFilesResponse.swift
+//  FilesResponse.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/17/25.
 //
 
-public struct PostFilesResponse {
+public struct FilesResponse {
     public let files: [String]
     
     public init(files: [String]) {

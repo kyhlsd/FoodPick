@@ -18,7 +18,7 @@ public final class DefaultPostRepositoryImpl: PostRepository, @unchecked Sendabl
     public func uploadFiles(datas: [(Data, MediaType)], onProgress: (@Sendable (Double) -> Void)?) async throws -> [String] {
         guard let response = try await networkManager.request(
             PostRouter.files(datas: datas),
-            responseType: PostFilesResponseDTO.self,
+            responseType: FilesResponseDTO.self,
             onProgress: onProgress
         ) else {
             throw APIError.empty

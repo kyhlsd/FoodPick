@@ -18,6 +18,8 @@ public enum MediaType: Sendable {
     case mkv
     case wmv
 
+    case pdf
+
     public var mimeType: String {
         switch self {
         case .jpg, .jpeg:
@@ -38,6 +40,8 @@ public enum MediaType: Sendable {
             return "video/x-matroska"
         case .wmv:
             return "video/x-ms-wmv"
+        case .pdf:
+            return "application/pdf"
         }
     }
 
@@ -63,6 +67,8 @@ public enum MediaType: Sendable {
             return "mkv"
         case .wmv:
             return "wmv"
+        case .pdf:
+            return "pdf"
         }
     }
 
@@ -70,12 +76,24 @@ public enum MediaType: Sendable {
         switch self {
         case .jpg, .jpeg, .png, .gif, .webp:
             return true
-        case .mp4, .mov, .avi, .mkv, .wmv:
+        case .mp4, .mov, .avi, .mkv, .wmv, .pdf:
             return false
         }
     }
 
     public var isVideo: Bool {
-        return !isImage
+        switch self {
+        case .mp4, .mov, .avi, .mkv, .wmv:
+            return true
+        case .jpg, .jpeg, .png, .gif, .webp, .pdf:
+            return false
+        }
+    }
+
+    public var isPDF: Bool {
+        if case .pdf = self {
+            return true
+        }
+        return false
     }
 }
