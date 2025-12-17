@@ -14,6 +14,7 @@ public final class DefaultPostRepositoryImpl: PostRepository, @unchecked Sendabl
 
     public init() {}
 
+    // MARK: - Post
     public func uploadFiles(datas: [(Data, MediaType)], onProgress: (@Sendable (Double) -> Void)?) async throws -> [String] {
         guard let response = try await networkManager.request(
             PostRouter.files(datas: datas),
@@ -36,7 +37,7 @@ public final class DefaultPostRepositoryImpl: PostRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func fetchPosts(request: ByLocationRequest) async throws -> ResponseListWithCursor<Post> {
+    public func fetchPosts(request: PostByLocationRequest) async throws -> ResponseListWithCursor<Post> {
         let dto = ByLocationRequestDTO(from: request)
         guard let response = try await networkManager.request(
             PostRouter.posts(dto: dto),
@@ -112,5 +113,30 @@ public final class DefaultPostRepositoryImpl: PostRepository, @unchecked Sendabl
             throw APIError.empty
         }
         return response.toDomain
+    }
+
+    // MARK: - Comment
+    public func createComment(postId: String, parentId: String?, content: String) async throws -> Comment {
+        guard let response = try await networkManager.request(
+            PostRouter.createComment(postId: postId, parentId: parentId, content: content),
+            responseType: CommentDTO.self
+        ) else {
+            throw APIError.empty
+        }
+        return response.toDomain
+    }
+
+    public func editComment(postId: String, commentId: String, content: String) async throws -> Comment {
+        guard let response = try await networkManager.request(
+            PostRouter.editComment(postId: postId, commentId: commentId, content: content),
+            responseType: CommentDTO.self
+        ) else {
+            throw APIError.empty
+        }
+        return response.toDomain
+    }
+
+    public func deleteComment(postId: String, commentId: String) async throws {
+        try await networkManager.request(PostRouter.deleteComment(postId: postId, commentId: commentId))
     }
 }

@@ -12,27 +12,13 @@ public struct Comment {
     public let content: String
     public let createdAt: Date
     public let creator: Profile
-    public let replies: [Reply]
+    public let replies: [Comment]?
     
-    public init(commentId: String, content: String, createdAt: Date, creator: Profile, replies: [Reply]) {
+    public init(commentId: String, content: String, createdAt: Date, creator: Profile, replies: [Comment]?) {
         self.commentId = commentId
         self.content = content
         self.createdAt = createdAt
         self.creator = creator
         self.replies = replies
-    }
-}
-
-public struct Reply {
-    public let commentId: String
-    public let content: String
-    public let createdAt: Date
-    public let creator: Profile
-    
-    public init(commentId: String, content: String, createdAt: Date, creator: Profile) {
-        self.commentId = commentId
-        self.content = content
-        self.createdAt = createdAt
-        self.creator = creator
     }
 }

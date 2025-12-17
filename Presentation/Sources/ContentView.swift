@@ -15,6 +15,9 @@ public struct ContentView: View {
     let likePostUseCase: LikePostUseCase
     let fetchUserPostsUseCase: FetchUserPostsUseCase
     let fetchMyLikedPostsUseCase: FetchMyLikedPostsUseCase
+    let createCommentUseCase: CreateCommentUseCase
+    let editCommentUseCase: EditCommentUseCase
+    let deleteCommentUseCase: DeleteCommentUseCase
 
     public init() {
         let postRepository = DefaultPostRepositoryImpl()
@@ -29,6 +32,9 @@ public struct ContentView: View {
         self.likePostUseCase = LikePostUseCaseImpl(postRepository: postRepository)
         self.fetchUserPostsUseCase = FetchUserPostsUseCaseImpl(postRepository: postRepository)
         self.fetchMyLikedPostsUseCase = FetchMyLikedPostsUseCaseImpl(postRepository: postRepository)
+        self.createCommentUseCase = CreateCommentUseCaseImpl(postRepository: postRepository)
+        self.editCommentUseCase = EditCommentUseCaseImpl(postRepository: postRepository)
+        self.deleteCommentUseCase = DeleteCommentUseCaseImpl(postRepository: postRepository)
     }
     
     public var body: some View {
@@ -40,13 +46,7 @@ public struct ContentView: View {
             Button {
                 Task {
                     do {
-                        let data = UIImage(systemName: "star")?.jpegData(compressionQuality: 0.8)
-                        guard let data else { return }
-                        let response = try await uploadFilesUseCase.execute(datas: [
-                            (data, .jpeg)
-                        ]) { progress in
-                            print(progress)
-                        }
+                        let response = try await deleteCommentUseCase.execute(postId: "69418edc41c87a75edccc2e6", commentId: "694240a50d0a7a65b929e2b4")
                         print(response)
                     } catch {
                         print("error: \(error.localizedDescription)")

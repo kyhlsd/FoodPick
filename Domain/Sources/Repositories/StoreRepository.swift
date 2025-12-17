@@ -6,7 +6,7 @@
 //
 
 public protocol StoreRepository {
-    func fetchStores(request: ByLocationRequest) async throws -> ResponseListWithCursor<Store>
+    func fetchStores(request: StoreByLocationRequest) async throws -> ResponseListWithCursor<Store>
     func fetchStoreInfo(id: String) async throws -> StoreDetail
     func toggleStoreLike(id: String, like: Bool) async throws -> LikeStatus
     func searchStores(name: String) async throws -> [Store]

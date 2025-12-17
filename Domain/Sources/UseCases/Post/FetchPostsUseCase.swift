@@ -6,7 +6,7 @@
 //
 
 public protocol FetchPostsUseCase: Sendable {
-    func execute(request: ByLocationRequest) async throws -> ResponseListWithCursor<Post>
+    func execute(request: StoreByLocationRequest) async throws -> ResponseListWithCursor<Post>
 }
 
 public final class FetchPostsUseCaseImpl: FetchPostsUseCase, @unchecked Sendable {
@@ -16,7 +16,7 @@ public final class FetchPostsUseCaseImpl: FetchPostsUseCase, @unchecked Sendable
         self.postRepository = postRepository
     }
 
-    public func execute(request: ByLocationRequest) async throws -> ResponseListWithCursor<Post> {
+    public func execute(request: StoreByLocationRequest) async throws -> ResponseListWithCursor<Post> {
         return try await postRepository.fetchPosts(request: request)
     }
 }

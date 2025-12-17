@@ -20,18 +20,23 @@ enum PostRouter {
     case like(id: String, like: Bool)
     case userPosts(id: String, dto: BasicRequestDTO)
     case myLikes(dto: BasicRequestDTO)
+
+    // Comment
+    case createComment(postId: String, parentId: String?, content: String)
+    case editComment(postId: String, commentId: String, content: String)
+    case deleteComment(postId: String, commentId: String)
 }
 
 extension PostRouter: Router {
     var method: HTTPMethod {
         switch self {
-        case .files, .create, .like:
+        case .files, .create, .like, .createComment:
             return .post
         case .posts, .search, .detail, .userPosts, .myLikes:
             return .get
-        case .edit:
+        case .edit, .editComment:
             return .put
-        case .delete:
+        case .delete, .deleteComment:
             return .delete
         }
     }
@@ -55,12 +60,16 @@ extension PostRouter: Router {
             return base + "/users/\(id)"
         case .myLikes:
             return base + "/likes/me"
+        case .createComment(let postId, _, _):
+            return base + "/\(postId)/comments"
+        case .editComment(let postId, let commentId, _), .deleteComment(let postId, let commentId):
+            return base + "/\(postId)/comments/\(commentId)"
         }
     }
     
     var body: RequestBody {
         switch self {
-        case .files, .posts, .search, .detail, .delete, .userPosts, .myLikes:
+        case .files, .posts, .search, .detail, .delete, .userPosts, .myLikes, .deleteComment:
             return .none
         case .create(let dto):
             return .encodable(dto)
@@ -68,12 +77,23 @@ extension PostRouter: Router {
             return .encodable(dto)
         case .like(_, let like):
             return .plain(["like_status": like])
+        case .createComment(_, let parentId, let content):
+            if let parentId {
+                return .plain([
+                    "parent_comment_id": parentId,
+                    "content": content
+                ])
+            } else {
+                return .plain(["content": content])
+            }
+        case .editComment(_, _, let content):
+            return .plain(["content": content])
         }
     }
     
     var queryItems: [URLQueryItem] {
         switch self {
-        case .files, .create, .detail, .edit, .delete, .like:
+        case .files, .create, .detail, .edit, .delete, .like, .createComment, .editComment, .deleteComment:
             return []
         case .posts(let dto):
             return dto.toQueryItems

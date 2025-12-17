@@ -12,7 +12,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
 
     public init() {}
 
-    public func fetchStores(request: ByLocationRequest) async throws -> ResponseListWithCursor<Store> {
+    public func fetchStores(request: StoreByLocationRequest) async throws -> ResponseListWithCursor<Store> {
         let dto = ByLocationRequestDTO(from: request)
         guard let response = try await networkManager.request(
             StoreRouter.stores(dto: dto),
