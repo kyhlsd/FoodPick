@@ -9,7 +9,7 @@ import Foundation
 import Core
 
 public protocol UploadProfileImageUseCase: Sendable {
-    func execute(imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse
+    func execute(imageData: Data, imageType: BasicImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse
 }
 
 public final class UploadProfileImageUseCaseImpl: UploadProfileImageUseCase, @unchecked Sendable {
@@ -19,7 +19,7 @@ public final class UploadProfileImageUseCaseImpl: UploadProfileImageUseCase, @un
         self.userRepository = userRepository
     }
 
-    public func execute(imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse {
+    public func execute(imageData: Data, imageType: BasicImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse {
         return try await userRepository.uploadProfileImage(imageData, imageType: imageType, onProgress: onProgress)
     }
 }

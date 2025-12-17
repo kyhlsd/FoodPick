@@ -14,7 +14,7 @@ struct PostDetailDTO: ResponseDTO {
     private let category: String
     private let title: String
     private let content: String
-    private let store: StoreForPostDTO
+    private let store: StoreDTO
     private let geolocation: GeolocationDTO
     private let creator: ProfileDTO
     private let files: [String]
@@ -46,7 +46,7 @@ struct PostDetailDTO: ResponseDTO {
         self.category = try container.decode(String.self, forKey: .category)
         self.title = try container.decode(String.self, forKey: .title)
         self.content = try container.decode(String.self, forKey: .content)
-        self.store = try container.decode(StoreForPostDTO.self, forKey: .store)
+        self.store = try container.decode(StoreDTO.self, forKey: .store)
         self.geolocation = try container.decode(GeolocationDTO.self, forKey: .geolocation)
         self.creator = try container.decode(ProfileDTO.self, forKey: .creator)
         self.files = try container.decode([String].self, forKey: .files)

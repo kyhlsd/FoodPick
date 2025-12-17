@@ -94,7 +94,7 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func uploadProfileImage(_ imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> ProfileImageResponse {
+    public func uploadProfileImage(_ imageData: Data, imageType: BasicImageType, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> ProfileImageResponse {
         guard let response = try await networkManager.request(
             UserRouter.profileImage(data: imageData, mediaType: imageType.toMediaType),
             responseType: ProfileImageResponseDTO.self,

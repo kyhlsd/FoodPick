@@ -18,6 +18,6 @@ public protocol UserRepository {
     func updateDeviceToken() async throws
     func fetchMyProfile() async throws -> MyProfile
     func updateMyProfile(_ request: ProfileRequest) async throws -> MyProfile
-    func uploadProfileImage(_ imageData: Data, imageType: ProfileImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse
+    func uploadProfileImage(_ imageData: Data, imageType: BasicImageType, onProgress: (@Sendable (Double) -> Void)?) async throws -> ProfileImageResponse
     func searchUsers(nickname: String) async throws -> [Profile]
 }

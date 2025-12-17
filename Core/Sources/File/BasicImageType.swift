@@ -1,11 +1,11 @@
 //
-//  ProfileImageType.swift
+//  BasicImageType.swift
 //  Core
 //
 //  Created by 김영훈 on 12/16/25.
 //
 
-public enum ProfileImageType: Sendable {
+public enum BasicImageType: Sendable {
     case jpg
     case jpeg
     case png

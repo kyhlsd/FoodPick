@@ -29,6 +29,7 @@ struct StoreDTO: ResponseDTO {
     
     enum CodingKeys: String, CodingKey {
         case storeId = "store_id"
+        case id
         case category
         case name
         case close
@@ -48,7 +49,8 @@ struct StoreDTO: ResponseDTO {
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.storeId = try container.decode(String.self, forKey: .storeId)
+        self.storeId = try container.decodeIfPresent(String.self, forKey: .storeId)
+            ?? container.decode(String.self, forKey: .id)
         self.category = try container.decode(String.self, forKey: .category)
         self.name = try container.decode(String.self, forKey: .name)
         self.close = try container.decode(String.self, forKey: .close)
