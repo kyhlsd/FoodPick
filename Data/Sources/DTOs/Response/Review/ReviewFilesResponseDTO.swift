@@ -21,7 +21,7 @@ struct ReviewFilesResponseDTO: ResponseDTO {
 }
 
 extension ReviewFilesResponseDTO {
-    var toDomain: ReviewFilesResponse {
-        return .init(reviewImageURLs: reviewImageURLs)
+    var toDomain: [String] {
+        return reviewImageURLs
     }
 }
