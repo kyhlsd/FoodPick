@@ -11,6 +11,7 @@ import ComposableArchitecture
 
 @Reducer
 public struct SignUpFeature: Sendable {
+    // MARK: - State
     @ObservableState
     public struct State {
         var email = ""
@@ -71,15 +72,12 @@ public struct SignUpFeature: Sendable {
             emailError != nil || isEmailDuplicate
         }
 
+        @Presents var alert: AlertState<SignUpFeature.Alert>?
+
         public init() {}
     }
 
-    @Dependency(\.signUpInputValidation) var validationUseCase
-    @Dependency(\.checkEmailDuplication) var checkEmailDuplicationUseCase
-    @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
-    @Dependency(\.join) var joinUseCase
-    @Dependency(\.saveTokens) var saveTokensUseCase
-
+    // MARK: - Action
     public enum Action {
         case emailChanged(String)
         case passwordChanged(String)
@@ -87,12 +85,16 @@ public struct SignUpFeature: Sendable {
         case nicknameChanged(String)
         case checkEmailButtonTapped
         case emailCheckCompleted(Bool)
+        case emailCheckFailed(Error)
         case signUpButtonTapped
         case signUpCompleted
+        case signUpFailed(Error)
+        case alert(PresentationAction<SignUpFeature.Alert>)
     }
 
     public init() {}
 
+    // MARK: - Body
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -188,14 +190,14 @@ public struct SignUpFeature: Sendable {
             case .checkEmailButtonTapped:
                 let email = state.email
                 state.isCheckingEmail = true
-                
+
                 // 이메일 중복 검증
                 return .run { send in
                     do {
                         try await checkEmailDuplicationUseCase.execute(email: email)
                         await send(.emailCheckCompleted(true))
                     } catch {
-                        await send(.emailCheckCompleted(false))
+                        await send(.emailCheckFailed(error))
                     }
                 }
 
@@ -205,12 +207,25 @@ public struct SignUpFeature: Sendable {
                 state.isCheckingEmail = false
                 return .none
 
+            case .emailCheckFailed(let error):
+                state.isCheckingEmail = false
+                state.alert = AlertState {
+                    TextState("이메일 중복 확인 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
             case .signUpButtonTapped:
                 let email = state.email
                 let password = state.password
                 let nickname = state.nickname
                 state.isSigningUp = true
-                
+
                 return .run { send in
                     do {
                         let deviceToken = try await getDeviceTokenUseCase.execute()
@@ -229,17 +244,43 @@ public struct SignUpFeature: Sendable {
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-                        
+
                         await send(.signUpCompleted)
                     } catch {
-                        await send(.signUpCompleted)
+                        await send(.signUpFailed(error))
                     }
                 }
             
             case .signUpCompleted:
                 state.isSigningUp = false
                 return .none
+
+            case .signUpFailed(let error):
+                state.isSigningUp = false
+                state.alert = AlertState {
+                    TextState("회원가입 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case .alert:
+                return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
     }
+    
+    // MARK: - Dependencies
+    @Dependency(\.signUpInputValidation) var validationUseCase
+    @Dependency(\.checkEmailDuplication) var checkEmailDuplicationUseCase
+    @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
+    @Dependency(\.join) var joinUseCase
+    @Dependency(\.saveTokens) var saveTokensUseCase
+    
+    public enum Alert {}
 }

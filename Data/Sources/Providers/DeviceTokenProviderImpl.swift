@@ -1,22 +1,22 @@
 //
-//  DeviceTokenProvider.swift
-//  Core
+//  DeviceTokenProviderImpl.swift
+//  Data
 //
 //  Created by 김영훈 on 12/19/25.
 //
 
 import UIKit
 import UserNotifications
+import Domain
 
-public actor DeviceTokenProvider {
-    public static let shared = DeviceTokenProvider()
+public actor DeviceTokenProviderImpl: DeviceTokenProvider {
+    public static let shared = DeviceTokenProviderImpl()
 
     private var deviceToken: String?
     private var continuation: CheckedContinuation<String, Error>?
 
     private init() {}
 
-    // 디바이스 토큰을 가져옵니다. 토큰이 없으면 푸시 권한을 요청하고 등록합니다.
     public func getDeviceToken() async throws -> String {
         // 이미 토큰이 있으면 반환
         if let token = deviceToken {
@@ -57,19 +57,5 @@ public actor DeviceTokenProvider {
     // 저장된 토큰을 반환
     public func getCurrentToken() -> String? {
         return deviceToken
-    }
-}
-
-public enum DeviceTokenError: LocalizedError {
-    case permissionDenied
-    case registrationFailed
-
-    public var errorDescription: String? {
-        switch self {
-        case .permissionDenied:
-            return "푸시 알림 권한이 거부되었습니다."
-        case .registrationFailed:
-            return "디바이스 토큰 등록에 실패했습니다."
-        }
     }
 }

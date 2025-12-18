@@ -8,7 +8,7 @@
 import Foundation
 import Core
 
-public protocol ReviewRepository {
+public protocol ReviewRepository: Sendable {
     func uploadFiles(storeId: String, files: [(Data, MediaType)]) async throws -> [String]
     func createReview(storeId: String, request: ReviewRequest) async throws -> ReviewResponse
     func fetchReviewList(storeId: String, request: ReviewPageRequest) async throws -> ResponseListWithCursor<ReviewForListResponse>

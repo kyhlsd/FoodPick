@@ -11,26 +11,26 @@ import ComposableArchitecture
 
 @Reducer
 public struct LoginFeature: Sendable {
+    // MARK: - State
     @ObservableState
     public struct State {
         var email = ""
         var password = ""
-        
+
         var isLoggingIn = false
 
         var isLoginEnabled: Bool {
             !email.isEmpty && !password.isEmpty
         }
-        
+
         @Presents var destination: Destination.State?
-        
+        @Presents var alert: AlertState<LoginFeature.Alert>?
+
         public init() {}
     }
 
-    @Dependency(\.login) var loginUseCase
-    @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
-    @Dependency(\.saveTokens) var saveTokensUseCase
-    
+
+    // MARK: - Action
     public enum Action {
         case emailChanged(String)
         case passwordChanged(String)
@@ -39,11 +39,14 @@ public struct LoginFeature: Sendable {
         case appleLoginButtonTapped
         case joinButtonTapped
         case loginCompleted
+        case loginFailed(Error)
         case destination(PresentationAction<Destination.Action>)
+        case alert(PresentationAction<LoginFeature.Alert>)
     }
 
     public init() {}
 
+    // MARK: - Body
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -63,19 +66,19 @@ public struct LoginFeature: Sendable {
                 return .run { send in
                     do {
                         let deviceToken = try await getDeviceTokenUseCase.execute()
-                        
+
                         let response = try await loginUseCase.execute(
                             type: .email(email: email, password: password, deviceToken: deviceToken)
                         )
-                        
+
                         try await saveTokensUseCase.execute(
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-                        
+
                         await send(.loginCompleted)
                     } catch {
-                        await send(.loginCompleted)
+                        await send(.loginFailed(error))
                     }
                 }
 
@@ -84,8 +87,27 @@ public struct LoginFeature: Sendable {
                 return .none
 
             case .appleLoginButtonTapped:
-                // TODO: 애플 로그인 로직 구현
-                return .none
+                state.isLoggingIn = true
+
+                return .run { send in
+                    do {
+                        let idToken = try await appleSignInUseCase.execute()
+                        let deviceToken = try await getDeviceTokenUseCase.execute()
+                        
+                        let response = try await loginUseCase.execute(
+                            type: .apple(idToken: idToken, deviceToken: deviceToken)
+                        )
+
+                        try await saveTokensUseCase.execute(
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken
+                        )
+
+                        await send(.loginCompleted)
+                    } catch {
+                        await send(.loginFailed(error))
+                    }
+                }
 
             case .joinButtonTapped:
                 state.destination = .signUp(SignUpFeature.State())
@@ -95,12 +117,37 @@ public struct LoginFeature: Sendable {
                 state.isLoggingIn = false
                 return .none
 
+            case .loginFailed(let error):
+                state.isLoggingIn = false
+                state.alert = AlertState {
+                    TextState("로그인 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
             case .destination:
+                return .none
+
+            case .alert:
                 return .none
             }
         }
         .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
     }
+    
+    // MARK: - Dependencies
+    @Dependency(\.login) var loginUseCase
+    @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
+    @Dependency(\.saveTokens) var saveTokensUseCase
+    @Dependency(\.appleSignIn) var appleSignInUseCase
+    
+    public enum Alert {}
 }
 
 // MARK: - Destinations

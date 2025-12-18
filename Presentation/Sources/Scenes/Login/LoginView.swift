@@ -48,7 +48,7 @@ public struct LoginView: View {
                     PrimaryButton(
                         title: "로그인",
                         isEnabled: store.isLoginEnabled,
-                        isLoading: false
+                        isLoading: store.isLoggingIn
                     ) {
                         store.send(.loginButtonTapped)
                     }
@@ -68,10 +68,11 @@ public struct LoginView: View {
                     
                     // 소셜 로그인 버튼
                     HStack(spacing: AppPadding.xLarge.value) {
-                        KakaoLoginButton {
+                        KakaoLoginButton(isLoading: store.isLoggingIn) {
                             store.send(.kakaoLoginButtonTapped)
                         }
-                        AppleLoginButton { store.send(.appleLoginButtonTapped)
+                        AppleLoginButton(isLoading: store.isLoggingIn) {
+                            store.send(.appleLoginButtonTapped)
                         }
                     }
                     
@@ -91,6 +92,7 @@ public struct LoginView: View {
             ) { signUpStore in
                 SignUpView(store: signUpStore)
             }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
 }
@@ -104,6 +106,7 @@ private struct TitleView: View {
 }
 
 private struct KakaoLoginButton: View {
+    let isLoading: Bool
     let action: () -> Void
 
     var body: some View {
@@ -112,15 +115,25 @@ private struct KakaoLoginButton: View {
                 .fill(Color(hex: "#FEE500"))
                 .frame(width: 60, height: 60)
                 .overlay(
-                    AppIcon.kakao
-                        .resizable()
-                        .font(.custom(.pretendard(.title1)))
+                    Group {
+                        if isLoading {
+                            ProgressView()
+                                .tint(.black)
+                        } else {
+                            AppIcon.kakao
+                                .resizable()
+                                .font(.custom(.pretendard(.title1)))
+                        }
+                    }
                 )
         }
+        .disabled(isLoading)
+        .opacity(isLoading ? 0.6 : 1.0)
     }
 }
 
 private struct AppleLoginButton: View {
+    let isLoading: Bool
     let action: () -> Void
 
     var body: some View {
@@ -129,11 +142,20 @@ private struct AppleLoginButton: View {
                 .fill(Color.custom(.gray(.gray100)))
                 .frame(width: 60, height: 60)
                 .overlay(
-                    Image(systemName: "apple.logo")
-                        .font(.system(size: 24))
-                        .foregroundStyle(.custom(.gray(.gray0)))
+                    Group {
+                        if isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 24))
+                                .foregroundStyle(.custom(.gray(.gray0)))
+                        }
+                    }
                 )
         }
+        .disabled(isLoading)
+        .opacity(isLoading ? 0.6 : 1.0)
     }
 }
 

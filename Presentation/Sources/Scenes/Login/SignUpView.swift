@@ -95,6 +95,7 @@ public struct SignUpView: View {
             .navigationTitle("회원가입")
             .navigationBarTitleDisplayMode(.inline)
             .hideKeyboardOnTap()
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
 }

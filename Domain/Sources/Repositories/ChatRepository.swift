@@ -8,7 +8,7 @@
 import Foundation
 import Core
 
-public protocol ChatRepository {
+public protocol ChatRepository: Sendable {
     func fetchChatRoom(opponentId: String) async throws -> ChatRoom
     func fetchChatRoomList() async throws -> [ChatRoom]
     func sendMessage(roomId: String, content: String, files: [String]) async throws -> Chat

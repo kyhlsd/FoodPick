@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol OrderRepository {
+public protocol OrderRepository: Sendable {
     func createOrder(request: OrderRequest) async throws -> OrderResponse
     func fetchOrders() async throws -> [Order]
     func updateOrderStatus(code: String, status: OrderStatus) async throws

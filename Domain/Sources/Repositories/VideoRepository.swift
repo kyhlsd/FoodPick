@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol VideoRepository {
+public protocol VideoRepository: Sendable {
     func fetchVideoList(request: VideoPageRequest) async throws -> VideoListResponse
     func fetchVideoStream(id: String) async throws -> StreamResponse
     func likeVideo(id: String, like: Bool) async throws -> LikeStatus

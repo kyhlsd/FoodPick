@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Core
 
 public protocol GetDeviceTokenUseCase: Sendable {
     func execute() async throws -> String
@@ -15,7 +14,7 @@ public protocol GetDeviceTokenUseCase: Sendable {
 public final class GetDeviceTokenUseCaseImpl: GetDeviceTokenUseCase {
     private let deviceTokenProvider: DeviceTokenProvider
 
-    public init(deviceTokenProvider: DeviceTokenProvider = .shared) {
+    public init(deviceTokenProvider: DeviceTokenProvider) {
         self.deviceTokenProvider = deviceTokenProvider
     }
 

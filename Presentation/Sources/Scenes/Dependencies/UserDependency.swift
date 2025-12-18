@@ -10,18 +10,29 @@ import Data
 import ComposableArchitecture
 
 extension DependencyValues {
-    
+
     // MARK: - Repository
     var userRepository: UserRepository {
         get { self[UserRepositoryKey.self] }
         set { self[UserRepositoryKey.self] = newValue }
     }
-    
+
     var tokenRepository: TokenRepository {
         get { self[TokenRepositoryKey.self] }
         set { self[TokenRepositoryKey.self] = newValue }
     }
-    
+
+    // MARK: - Providers
+    var appleSignInProvider: AppleSignInProvider {
+        get { self[AppleSignInProviderKey.self] }
+        set { self[AppleSignInProviderKey.self] = newValue }
+    }
+
+    var deviceTokenProvider: DeviceTokenProvider {
+        get { self[DeviceTokenProviderKey.self] }
+        set { self[DeviceTokenProviderKey.self] = newValue }
+    }
+
     // MARK: - UseCases
     var checkEmailDuplication: CheckEmailDuplicationUseCase {
         get { self[CheckEmailDuplicationKey.self] }
@@ -82,6 +93,11 @@ extension DependencyValues {
         get { self[SaveTokensKey.self] }
         set { self[SaveTokensKey.self] = newValue }
     }
+
+    var appleSignIn: AppleSignInUseCase {
+        get { self[AppleSignInKey.self] }
+        set { self[AppleSignInKey.self] = newValue }
+    }
 }
 
 // MARK: - Keys
@@ -91,6 +107,14 @@ private enum UserRepositoryKey: DependencyKey {
 
 private enum TokenRepositoryKey: DependencyKey {
     static let liveValue: TokenRepository = DefaultTokenRepositoryImpl()
+}
+
+private enum AppleSignInProviderKey: DependencyKey {
+    static let liveValue: AppleSignInProvider = AppleSignInProviderImpl.shared
+}
+
+private enum DeviceTokenProviderKey: DependencyKey {
+    static let liveValue: DeviceTokenProvider = DeviceTokenProviderImpl.shared
 }
 
 private enum CheckEmailDuplicationKey: DependencyKey {
@@ -157,7 +181,10 @@ private enum UpdateDeviceTokenKey: DependencyKey {
 }
 
 private enum GetDeviceTokenKey: DependencyKey {
-    static let liveValue: GetDeviceTokenUseCase = GetDeviceTokenUseCaseImpl()
+    static let liveValue: GetDeviceTokenUseCase = {
+        @Dependency(\.deviceTokenProvider) var deviceTokenProvider
+        return GetDeviceTokenUseCaseImpl(deviceTokenProvider: deviceTokenProvider)
+    }()
 }
 
 private enum SignUpInputValidationKey: DependencyKey {
@@ -168,5 +195,12 @@ private enum SaveTokensKey: DependencyKey {
     static let liveValue: SaveTokensUseCase = {
         @Dependency(\.tokenRepository) var tokenRepository
         return SaveTokensUseCaseImpl(tokenRepository: tokenRepository)
+    }()
+}
+
+private enum AppleSignInKey: DependencyKey {
+    static let liveValue: AppleSignInUseCase = {
+        @Dependency(\.appleSignInProvider) var appleSignInProvider
+        return AppleSignInUseCaseImpl(appleSignInProvider: appleSignInProvider)
     }()
 }

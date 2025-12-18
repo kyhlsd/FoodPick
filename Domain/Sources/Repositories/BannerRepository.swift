@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol BannerRepository {
+public protocol BannerRepository: Sendable {
     func fetchMainBanners() async throws -> [Banner]
 }

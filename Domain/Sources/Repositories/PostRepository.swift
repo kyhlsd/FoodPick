@@ -8,7 +8,7 @@
 import Foundation
 import Core
 
-public protocol PostRepository {
+public protocol PostRepository: Sendable {
     // Post
     func uploadFiles(datas: [(Data, MediaType)], onProgress: (@Sendable (Double) -> Void)?) async throws -> [String]
     func createPost(request: CreatePostRequest) async throws -> PostDetail

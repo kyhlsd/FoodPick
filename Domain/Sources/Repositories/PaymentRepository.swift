@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol PaymentRepository {
+public protocol PaymentRepository: Sendable {
     func validatePayment(impUid: String) async throws -> ValidatePaymentResponse
     func fetchReceipt(orderCode: String) async throws -> Receipt
 }

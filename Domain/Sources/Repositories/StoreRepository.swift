@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/16/25.
 //
 
-public protocol StoreRepository {
+public protocol StoreRepository: Sendable {
     func fetchStores(request: StoreByLocationRequest) async throws -> ResponseListWithCursor<Store>
     func fetchStoreInfo(id: String) async throws -> StoreDetail
     func toggleStoreLike(id: String, like: Bool) async throws -> LikeStatus

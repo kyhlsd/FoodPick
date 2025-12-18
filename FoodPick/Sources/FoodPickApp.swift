@@ -1,7 +1,7 @@
 import SwiftUI
 import Presentation
 import ComposableArchitecture
-import Core
+import Data
 
 @main
 struct FoodPickApp: App {
@@ -32,7 +32,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) {
         let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         Task {
-            await DeviceTokenProvider.shared.setDeviceToken(tokenString)
+            await DeviceTokenProviderImpl.shared.setDeviceToken(tokenString)
         }
     }
 
@@ -41,7 +41,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         Task {
-            await DeviceTokenProvider.shared.setDeviceTokenError(error)
+            await DeviceTokenProviderImpl.shared.setDeviceTokenError(error)
         }
     }
 }
