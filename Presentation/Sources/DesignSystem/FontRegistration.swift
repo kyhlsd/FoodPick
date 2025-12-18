@@ -16,7 +16,11 @@ public class FontRegistration {
         guard !isRegistered else { return }
 
         let fonts = [
-            ("PretendardVariable", "ttf"),
+            // Pretendard Static Fonts
+            ("Pretendard-Regular", "otf"),
+            ("Pretendard-Medium", "otf"),
+            ("Pretendard-Bold", "otf"),
+            // Jalnan Gothic
             ("JalnanGothicTTF", "ttf")
         ]
 

@@ -10,7 +10,7 @@ import Alamofire
 import Core
 
 enum UserRouter {
-    case validate(email: String)
+    case checkEmailDuplication(email: String)
     case join(dto: JoinRequestDTO)
     case emailLogin(email: String, password: String)
     case kakaoLogin(oauthToken: String)
@@ -25,7 +25,7 @@ enum UserRouter {
 extension UserRouter: Router {
     var method: HTTPMethod {
         switch self {
-        case .validate, .join, .emailLogin, .kakaoLogin, .appleLogin, .logout, .profileImage:
+        case .checkEmailDuplication, .join, .emailLogin, .kakaoLogin, .appleLogin, .logout, .profileImage:
             return .post
         case .deviceToken:
             return .put
@@ -39,7 +39,7 @@ extension UserRouter: Router {
     var path: String {
         let base = "/users"
         switch self {
-        case .validate:
+        case .checkEmailDuplication:
             return base + "/validation/email"
         case .join:
             return base + "/join"
@@ -65,7 +65,7 @@ extension UserRouter: Router {
     var body: RequestBody {
         let deviceToken = UserDefaultsManager.shared.deviceToken
         switch self {
-        case .validate(let email):
+        case .checkEmailDuplication(let email):
             return .plain(["email": email])
         case .join(let dto):
             return .encodable(dto)
@@ -109,7 +109,7 @@ extension UserRouter: Router {
     
     var headers: HTTPHeaders {
         switch self {
-        case .validate, .join, .emailLogin, .kakaoLogin, .appleLogin:
+        case .checkEmailDuplication, .join, .emailLogin, .kakaoLogin, .appleLogin:
             return HTTPHeader.asHTTPHeaders([.apiKey])
         case .logout, .deviceToken, .myProfile, .profileImage, .search:
             return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)

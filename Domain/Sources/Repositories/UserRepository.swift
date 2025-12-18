@@ -9,7 +9,7 @@ import Foundation
 import Core
 
 public protocol UserRepository {
-    func validateEmail(_ email: String) async throws
+    func checkEmailDuplication(_ email: String) async throws
     func join(_ request: JoinRequest) async throws -> LoginResponse
     func emailLogin(email: String, password: String) async throws -> LoginResponse
     func kakaoLogin(oauthToken: String) async throws -> LoginResponse

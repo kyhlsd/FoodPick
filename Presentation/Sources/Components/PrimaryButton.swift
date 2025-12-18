@@ -1,0 +1,65 @@
+//
+//  PrimaryButton.swift
+//  Presentation
+//
+//  Created by 김영훈 on 12/18/25.
+//
+
+import SwiftUI
+
+public struct PrimaryButton: View {
+    let title: String
+    let height: CGFloat
+    let isEnabled: Bool
+    let isLoading: Bool
+    let action: () -> Void
+
+    public init(
+        title: String,
+        height: CGFloat = 50,
+        isEnabled: Bool = true,
+        isLoading: Bool = false,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.height = height
+        self.isEnabled = isEnabled
+        self.isLoading = isLoading
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            ZStack {
+                Text(title)
+                    .font(.custom(.pretendard(.title1)))
+                    .foregroundStyle(.custom(.gray(.gray0)))
+                    .opacity(isLoading ? 0 : 1)
+
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .custom(.gray(.gray0))))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .background(isEnabled && !isLoading ?
+                        Color.custom(.brand(.blackSprout))
+                        : Color.custom(.brand(.deepSprout)))
+            .cornerRadius(10)
+        }
+        .disabled(!isEnabled || isLoading)
+        .padding(.vertical, .medium)
+    }
+}
+
+#Preview {
+    VStack(spacing: 20) {
+        PrimaryButton(title: "로그인", isEnabled: true, isLoading: false) {}
+
+        PrimaryButton(title: "로그인", isEnabled: false, isLoading: false) {}
+
+        PrimaryButton(title: "로그인", isEnabled: true, isLoading: true) {}
+    }
+    .padding()
+}

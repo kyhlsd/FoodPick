@@ -25,19 +25,18 @@ enum AppFont {
 
 extension AppFont.Family {
     var font: Font {
-        let pretendard = "Pretendard Variable"
         let jalnanGothic = "JalnanGothicTTF"
 
         switch self {
         case .pretendard(let style):
             switch style {
-            case .title1: return Font.custom(pretendard, size: 20).weight(.bold)
-            case .body1: return Font.custom(pretendard, size: 16).weight(.medium)
-            case .body2: return Font.custom(pretendard, size: 14).weight(.medium)
-            case .body3: return Font.custom(pretendard, size: 13).weight(.medium)
-            case .caption1: return Font.custom(pretendard, size: 12).weight(.regular)
-            case .caption2: return Font.custom(pretendard, size: 10).weight(.regular)
-            case .caption3: return Font.custom(pretendard, size: 8).weight(.regular)
+            case .title1: return Font.custom("Pretendard-Bold", size: 20)
+            case .body1: return Font.custom("Pretendard-Medium", size: 16)
+            case .body2: return Font.custom("Pretendard-Medium", size: 14)
+            case .body3: return Font.custom("Pretendard-Medium", size: 13)
+            case .caption1: return Font.custom("Pretendard-Regular", size: 12)
+            case .caption2: return Font.custom("Pretendard-Regular", size: 10)
+            case .caption3: return Font.custom("Pretendard-Regular", size: 8)
             }
 
         case .jalnan(let style):

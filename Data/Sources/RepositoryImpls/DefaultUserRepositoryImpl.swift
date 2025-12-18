@@ -14,9 +14,9 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
 
     public init() {}
 
-    public func validateEmail(_ email: String) async throws {
+    public func checkEmailDuplication(_ email: String) async throws {
         try await networkManager.request(
-            UserRouter.validate(email: email)
+            UserRouter.checkEmailDuplication(email: email)
         )
     }
 

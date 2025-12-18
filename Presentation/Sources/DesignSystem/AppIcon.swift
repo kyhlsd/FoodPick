@@ -45,4 +45,7 @@ enum AppIcon {
     static let communityEmpty = Image("community_empty", bundle: .module).renderingMode(.template)
     static let profileFill = Image("profile_fill", bundle: .module).renderingMode(.template)
     static let profileEmpty = Image("profile_empty", bundle: .module).renderingMode(.template)
+ 
+    // etc.
+    static let kakao = Image("kakao", bundle: .module)
 }

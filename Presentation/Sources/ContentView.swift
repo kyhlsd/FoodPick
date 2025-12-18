@@ -16,6 +16,12 @@ public struct ContentView: View {
             Text("글씨 테스트")
                 .font(.custom(.jalnan(.title1)))
                 .padding(.vertical, .xLarge)
+            Text("글씨 테스트")
+                .font(.custom(.pretendard(.title1)))
+                .padding(.vertical, .xLarge)
+            Text("글씨 테스트")
+                .font(.system(size: 20))
+                .padding(.vertical, .xLarge)
             
             Button {
                 Task {

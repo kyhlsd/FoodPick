@@ -1,15 +1,15 @@
 //
-//  ValidateEmailUseCase.swift
+//  CheckEmailDuplicationUseCase.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
 //
 
-public protocol ValidateEmailUseCase: Sendable {
+public protocol CheckEmailDuplicationUseCase: Sendable {
     func execute(email: String) async throws
 }
 
-public final class ValidateEmailUseCaseImpl: ValidateEmailUseCase, @unchecked Sendable {
+public final class CheckEmailDuplicationUseCaseImpl: CheckEmailDuplicationUseCase, @unchecked Sendable {
     private let userRepository: UserRepository
 
     public init(userRepository: UserRepository) {
@@ -17,6 +17,6 @@ public final class ValidateEmailUseCaseImpl: ValidateEmailUseCase, @unchecked Se
     }
 
     public func execute(email: String) async throws {
-        try await userRepository.validateEmail(email)
+        try await userRepository.checkEmailDuplication(email)
     }
 }
