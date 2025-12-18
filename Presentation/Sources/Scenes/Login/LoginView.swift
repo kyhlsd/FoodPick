@@ -82,8 +82,9 @@ public struct LoginView: View {
                     
                     Spacer()
                 }
+                .padding([.horizontal, .top], .xLarge)
             }
-            .padding([.horizontal, .top], .xLarge)
+            .scrollIndicators(.hidden)
             .hideKeyboardOnTap()
             .navigationDestination(
                 item: $store.scope(state: \.destination?.signUp, action: \.destination.signUp)

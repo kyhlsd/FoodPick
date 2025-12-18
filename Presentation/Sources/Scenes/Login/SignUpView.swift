@@ -91,6 +91,7 @@ public struct SignUpView: View {
                 }
                 .padding([.horizontal, .top], .xLarge)
             }
+            .scrollIndicators(.hidden)
             .navigationTitle("회원가입")
             .navigationBarTitleDisplayMode(.inline)
             .hideKeyboardOnTap()

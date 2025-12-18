@@ -6,9 +6,8 @@
 //
 
 import Foundation
-import ComposableArchitecture
 import Domain
-import Data
+import ComposableArchitecture
 
 @Reducer
 public struct SignUpFeature: Sendable {
@@ -78,7 +77,7 @@ public struct SignUpFeature: Sendable {
     @Dependency(\.signUpInputValidation) var validationUseCase
     @Dependency(\.checkEmailDuplication) var checkEmailDuplicationUseCase
     @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
-    @Dependency(\.joinUseCase) var joinUseCase
+    @Dependency(\.join) var joinUseCase
     @Dependency(\.saveTokens) var saveTokensUseCase
 
     public enum Action {
@@ -243,70 +242,4 @@ public struct SignUpFeature: Sendable {
             }
         }
     }
-}
-
-// MARK: - Dependency
-extension DependencyValues {
-    var userRepository: UserRepository {
-        get { self[UserRepositoryKey.self] }
-        set { self[UserRepositoryKey.self] = newValue }
-    }
-    
-    var signUpInputValidation: SignUpInputValidationUseCase {
-        get { self[SignUpInputValidationKey.self] }
-        set { self[SignUpInputValidationKey.self] = newValue }
-    }
-
-    var checkEmailDuplication: CheckEmailDuplicationUseCase {
-        get { self[CheckEmailDuplicationKey.self] }
-        set { self[CheckEmailDuplicationKey.self] = newValue }
-    }
-
-    var getDeviceToken: GetDeviceTokenUseCase {
-        get { self[GetDeviceTokenKey.self] }
-        set { self[GetDeviceTokenKey.self] = newValue }
-    }
-
-    var joinUseCase: JoinUseCase {
-        get { self[JoinUseCaseKey.self] }
-        set { self[JoinUseCaseKey.self] = newValue }
-    }
-
-    var saveTokens: SaveTokensUseCase {
-        get { self[SaveTokensKey.self] }
-        set { self[SaveTokensKey.self] = newValue }
-    }
-}
-
-private enum UserRepositoryKey: DependencyKey {
-    static let liveValue: UserRepository = DefaultUserRepositoryImpl()
-}
-
-private enum SignUpInputValidationKey: DependencyKey {
-    static let liveValue: SignUpInputValidationUseCase = SignUpInputValidationUseCaseImpl()
-}
-
-private enum CheckEmailDuplicationKey: DependencyKey {
-    static let liveValue: CheckEmailDuplicationUseCase = {
-        let userRepository = DefaultUserRepositoryImpl()
-        return CheckEmailDuplicationUseCaseImpl(userRepository: userRepository)
-    }()
-}
-
-private enum GetDeviceTokenKey: DependencyKey {
-    static let liveValue: GetDeviceTokenUseCase = GetDeviceTokenUseCaseImpl()
-}
-
-private enum JoinUseCaseKey: DependencyKey {
-    static let liveValue: JoinUseCase = {
-        let userRepository = DefaultUserRepositoryImpl()
-        return JoinUseCaseImpl(userRepository: userRepository)
-    }()
-}
-
-private enum SaveTokensKey: DependencyKey {
-    static let liveValue: SaveTokensUseCase = {
-        let tokenRepository = DefaultTokenRepositoryImpl()
-        return SaveTokensUseCaseImpl(tokenRepository: tokenRepository)
-    }()
 }

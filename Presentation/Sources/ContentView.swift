@@ -27,9 +27,9 @@ public struct ContentView: View {
                 Task {
                     do {
                         let response = try await useCase.execute()
-                        print(response)
+//                        print(response)
                     } catch {
-                        print("error: \(error.localizedDescription)")
+//                        print("error: \(error.localizedDescription)")
                     }
                 }
             } label: {
