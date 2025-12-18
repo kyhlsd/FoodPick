@@ -31,9 +31,9 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func emailLogin(email: String, password: String) async throws -> LoginResponse {
+    public func emailLogin(email: String, password: String, deviceToken: String) async throws -> LoginResponse {
         guard let response = try await networkManager.request(
-            UserRouter.emailLogin(email: email, password: password),
+            UserRouter.emailLogin(email: email, password: password, deviceToken: deviceToken),
             responseType: LoginResponseDTO.self) else {
             throw APIError.empty
         }
@@ -41,9 +41,9 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func kakaoLogin(oauthToken: String) async throws -> LoginResponse {
+    public func kakaoLogin(oauthToken: String, deviceToken: String) async throws -> LoginResponse {
         guard let response = try await networkManager.request(
-            UserRouter.kakaoLogin(oauthToken: oauthToken),
+            UserRouter.kakaoLogin(oauthToken: oauthToken, deviceToken: deviceToken),
             responseType: LoginResponseDTO.self) else {
             throw APIError.empty
         }
@@ -51,9 +51,9 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func appleLogin(idToken: String) async throws -> LoginResponse {
+    public func appleLogin(idToken: String, deviceToken: String) async throws -> LoginResponse {
         guard let response = try await networkManager.request(
-            UserRouter.appleLogin(idToken: idToken),
+            UserRouter.appleLogin(idToken: idToken, deviceToken: deviceToken),
             responseType: LoginResponseDTO.self) else {
             throw APIError.empty
         }
@@ -67,9 +67,9 @@ public final class DefaultUserRepositoryImpl: UserRepository, @unchecked Sendabl
         )
     }
 
-    public func updateDeviceToken() async throws {
+    public func updateDeviceToken(deviceToken: String) async throws {
         try await networkManager.request(
-            UserRouter.deviceToken
+            UserRouter.deviceToken(deviceToken: deviceToken)
         )
     }
 

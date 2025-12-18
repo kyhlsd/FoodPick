@@ -10,11 +10,13 @@ public struct JoinRequest {
     public let password: String
     public let nickname: String
     public let phoneNumber: String
+    public let deviceToken: String
     
-    public init(email: String, password: String, nickname: String, phoneNumber: String) {
+    public init(email: String, password: String, nickname: String, phoneNumber: String, deviceToken: String) {
         self.email = email
         self.password = password
         self.nickname = nickname
         self.phoneNumber = phoneNumber
+        self.deviceToken = deviceToken
     }
 }

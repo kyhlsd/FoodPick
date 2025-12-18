@@ -40,7 +40,7 @@ public struct SignUpView: View {
                                 PrimaryButton(title: "중복 확인",
                                               height: 46,
                                               isEnabled: store.isEmailCheckEnabled,
-                                              isLoading: false
+                                              isLoading: store.isCheckingEmail
                                 ) {
                                     store.send(.checkEmailButtonTapped)
                                 }
@@ -48,6 +48,15 @@ public struct SignUpView: View {
                             }
                         }
                     }
+
+                    // 닉네임 입력
+                    InputFieldWithMessageView(
+                        title: "닉네임",
+                        placeholder: "닉네임을 입력하세요",
+                        text: $store.nickname.sending(\.nicknameChanged),
+                        message: store.nicknameValidationMessage,
+                        isError: store.nicknameValidationMessage != nil
+                    )
 
                     // 비밀번호 입력
                     InputFieldWithMessageView(
@@ -73,7 +82,7 @@ public struct SignUpView: View {
                     PrimaryButton(
                         title: "회원가입",
                         isEnabled: store.isSignUpEnabled,
-                        isLoading: false
+                        isLoading: store.isSigningUp
                     ) {
                         store.send(.signUpButtonTapped)
                     }

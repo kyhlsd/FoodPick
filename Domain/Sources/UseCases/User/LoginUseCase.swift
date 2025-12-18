@@ -6,9 +6,9 @@
 //
 
 public enum LoginType: Sendable {
-    case email(email: String, password: String)
-    case kakao(oauthToken: String)
-    case apple(idToken: String)
+    case email(email: String, password: String, deviceToken: String)
+    case kakao(oauthToken: String, deviceToken: String)
+    case apple(idToken: String, deviceToken: String)
 }
 
 public protocol LoginUseCase: Sendable {
@@ -24,12 +24,12 @@ public final class LoginUseCaseImpl: LoginUseCase, @unchecked Sendable {
 
     public func execute(type: LoginType) async throws -> LoginResponse {
         switch type {
-        case .email(let email, let password):
-            return try await userRepository.emailLogin(email: email, password: password)
-        case .kakao(let oauthToken):
-            return try await userRepository.kakaoLogin(oauthToken: oauthToken)
-        case .apple(let idToken):
-            return try await userRepository.appleLogin(idToken: idToken)
+        case .email(let email, let password, let deviceToken):
+            return try await userRepository.emailLogin(email: email, password: password, deviceToken: deviceToken)
+        case .kakao(let oauthToken, let deviceToken):
+            return try await userRepository.kakaoLogin(oauthToken: oauthToken, deviceToken: deviceToken)
+        case .apple(let idToken, let deviceToken):
+            return try await userRepository.appleLogin(idToken: idToken, deviceToken: deviceToken)
         }
     }
 }

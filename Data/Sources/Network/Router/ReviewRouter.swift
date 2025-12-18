@@ -68,10 +68,6 @@ extension ReviewRouter: Router {
         }
     }
     
-    var headers: HTTPHeaders {
-        return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
-    }
-    
     var multipartFormData: ((Alamofire.MultipartFormData) -> Void)? {
         switch self {
         case .files(_, let files):

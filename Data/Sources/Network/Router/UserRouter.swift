@@ -12,11 +12,11 @@ import Core
 enum UserRouter {
     case checkEmailDuplication(email: String)
     case join(dto: JoinRequestDTO)
-    case emailLogin(email: String, password: String)
-    case kakaoLogin(oauthToken: String)
-    case appleLogin(idToken: String)
+    case emailLogin(email: String, password: String, deviceToken: String)
+    case kakaoLogin(oauthToken: String, deviceToken: String)
+    case appleLogin(idToken: String, deviceToken: String)
     case logout
-    case deviceToken
+    case deviceToken(deviceToken: String)
     case myProfile(dto: ProfileRequestDTO? = nil)
     case profileImage(data: Data, mediaType: MediaType)
     case search(nickname: String)
@@ -63,31 +63,30 @@ extension UserRouter: Router {
     }
     
     var body: RequestBody {
-        let deviceToken = UserDefaultsManager.shared.deviceToken
         switch self {
         case .checkEmailDuplication(let email):
             return .plain(["email": email])
         case .join(let dto):
             return .encodable(dto)
-        case .emailLogin(let email, let password):
+        case .emailLogin(let email, let password, let deviceToken):
             return .plain([
                 "email": email,
                 "password": password,
                 "deviceToken": deviceToken
             ])
-        case .kakaoLogin(let oauthToken):
+        case .kakaoLogin(let oauthToken, let deviceToken):
             return .plain([
                 "oauthToken": oauthToken,
                 "deviceToken": deviceToken
             ])
-        case .appleLogin(let idToken):
+        case .appleLogin(let idToken, let deviceToken):
             return .plain([
                 "idToken": idToken,
                 "deviceToken": deviceToken
             ])
         case .logout:
             return .none
-        case .deviceToken:
+        case .deviceToken(let deviceToken):
             return .plain(["deviceToken": deviceToken])
         case .myProfile(let dto):
             return dto == nil ? .none : .encodable(dto)
@@ -104,15 +103,6 @@ extension UserRouter: Router {
             return [URLQueryItem(name: "nick", value: nickname)]
         default:
             return []
-        }
-    }
-    
-    var headers: HTTPHeaders {
-        switch self {
-        case .checkEmailDuplication, .join, .emailLogin, .kakaoLogin, .appleLogin:
-            return HTTPHeader.asHTTPHeaders([.apiKey])
-        case .logout, .deviceToken, .myProfile, .profileImage, .search:
-            return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
         }
     }
     

@@ -36,6 +36,10 @@ extension Router {
         return "v1"
     }
     
+    var headers: HTTPHeaders {
+        return ["SeSACKey": APIInfos.key]
+    }
+    
     func asURLRequest() throws -> URLRequest {
         let url = try asURL()
         var urlRequest = try URLRequest(url: url, method: method, headers: headers)
@@ -58,37 +62,5 @@ extension Router {
         url = url.appending(path: "\(version)\(path)")
         url = url.appending(queryItems: queryItems)
         return url
-    }
-}
-
-enum HTTPHeader {
-    case apiKey
-    case authorization
-    case custom(key: String, value: String)
-    
-    var tuple: (key: String, value: String) {
-        switch self {
-        case .apiKey:
-            return ("SeSACKey", APIInfos.key)
-        case .authorization:
-            // TODO: Login 구현 후 토큰 관리
-            let token = APIInfos.accessToken
-            return ("Authorization", token)
-        case .custom(let key, let value):
-            return (key, value)
-        }
-    }
-    
-    static var basic: [Self] {
-        return [.apiKey, .authorization]
-    }
-    
-    static func asHTTPHeaders(_ list: [HTTPHeader]) -> HTTPHeaders {
-        var headers: HTTPHeaders = [:]
-        list.forEach {
-            let tuple = $0.tuple
-            headers.add(name: tuple.key, value: tuple.value)
-        }
-        return headers
     }
 }

@@ -30,10 +30,6 @@ extension AuthRouter: Router {
         return []
     }
     
-    var headers: HTTPHeaders {
-        return HTTPHeader.asHTTPHeaders([.custom(key: "RefreshToken", value: APIInfos.refreshToken)])
-    }
-    
     var multipartFormData: ((MultipartFormData) -> Void)? {
         return nil
     }

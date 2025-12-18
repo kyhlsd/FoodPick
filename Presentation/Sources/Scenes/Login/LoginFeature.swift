@@ -12,8 +12,8 @@ import ComposableArchitecture
 public struct LoginFeature {
     @ObservableState
     public struct State {
-        var email: String = ""
-        var password: String = ""
+        var email = ""
+        var password = ""
         @Presents var destination: Destination.State?
 
         var isLoginEnabled: Bool {

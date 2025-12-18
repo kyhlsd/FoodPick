@@ -7,10 +7,18 @@
 
 import Foundation
 import Alamofire
+import Domain
 
 final class NetworkManager: @unchecked Sendable {
     static let shared = NetworkManager()
-    private init() {}
+
+    private let session: Session
+
+    private init(tokenRepository: TokenRepository = DefaultTokenRepositoryImpl()) {
+        let interceptor = AuthInterceptor(tokenRepository: tokenRepository)
+
+        self.session = Session(interceptor: interceptor)
+    }
 
     // Void Response
     func request(
@@ -65,7 +73,7 @@ final class NetworkManager: @unchecked Sendable {
         var dataRequest: DataRequest?
 
         return try await withCheckedThrowingContinuation { continuation in
-            dataRequest = AF.request(router)
+            dataRequest = session.request(router)
                 .validate()
                 .responseDecodable(of: T.self) { [weak self] response in
                     guard let self else {
@@ -103,7 +111,7 @@ final class NetworkManager: @unchecked Sendable {
         var uploadRequest: UploadRequest?
 
         return try await withCheckedThrowingContinuation { continuation in
-            uploadRequest = AF.upload(
+            uploadRequest = session.upload(
                 multipartFormData: multipartFormData,
                 with: router
             )
@@ -145,7 +153,7 @@ final class NetworkManager: @unchecked Sendable {
         var dataRequest: DataRequest?
 
         return try await withCheckedThrowingContinuation { continuation in
-            dataRequest = AF.request(router)
+            dataRequest = session.request(router)
                 .validate()
                 .response { [weak self] response in
                     guard let self else {
@@ -180,7 +188,7 @@ final class NetworkManager: @unchecked Sendable {
         var uploadRequest: UploadRequest?
 
         return try await withCheckedThrowingContinuation { continuation in
-            uploadRequest = AF.upload(
+            uploadRequest = session.upload(
                 multipartFormData: multipartFormData,
                 with: router
             )

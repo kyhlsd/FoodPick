@@ -8,28 +8,36 @@
 import Foundation
 import ComposableArchitecture
 import Domain
+import Data
 
 @Reducer
-public struct SignUpFeature {
+public struct SignUpFeature: Sendable {
     @ObservableState
     public struct State {
-        var email: String = ""
-        var password: String = ""
-        var passwordConfirm: String = ""
-        var isEmailChecked: Bool = false
-        var isEmailDuplicate: Bool = false
+        var email = ""
+        var password = ""
+        var passwordConfirm = ""
+        var nickname = ""
+        var isEmailChecked = false
+        var isEmailDuplicate = false
 
         var emailError: String?
         var passwordError: String?
         var passwordConfirmError: String?
+        var nicknameError: String?
+
+        var isCheckingEmail = false
+        var isSigningUp = false
 
         var isSignUpEnabled: Bool {
             !email.isEmpty &&
             !password.isEmpty &&
             !passwordConfirm.isEmpty &&
+            !nickname.isEmpty &&
             emailError == nil &&
             passwordError == nil &&
             passwordConfirmError == nil &&
+            nicknameError == nil &&
             isEmailChecked &&
             !isEmailDuplicate
         }
@@ -56,6 +64,10 @@ public struct SignUpFeature {
             passwordConfirmError
         }
 
+        var nicknameValidationMessage: String? {
+            nicknameError
+        }
+
         var isEmailError: Bool {
             emailError != nil || isEmailDuplicate
         }
@@ -64,13 +76,20 @@ public struct SignUpFeature {
     }
 
     @Dependency(\.signUpInputValidation) var validationUseCase
+    @Dependency(\.checkEmailDuplication) var checkEmailDuplicationUseCase
+    @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
+    @Dependency(\.joinUseCase) var joinUseCase
+    @Dependency(\.saveTokens) var saveTokensUseCase
 
     public enum Action {
         case emailChanged(String)
         case passwordChanged(String)
         case passwordConfirmChanged(String)
+        case nicknameChanged(String)
         case checkEmailButtonTapped
+        case emailCheckCompleted(Bool)
         case signUpButtonTapped
+        case signUpCompleted
     }
 
     public init() {}
@@ -79,8 +98,11 @@ public struct SignUpFeature {
         Reduce { state, action in
             switch action {
             case let .emailChanged(email):
+                if state.email != email {
+                    state.isEmailChecked = false
+                    state.isEmailDuplicate = false
+                }
                 state.email = email
-                state.isEmailChecked = false
 
                 // 이메일 유효성 검증
                 if email.isEmpty {
@@ -97,6 +119,8 @@ public struct SignUpFeature {
                 return .none
 
             case let .passwordChanged(password):
+                guard state.password != password else { return .none }
+
                 state.password = password
 
                 // 비밀번호 유효성 검증
@@ -124,10 +148,11 @@ public struct SignUpFeature {
                         }
                     }
                 }
-
                 return .none
 
             case let .passwordConfirmChanged(passwordConfirm):
+                guard state.passwordConfirm != passwordConfirm else { return .none }
+
                 state.passwordConfirm = passwordConfirm
 
                 // 비밀번호 확인 검증
@@ -141,17 +166,79 @@ public struct SignUpFeature {
                         state.passwordConfirmError = error.errorDescription
                     }
                 }
+                return .none
 
+            case let .nicknameChanged(nickname):
+                guard state.nickname != nickname else { return .none }
+
+                state.nickname = nickname
+
+                // 닉네임 유효성 검증
+                if nickname.isEmpty {
+                    state.nicknameError = nil
+                } else {
+                    switch validationUseCase.validateNickname(nickname: nickname) {
+                    case .success:
+                        state.nicknameError = nil
+                    case .failure(let error):
+                        state.nicknameError = error.errorDescription
+                    }
+                }
                 return .none
 
             case .checkEmailButtonTapped:
-                // TODO: 이메일 중복 체크 API 호출
+                let email = state.email
+                state.isCheckingEmail = true
+                
+                // 이메일 중복 검증
+                return .run { send in
+                    do {
+                        try await checkEmailDuplicationUseCase.execute(email: email)
+                        await send(.emailCheckCompleted(true))
+                    } catch {
+                        await send(.emailCheckCompleted(false))
+                    }
+                }
+
+            case let .emailCheckCompleted(success):
                 state.isEmailChecked = true
-                state.isEmailDuplicate = false
+                state.isEmailDuplicate = !success
+                state.isCheckingEmail = false
                 return .none
 
             case .signUpButtonTapped:
-                // TODO: 회원가입 API 호출
+                let email = state.email
+                let password = state.password
+                let nickname = state.nickname
+                state.isSigningUp = true
+                
+                return .run { send in
+                    do {
+                        let deviceToken = try await getDeviceTokenUseCase.execute()
+
+                        let request = JoinRequest(
+                            email: email,
+                            password: password,
+                            nickname: nickname,
+                            phoneNumber: "",
+                            deviceToken: deviceToken
+                        )
+
+                        let response = try await joinUseCase.execute(request: request)
+
+                        try await saveTokensUseCase.execute(
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken
+                        )
+                        
+                        await send(.signUpCompleted)
+                    } catch {
+                        await send(.signUpCompleted)
+                    }
+                }
+            
+            case .signUpCompleted:
+                state.isSigningUp = false
                 return .none
             }
         }
@@ -160,12 +247,66 @@ public struct SignUpFeature {
 
 // MARK: - Dependency
 extension DependencyValues {
+    var userRepository: UserRepository {
+        get { self[UserRepositoryKey.self] }
+        set { self[UserRepositoryKey.self] = newValue }
+    }
+    
     var signUpInputValidation: SignUpInputValidationUseCase {
         get { self[SignUpInputValidationKey.self] }
         set { self[SignUpInputValidationKey.self] = newValue }
     }
+
+    var checkEmailDuplication: CheckEmailDuplicationUseCase {
+        get { self[CheckEmailDuplicationKey.self] }
+        set { self[CheckEmailDuplicationKey.self] = newValue }
+    }
+
+    var getDeviceToken: GetDeviceTokenUseCase {
+        get { self[GetDeviceTokenKey.self] }
+        set { self[GetDeviceTokenKey.self] = newValue }
+    }
+
+    var joinUseCase: JoinUseCase {
+        get { self[JoinUseCaseKey.self] }
+        set { self[JoinUseCaseKey.self] = newValue }
+    }
+
+    var saveTokens: SaveTokensUseCase {
+        get { self[SaveTokensKey.self] }
+        set { self[SaveTokensKey.self] = newValue }
+    }
+}
+
+private enum UserRepositoryKey: DependencyKey {
+    static let liveValue: UserRepository = DefaultUserRepositoryImpl()
 }
 
 private enum SignUpInputValidationKey: DependencyKey {
     static let liveValue: SignUpInputValidationUseCase = SignUpInputValidationUseCaseImpl()
+}
+
+private enum CheckEmailDuplicationKey: DependencyKey {
+    static let liveValue: CheckEmailDuplicationUseCase = {
+        let userRepository = DefaultUserRepositoryImpl()
+        return CheckEmailDuplicationUseCaseImpl(userRepository: userRepository)
+    }()
+}
+
+private enum GetDeviceTokenKey: DependencyKey {
+    static let liveValue: GetDeviceTokenUseCase = GetDeviceTokenUseCaseImpl()
+}
+
+private enum JoinUseCaseKey: DependencyKey {
+    static let liveValue: JoinUseCase = {
+        let userRepository = DefaultUserRepositoryImpl()
+        return JoinUseCaseImpl(userRepository: userRepository)
+    }()
+}
+
+private enum SaveTokensKey: DependencyKey {
+    static let liveValue: SaveTokensUseCase = {
+        let tokenRepository = DefaultTokenRepositoryImpl()
+        return SaveTokensUseCaseImpl(tokenRepository: tokenRepository)
+    }()
 }

@@ -41,11 +41,13 @@ let project = Project(
                     "NSLocationWhenInUseUsageDescription": "내 주위 가게 정보를 받아오기 위해 위치 정보를 사용합니다.",
                     "NSAppTransportSecurity": [
                         "NSAllowsArbitraryLoads": true
-                    ]
+                    ],
+                    "UIBackgroundModes": ["remote-notification"]
                 ]
             ),
             sources: ["FoodPick/Sources/**"],
             resources: ["FoodPick/Resources/**"],
+            entitlements: "FoodPick/FoodPick.entitlements",
             scripts: [swiftLintScript],
             dependencies: [
                 .target(name: "Presentation"),

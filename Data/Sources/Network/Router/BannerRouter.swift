@@ -29,10 +29,6 @@ extension BannerRouter: Router {
         return []
     }
     
-    var headers: HTTPHeaders {
-        return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
-    }
-    
     var multipartFormData: ((MultipartFormData) -> Void)? {
         return nil
     }

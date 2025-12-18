@@ -104,10 +104,6 @@ extension PostRouter: Router {
         }
     }
     
-    var headers: HTTPHeaders {
-        return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
-    }
-    
     var multipartFormData: ((MultipartFormData) -> Void)? {
         switch self {
         case .files(let datas):

@@ -11,9 +11,6 @@ final class UserDefaultsManager: @unchecked Sendable {
     static let shared = UserDefaultsManager()
     private init() {}
 
-    @UserDefaultsItem(key: "DeviceToken", type: String.self)
-    var deviceToken: String?
-
     func clearAll() {
         UserDefaults.standard.dictionaryRepresentation().keys.forEach {
             UserDefaults.standard.removeObject(forKey: $0.description)

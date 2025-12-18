@@ -17,6 +17,6 @@ struct JoinRequestDTO: Encodable {
 
 extension JoinRequestDTO {
     init(from domain: JoinRequest) {
-        self.init(email: domain.email, password: domain.password, nick: domain.nickname, phoneNum: domain.phoneNumber, deviceToken: UserDefaultsManager.shared.deviceToken ?? "")
+        self.init(email: domain.email, password: domain.password, nick: domain.nickname, phoneNum: domain.phoneNumber, deviceToken: domain.deviceToken)
     }
 }

@@ -54,10 +54,6 @@ extension VideoRouter: Router {
         }
     }
     
-    var headers: HTTPHeaders {
-        return HTTPHeader.asHTTPHeaders(HTTPHeader.basic)
-    }
-    
     var multipartFormData: ((Alamofire.MultipartFormData) -> Void)? {
         return nil
     }
