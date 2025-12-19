@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import Domain
 import AuthenticationServices
 import KakaoSDKUser
 import KakaoSDKAuth
-import Domain
+import KakaoSDKCommon
 
 public final class DefaultAuthRepositoryImpl: NSObject, AuthRepository, @unchecked Sendable {
     public static let shared = DefaultAuthRepositoryImpl()
@@ -19,6 +20,19 @@ public final class DefaultAuthRepositoryImpl: NSObject, AuthRepository, @uncheck
 
     override private init() {
         super.init()
+    }
+
+    // MARK: - Kakao SDK Setup
+    public func initializeKakaoSDK() async {
+        KakaoSDK.initSDK(appKey: APIInfos.kakaoKey)
+    }
+
+    @MainActor
+    public func handleKakaoOpenURL(_ url: URL) async -> Bool {
+        if AuthApi.isKakaoTalkLoginUrl(url) {
+            return AuthController.handleOpenUrl(url: url)
+        }
+        return false
     }
 
     // MARK: - Apple Sign In

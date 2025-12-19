@@ -1,29 +1,14 @@
 import SwiftUI
 import Presentation
 import Data
-import ComposableArchitecture
 
 @main
 struct FoodPickApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    init() {
-        FontRegistration.registerFonts()
-        KakaoSDKManager.initialize()
-    }
-
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                LoginView(
-                    store: Store(initialState: LoginFeature.State()) {
-                        LoginFeature()
-                    }
-                )
-            }
-            .onOpenURL { url in
-                _ = KakaoSDKManager.handleOpenURL(url)
-            }
+            RootView()
         }
     }
 }

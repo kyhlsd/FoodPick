@@ -8,6 +8,8 @@
 import Foundation
 
 public protocol AuthRepository: Sendable {
+    func initializeKakaoSDK() async
+    func handleKakaoOpenURL(_ url: URL) async -> Bool
     func signInWithApple() async throws -> String
     func signInWithKakao() async throws -> String
 }

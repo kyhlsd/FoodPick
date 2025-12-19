@@ -9,10 +9,10 @@ import UIKit
 import CoreText
 
 @MainActor
-public class FontRegistration {
+final class FontRegistration {
     private static var isRegistered = false
 
-    public static func registerFonts() {
+    static func registerFonts() {
         guard !isRegistered else { return }
 
         let fonts = [
