@@ -83,21 +83,40 @@ public struct LoginFeature: Sendable {
                 }
 
             case .kakaoLoginButtonTapped:
-                // TODO: 카카오 로그인 로직 구현
-                return .none
+                state.isLoggingIn = true
+
+                return .run { send in
+                    do {
+                        let oauthToken = try await kakaoLoginUseCase.execute()
+                        let deviceToken = try await getDeviceTokenUseCase.execute()
+                        
+                        let response = try await loginUseCase.execute(
+                            type: .kakao(oauthToken: oauthToken, deviceToken: deviceToken)
+                        )
+                        
+                        try await saveTokensUseCase.execute(
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken
+                        )
+
+                        await send(.loginCompleted)
+                    } catch {
+                        await send(.loginFailed(error))
+                    }
+                }
 
             case .appleLoginButtonTapped:
                 state.isLoggingIn = true
 
                 return .run { send in
                     do {
-                        let idToken = try await appleSignInUseCase.execute()
+                        let idToken = try await appleLoginUseCase.execute()
                         let deviceToken = try await getDeviceTokenUseCase.execute()
                         
                         let response = try await loginUseCase.execute(
                             type: .apple(idToken: idToken, deviceToken: deviceToken)
                         )
-
+                        
                         try await saveTokensUseCase.execute(
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
@@ -145,7 +164,7 @@ public struct LoginFeature: Sendable {
     @Dependency(\.login) var loginUseCase
     @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
     @Dependency(\.saveTokens) var saveTokensUseCase
-    @Dependency(\.appleSignIn) var appleSignInUseCase
+    @Dependency(\.appleLogin) var appleLoginUseCase
     
     public enum Alert {}
 }

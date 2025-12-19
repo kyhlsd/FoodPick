@@ -1,0 +1,13 @@
+//
+//  AuthRepository.swift
+//  Domain
+//
+//  Created by 김영훈 on 12/19/25.
+//
+
+import Foundation
+
+public protocol AuthRepository: Sendable {
+    func signInWithApple() async throws -> String
+    func signInWithKakao() async throws -> String
+}

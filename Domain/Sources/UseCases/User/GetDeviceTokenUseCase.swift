@@ -12,13 +12,13 @@ public protocol GetDeviceTokenUseCase: Sendable {
 }
 
 public final class GetDeviceTokenUseCaseImpl: GetDeviceTokenUseCase {
-    private let deviceTokenProvider: DeviceTokenProvider
+    private let deviceTokenRepository: DeviceTokenRepository
 
-    public init(deviceTokenProvider: DeviceTokenProvider) {
-        self.deviceTokenProvider = deviceTokenProvider
+    public init(deviceTokenRepository: DeviceTokenRepository) {
+        self.deviceTokenRepository = deviceTokenRepository
     }
 
     public func execute() async throws -> String {
-        return try await deviceTokenProvider.getDeviceToken()
+        return try await deviceTokenRepository.getDeviceToken()
     }
 }

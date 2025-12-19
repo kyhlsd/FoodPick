@@ -22,15 +22,14 @@ extension DependencyValues {
         set { self[TokenRepositoryKey.self] = newValue }
     }
 
-    // MARK: - Providers
-    var appleSignInProvider: AppleSignInProvider {
-        get { self[AppleSignInProviderKey.self] }
-        set { self[AppleSignInProviderKey.self] = newValue }
+    var authRepository: AuthRepository {
+        get { self[AuthRepositoryKey.self] }
+        set { self[AuthRepositoryKey.self] = newValue }
     }
 
-    var deviceTokenProvider: DeviceTokenProvider {
-        get { self[DeviceTokenProviderKey.self] }
-        set { self[DeviceTokenProviderKey.self] = newValue }
+    var deviceTokenRepository: DeviceTokenRepository {
+        get { self[DeviceTokenRepositoryKey.self] }
+        set { self[DeviceTokenRepositoryKey.self] = newValue }
     }
 
     // MARK: - UseCases
@@ -94,9 +93,14 @@ extension DependencyValues {
         set { self[SaveTokensKey.self] = newValue }
     }
 
-    var appleSignIn: AppleSignInUseCase {
-        get { self[AppleSignInKey.self] }
-        set { self[AppleSignInKey.self] = newValue }
+    var appleLogin: AppleLoginUseCase {
+        get { self[AppleLoginKey.self] }
+        set { self[AppleLoginKey.self] = newValue }
+    }
+
+    var kakaoLogin: KakaoLoginUseCase {
+        get { self[KakaoLoginKey.self] }
+        set { self[KakaoLoginKey.self] = newValue }
     }
 }
 
@@ -109,12 +113,12 @@ private enum TokenRepositoryKey: DependencyKey {
     static let liveValue: TokenRepository = DefaultTokenRepositoryImpl()
 }
 
-private enum AppleSignInProviderKey: DependencyKey {
-    static let liveValue: AppleSignInProvider = AppleSignInProviderImpl.shared
+private enum AuthRepositoryKey: DependencyKey {
+    static let liveValue: AuthRepository = DefaultAuthRepositoryImpl.shared
 }
 
-private enum DeviceTokenProviderKey: DependencyKey {
-    static let liveValue: DeviceTokenProvider = DeviceTokenProviderImpl.shared
+private enum DeviceTokenRepositoryKey: DependencyKey {
+    static let liveValue: DeviceTokenRepository = DeviceTokenRepositoryImpl.shared
 }
 
 private enum CheckEmailDuplicationKey: DependencyKey {
@@ -182,8 +186,8 @@ private enum UpdateDeviceTokenKey: DependencyKey {
 
 private enum GetDeviceTokenKey: DependencyKey {
     static let liveValue: GetDeviceTokenUseCase = {
-        @Dependency(\.deviceTokenProvider) var deviceTokenProvider
-        return GetDeviceTokenUseCaseImpl(deviceTokenProvider: deviceTokenProvider)
+        @Dependency(\.deviceTokenRepository) var deviceTokenRepository
+        return GetDeviceTokenUseCaseImpl(deviceTokenRepository: deviceTokenRepository)
     }()
 }
 
@@ -198,9 +202,16 @@ private enum SaveTokensKey: DependencyKey {
     }()
 }
 
-private enum AppleSignInKey: DependencyKey {
-    static let liveValue: AppleSignInUseCase = {
-        @Dependency(\.appleSignInProvider) var appleSignInProvider
-        return AppleSignInUseCaseImpl(appleSignInProvider: appleSignInProvider)
+private enum AppleLoginKey: DependencyKey {
+    static let liveValue: AppleLoginUseCase = {
+        @Dependency(\.authRepository) var authRepository
+        return AppleLoginUseCaseImpl(authRepository: authRepository)
+    }()
+}
+
+private enum KakaoLoginKey: DependencyKey {
+    static let liveValue: KakaoLoginUseCase = {
+        @Dependency(\.authRepository) var authRepository
+        return KakaoLoginUseCaseImpl(authRepository: authRepository)
     }()
 }

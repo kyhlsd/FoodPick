@@ -1,5 +1,5 @@
 //
-//  DeviceTokenProvider.swift
+//  DeviceTokenRepository.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/19/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol DeviceTokenProvider: Sendable {
+public protocol DeviceTokenRepository: Sendable {
     func getDeviceToken() async throws -> String
     func setDeviceToken(_ token: String) async
     func setDeviceTokenError(_ error: Error) async
