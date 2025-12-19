@@ -13,7 +13,7 @@ import ComposableArchitecture
 public struct SignUpFeature: Sendable {
     // MARK: - State
     @ObservableState
-    public struct State {
+    public struct State: Sendable {
         var email = ""
         var password = ""
         var passwordConfirm = ""
@@ -281,6 +281,6 @@ public struct SignUpFeature: Sendable {
     @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
     @Dependency(\.join) var joinUseCase
     @Dependency(\.saveTokens) var saveTokensUseCase
-    
-    public enum Alert {}
+
+    public enum Alert: Sendable {}
 }

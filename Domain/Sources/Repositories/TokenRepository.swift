@@ -13,4 +13,5 @@ public protocol TokenRepository: Sendable {
     func getAccessToken() async throws -> String
     func getRefreshToken() async throws -> String
     func deleteTokens() async throws
+    func refreshTokens() async throws
 }

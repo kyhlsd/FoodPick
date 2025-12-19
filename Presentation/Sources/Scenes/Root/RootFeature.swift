@@ -13,7 +13,7 @@ import Domain
 public struct RootFeature: Sendable {
     // MARK: - State
     @ObservableState
-    public enum State {
+    public enum State: Sendable {
         case loading
         case loggedIn
         case loggedOut(LoginFeature.State)
@@ -25,6 +25,7 @@ public struct RootFeature: Sendable {
         case handleOpenURL(URL)
         case loggedOut(LoginFeature.Action)
         case logout
+        case shouldNavigateToLogin
     }
 
     public init() {}
@@ -37,7 +38,7 @@ public struct RootFeature: Sendable {
                 return .run { send in
                     // Font 등록
                     await FontRegistration.registerFonts()
-                    
+
                     // Kakao SDK 초기화
                     await authRepository.initializeKakaoSDK()
 
@@ -46,6 +47,11 @@ public struct RootFeature: Sendable {
                     let hasRefreshToken = try? await tokenRepository.getRefreshToken()
                     let isLoggedIn = hasAccessToken != nil && hasRefreshToken != nil
                     await send(.authChecked(isLoggedIn))
+
+                    // 로그인 화면 이동 Notification 구독
+                    for await _ in NotificationCenter.default.notifications(named: .shouldNavigateToLogin) {
+                        await send(.shouldNavigateToLogin)
+                    }
                 }
 
             case let .handleOpenURL(url):
@@ -60,6 +66,16 @@ public struct RootFeature: Sendable {
                     state = .loggedOut(LoginFeature.State())
                 }
                 return .none
+
+            case .shouldNavigateToLogin:
+                // 토큰 만료 또는 유효하지 않은 토큰 - 로그인 화면으로 이동
+                return .run { [state] send in
+                    // 이미 로그아웃 상태가 아닌 경우에만 토큰 삭제 및 로그아웃 처리
+                    if case .loggedIn = state {
+                        try? await tokenRepository.deleteTokens()
+                        await send(.logout)
+                    }
+                }
 
             case .loggedOut(.loginCompleted):
                 state = .loggedIn
