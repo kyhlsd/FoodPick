@@ -1,10 +1,16 @@
 import SwiftUI
 import Presentation
 import Data
+import Core
 
 @main
 struct FoodPickApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    init() {
+        let configuration = DefaultAppConfiguration()
+        APIInfos.configure(with: configuration)
+    }
 
     var body: some Scene {
         WindowGroup {

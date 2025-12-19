@@ -71,8 +71,8 @@ let project = Project(
                     "SWIFT_VERSION": .string(swiftVersion)
                 ],
                 configurations: [
-                    .debug(name: "Debug", xcconfig: "Data/Resources/Secrets/Secrets.xcconfig"),
-                    .release(name: "Release", xcconfig: "Data/Resources/Secrets/Secrets.xcconfig")
+                    .debug(name: "Debug", xcconfig: "Config/Secrets/Secrets.xcconfig"),
+                    .release(name: "Release", xcconfig: "Config/Secrets/Secrets.xcconfig")
                 ]
             )
         ),
