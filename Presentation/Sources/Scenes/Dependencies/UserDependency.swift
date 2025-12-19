@@ -118,7 +118,7 @@ private enum AuthRepositoryKey: DependencyKey {
 }
 
 private enum DeviceTokenRepositoryKey: DependencyKey {
-    static let liveValue: DeviceTokenRepository = DeviceTokenRepositoryImpl.shared
+    static let liveValue: DeviceTokenRepository = DefaultDeviceTokenRepositoryImpl.shared
 }
 
 private enum CheckEmailDuplicationKey: DependencyKey {

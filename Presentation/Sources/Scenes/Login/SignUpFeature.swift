@@ -228,7 +228,7 @@ public struct SignUpFeature: Sendable {
 
                 return .run { send in
                     do {
-                        let deviceToken = try await getDeviceTokenUseCase.execute()
+                        let deviceToken = (try? await getDeviceTokenUseCase.execute()) ?? ""
 
                         let request = JoinRequest(
                             email: email,

@@ -1,5 +1,5 @@
 //
-//  DeviceTokenRepositoryImpl.swift
+//  DefaultDeviceTokenRepositoryImpl.swift
 //  Data
 //
 //  Created by 김영훈 on 12/19/25.
@@ -9,8 +9,8 @@ import UIKit
 import UserNotifications
 import Domain
 
-public actor DeviceTokenRepositoryImpl: DeviceTokenRepository {
-    public static let shared = DeviceTokenRepositoryImpl()
+public actor DefaultDeviceTokenRepositoryImpl: DeviceTokenRepository {
+    public static let shared = DefaultDeviceTokenRepositoryImpl()
 
     private var deviceToken: String?
     private var continuation: CheckedContinuation<String, Error>?

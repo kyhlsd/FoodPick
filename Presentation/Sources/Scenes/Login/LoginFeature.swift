@@ -64,8 +64,8 @@ public struct LoginFeature: Sendable {
                 
                 return .run { send in
                     do {
-                        let deviceToken = try await getDeviceTokenUseCase.execute()
-
+                        let deviceToken = (try? await getDeviceTokenUseCase.execute()) ?? ""
+                        
                         let response = try await loginUseCase.execute(
                             type: .email(email: email, password: password, deviceToken: deviceToken)
                         )
@@ -87,7 +87,7 @@ public struct LoginFeature: Sendable {
                 return .run { send in
                     do {
                         let oauthToken = try await kakaoLoginUseCase.execute()
-                        let deviceToken = try await getDeviceTokenUseCase.execute()
+                        let deviceToken = (try? await getDeviceTokenUseCase.execute()) ?? ""
                         
                         let response = try await loginUseCase.execute(
                             type: .kakao(oauthToken: oauthToken, deviceToken: deviceToken)
@@ -110,7 +110,7 @@ public struct LoginFeature: Sendable {
                 return .run { send in
                     do {
                         let idToken = try await appleLoginUseCase.execute()
-                        let deviceToken = try await getDeviceTokenUseCase.execute()
+                        let deviceToken = (try? await getDeviceTokenUseCase.execute()) ?? ""
                         
                         let response = try await loginUseCase.execute(
                             type: .apple(idToken: idToken, deviceToken: deviceToken)

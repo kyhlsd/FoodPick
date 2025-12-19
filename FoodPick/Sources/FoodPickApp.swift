@@ -36,7 +36,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) {
         let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         Task {
-            await DeviceTokenRepositoryImpl.shared.setDeviceToken(tokenString)
+            await DefaultDeviceTokenRepositoryImpl.shared.setDeviceToken(tokenString)
         }
     }
 
@@ -45,7 +45,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         Task {
-            await DeviceTokenRepositoryImpl.shared.setDeviceTokenError(error)
+            await DefaultDeviceTokenRepositoryImpl.shared.setDeviceTokenError(error)
         }
     }
 }
