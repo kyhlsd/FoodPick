@@ -1,7 +1,7 @@
 import SwiftUI
 import Presentation
-import ComposableArchitecture
 import Data
+import ComposableArchitecture
 
 @main
 struct FoodPickApp: App {
@@ -9,6 +9,7 @@ struct FoodPickApp: App {
 
     init() {
         FontRegistration.registerFonts()
+        KakaoSDKManager.initialize()
     }
 
     var body: some Scene {
@@ -19,6 +20,9 @@ struct FoodPickApp: App {
                         LoginFeature()
                     }
                 )
+            }
+            .onOpenURL { url in
+                _ = KakaoSDKManager.handleOpenURL(url)
             }
         }
     }

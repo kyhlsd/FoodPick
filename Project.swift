@@ -42,7 +42,18 @@ let project = Project(
                     "NSAppTransportSecurity": [
                         "NSAllowsArbitraryLoads": true
                     ],
-                    "UIBackgroundModes": ["remote-notification"]
+                    "UIBackgroundModes": ["remote-notification"],
+                    "LSApplicationQueriesSchemes": [
+                        "kakaokompassauth",
+                        "kakaolink"
+                    ],
+                    "CFBundleURLTypes": [
+                        [
+                            "CFBundleTypeRole": "Editor",
+                            "CFBundleURLSchemes": ["kakao$(KAKAO_APP_KEY)"]
+                        ]
+                    ],
+                    "KAKAO_APP_KEY": "$(KAKAO_APP_KEY)"
                 ]
             ),
             sources: ["FoodPick/Sources/**"],
@@ -58,6 +69,10 @@ let project = Project(
                 base: [
                     "DEVELOPMENT_TEAM": .string(teamID),
                     "SWIFT_VERSION": .string(swiftVersion)
+                ],
+                configurations: [
+                    .debug(name: "Debug", xcconfig: "Data/Resources/Secrets/Secrets.xcconfig"),
+                    .release(name: "Release", xcconfig: "Data/Resources/Secrets/Secrets.xcconfig")
                 ]
             )
         ),
@@ -123,7 +138,10 @@ let project = Project(
                     dependencies: [
                         .target(name: "Core"),
                         .target(name: "Domain"),
-                        .external(name: "Alamofire")
+                        .external(name: "Alamofire"),
+                        .external(name: "KakaoSDKCommon"),
+                        .external(name: "KakaoSDKUser"),
+                        .external(name: "KakaoSDKAuth")
                     ],
                     settings: .settings(
                         base: [

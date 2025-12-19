@@ -4,12 +4,7 @@ import Domain
 import Core
 
 public struct ContentView: View {
-    let repository: BannerRepository
-    let useCase: FetchMainBannersUseCase
-    public init() {
-        self.repository = DefaultBannerRepositoryImpl()
-        self.useCase = FetchMainBannersUseCaseImpl(bannerRepository: repository)
-    }
+    public init() {}
     
     public var body: some View {
         VStack {
@@ -24,14 +19,7 @@ public struct ContentView: View {
                 .padding(.vertical, .xLarge)
             
             Button {
-                Task {
-                    do {
-                        let response = try await useCase.execute()
-//                        print(response)
-                    } catch {
-//                        print("error: \(error.localizedDescription)")
-                    }
-                }
+                
             } label: {
                 AppIcon.communityEmpty
                     .foregroundStyle(.custom(.brand(.blackSprout)))

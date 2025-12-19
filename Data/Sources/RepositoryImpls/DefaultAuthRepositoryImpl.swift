@@ -7,6 +7,8 @@
 
 import Foundation
 import AuthenticationServices
+import KakaoSDKUser
+import KakaoSDKAuth
 import Domain
 
 public final class DefaultAuthRepositoryImpl: NSObject, AuthRepository, @unchecked Sendable {
@@ -40,8 +42,34 @@ public final class DefaultAuthRepositoryImpl: NSObject, AuthRepository, @uncheck
 
     // MARK: - Kakao Login
     public func signInWithKakao() async throws -> String {
-        // TODO: Kakao SDK 연동 구현
-        throw AuthError.notImplemented
+        return try await withCheckedThrowingContinuation { continuation in
+            Task { @MainActor in
+                // 카카오톡 설치 여부 확인
+                if UserApi.isKakaoTalkLoginAvailable() {
+                    // 카카오톡으로 로그인
+                    UserApi.shared.loginWithKakaoTalk { oauthToken, error in
+                        if let error = error {
+                            continuation.resume(throwing: error)
+                        } else if let token = oauthToken?.accessToken {
+                            continuation.resume(returning: token)
+                        } else {
+                            continuation.resume(throwing: AuthError.invalidCredential)
+                        }
+                    }
+                } else {
+                    // 카카오 계정으로 로그인
+                    UserApi.shared.loginWithKakaoAccount { oauthToken, error in
+                        if let error = error {
+                            continuation.resume(throwing: error)
+                        } else if let token = oauthToken?.accessToken {
+                            continuation.resume(returning: token)
+                        } else {
+                            continuation.resume(throwing: AuthError.invalidCredential)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - Private Helpers

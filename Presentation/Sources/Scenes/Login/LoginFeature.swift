@@ -29,7 +29,6 @@ public struct LoginFeature: Sendable {
         public init() {}
     }
 
-
     // MARK: - Action
     public enum Action {
         case emailChanged(String)
@@ -165,6 +164,7 @@ public struct LoginFeature: Sendable {
     @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
     @Dependency(\.saveTokens) var saveTokensUseCase
     @Dependency(\.appleLogin) var appleLoginUseCase
+    @Dependency(\.kakaoLogin) var kakaoLoginUseCase
     
     public enum Alert {}
 }
