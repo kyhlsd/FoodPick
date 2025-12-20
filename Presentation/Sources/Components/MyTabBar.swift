@@ -8,16 +8,13 @@ struct CustomTabBarView: View {
             Color.gray.opacity(0.05).ignoresSafeArea()
             
             GeometryReader { geometry in
-                let width = geometry.size.width
+                let width = geometry.size.width - 2 * AppPadding.xLarge.value
                 let tabWidth = width / 5
                 let barHeight: CGFloat = 70
                 
                 ZStack(alignment: .bottom) {
-                    // Sine Wave 형태의 배경
-                    SineTabBarShape()
-                        .fill(.white)
-                        .frame(height: barHeight)
-                        .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 6, x: 0, y: -4)
+                    // TabBar Background
+                    TabBarBackgroundView(height: barHeight)
                     
                     // TabBar Icon
                     HStack(spacing: 0) {
@@ -40,10 +37,26 @@ struct CustomTabBarView: View {
                     }
                     .offset(y: -barHeight + 28)
                 }
+                .padding(.horizontal, .xLarge)
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .frame(height: 110)
         }
+    }
+}
+
+// MARK: - TabBar Background
+private struct TabBarBackgroundView: View {
+    let height: CGFloat
+    
+    var body: some View {
+        SineTabBarShape()
+            .fill(.white)
+            .frame(height: height)
+            .clipShape(
+                RoundedRectangle(cornerRadius: height / 2, style: .continuous)
+            )
+            .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 8)
     }
 }
 
@@ -119,7 +132,7 @@ private struct CenterButton: View {
             ZStack {
                 Circle()
                     .fill(Color.custom(.brand(.blackSprout)))
-                    .shadow(color: .custom(.gray(.gray75)).opacity(0.4), radius: 12, x: 0, y: 4)
+                    .shadow(color: .custom(.gray(.gray75)).opacity(0.4), radius: 8, x: 0, y: 4)
                 
                 MyTab.pick.selectedIcon
                     .font(.system(size: 24))
