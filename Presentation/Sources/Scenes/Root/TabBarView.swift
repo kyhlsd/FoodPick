@@ -13,23 +13,18 @@ struct TabBarView: View {
     
     var body: some View {
         WithPerceptionTracking {
-            let selectedTab = store.selectedTab
             @Perception.Bindable var store = store
             
             ZStack(alignment: .bottom) {
-                // Tab Content Views
-                ZStack {
-                    TabContentView(tab: .home)
-                        .opacity(selectedTab == .home ? 1 : 0)
-                    
-                    TabContentView(tab: .order)
-                        .opacity(selectedTab == .order ? 1 : 0)
-                    
-                    TabContentView(tab: .community)
-                        .opacity(selectedTab == .community ? 1 : 0)
-                    
-                    TabContentView(tab: .profile)
-                        .opacity(selectedTab == .profile ? 1 : 0)
+                // TabView
+                TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
+                    ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
+                        NavigationStack {
+                            tab.view
+                        }
+                        .tag(tab)
+                        .toolbar(.hidden, for: .tabBar)
+                    }
                 }
                 
                 // TabBar UI
@@ -79,17 +74,6 @@ struct TabBarView: View {
             ) { pickStore in
                 PickView(store: pickStore)
             }
-        }
-    }
-}
-
-// MARK: - Tab Content View
-private struct TabContentView: View {
-    let tab: TabBarFeature.Tab
-    
-    var body: some View {
-        NavigationStack {
-            ContentView()
         }
     }
 }
@@ -229,6 +213,22 @@ extension TabBarFeature.Tab {
             icon = AppIcon.profileEmpty
         }
         return icon.foregroundStyle(.custom(.gray(.gray30)))
+    }
+    
+    @ViewBuilder
+    var view: some View {
+        switch self {
+        case .home:
+            Text("Home")
+        case .order:
+            Text("Order")
+        case .pick:
+            Color.clear
+        case .community:
+            Text("Community")
+        case .profile:
+            Text("Profile")
+        }
     }
 }
 
