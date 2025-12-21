@@ -13,60 +13,64 @@ struct TabBarView: View {
     
     var body: some View {
         WithPerceptionTracking {
+            let selectedTab = store.selectedTab
             @Perception.Bindable var store = store
             
             ZStack(alignment: .bottom) {
                 // Tab Content Views
                 ZStack {
                     TabContentView(tab: .home)
-                        .opacity(store.selectedTab == .home ? 1 : 0)
+                        .opacity(selectedTab == .home ? 1 : 0)
                     
                     TabContentView(tab: .order)
-                        .opacity(store.selectedTab == .order ? 1 : 0)
+                        .opacity(selectedTab == .order ? 1 : 0)
                     
                     TabContentView(tab: .community)
-                        .opacity(store.selectedTab == .community ? 1 : 0)
+                        .opacity(selectedTab == .community ? 1 : 0)
                     
                     TabContentView(tab: .profile)
-                        .opacity(store.selectedTab == .profile ? 1 : 0)
+                        .opacity(selectedTab == .profile ? 1 : 0)
                 }
                 
                 // TabBar UI
                 GeometryReader { geometry in
-                    let width = geometry.size.width - 2 * AppPadding.xLarge.value
-                    let tabWidth = width / 5
-                    let barHeight: CGFloat = 70
-                    
-                    ZStack(alignment: .bottom) {
-                        // TabBar Background
-                        TabBarBackgroundView(height: barHeight)
+                    WithPerceptionTracking {
+                        let selectedTab = store.selectedTab
+                        let width = geometry.size.width - 2 * AppPadding.xLarge.value
+                        let tabWidth = width / 5
+                        let barHeight: CGFloat = 70
                         
-                        // TabBar Icon
-                        HStack(spacing: 0) {
-                            ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
-                                if tab == .pick {
-                                    Spacer().frame(width: tabWidth)
-                                } else {
-                                    TabBarButton(
-                                        tab: tab,
-                                        isSelected: store.selectedTab == tab,
-                                        width: tabWidth,
-                                        height: barHeight
-                                    ) {
-                                        store.send(.tabSelected(tab))
+                        ZStack(alignment: .bottom) {
+                            // TabBar Background
+                            TabBarBackgroundView(height: barHeight)
+                            
+                            // TabBar Icon
+                            HStack(spacing: 0) {
+                                ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
+                                    if tab == .pick {
+                                        Spacer().frame(width: tabWidth)
+                                    } else {
+                                        TabBarButton(
+                                            tab: tab,
+                                            isSelected: selectedTab == tab,
+                                            width: tabWidth,
+                                            height: barHeight
+                                        ) {
+                                            store.send(.tabSelected(tab))
+                                        }
                                     }
                                 }
                             }
+                            .frame(height: barHeight)
+                            
+                            CenterButton {
+                                store.send(.centerButtonTapped)
+                            }
+                            .offset(y: -barHeight + 28)
                         }
-                        .frame(height: barHeight)
-                        
-                        CenterButton {
-                            store.send(.centerButtonTapped)
-                        }
-                        .offset(y: -barHeight + 28)
+                        .padding(.horizontal, .xLarge)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
                     }
-                    .padding(.horizontal, .xLarge)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
                 }
                 .frame(height: 110)
             }

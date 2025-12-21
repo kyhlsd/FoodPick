@@ -18,8 +18,8 @@ public struct RootView: View {
     }
     
     public var body: some View {
-        SwitchStore(store) { state in
-            switch state {
+        WithPerceptionTracking {
+            switch store.state {
             case .loading:
                 ProgressView()
                     .onAppear {
