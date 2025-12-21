@@ -16,17 +16,17 @@ struct LoginFeature: Sendable {
     struct State: Sendable {
         var email = ""
         var password = ""
-
+        
         var isLoggingIn = false
-
+        
         var isLoginEnabled: Bool {
             !email.isEmpty && !password.isEmpty
         }
-
+        
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<LoginFeature.Alert>?
     }
-
+    
     // MARK: - Action
     enum Action {
         case emailChanged(String)
@@ -40,7 +40,7 @@ struct LoginFeature: Sendable {
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<LoginFeature.Alert>)
     }
-
+    
     // MARK: - Body
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -48,11 +48,11 @@ struct LoginFeature: Sendable {
             case let .emailChanged(email):
                 state.email = email
                 return .none
-
+                
             case let .passwordChanged(password):
                 state.password = password
                 return .none
-
+                
             case .loginButtonTapped:
                 let email = state.email
                 let password = state.password
@@ -65,21 +65,21 @@ struct LoginFeature: Sendable {
                         let response = try await loginUseCase.execute(
                             type: .email(email: email, password: password, deviceToken: deviceToken)
                         )
-
+                        
                         try await saveTokensUseCase.execute(
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-
+                        
                         await send(.loginCompleted)
                     } catch {
                         await send(.loginFailed(error))
                     }
                 }
-
+                
             case .kakaoLoginButtonTapped:
                 state.isLoggingIn = true
-
+                
                 return .run { send in
                     do {
                         let oauthToken = try await kakaoLoginUseCase.execute()
@@ -93,16 +93,16 @@ struct LoginFeature: Sendable {
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-
+                        
                         await send(.loginCompleted)
                     } catch {
                         await send(.loginFailed(error))
                     }
                 }
-
+                
             case .appleLoginButtonTapped:
                 state.isLoggingIn = true
-
+                
                 return .run { send in
                     do {
                         let idToken = try await appleLoginUseCase.execute()
@@ -116,23 +116,21 @@ struct LoginFeature: Sendable {
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-
+                        
                         await send(.loginCompleted)
                     } catch {
                         await send(.loginFailed(error))
                     }
                 }
-
+                
             case .joinButtonTapped:
                 state.destination = .signUp(SignUpFeature.State())
                 return .none
                 
             case .loginCompleted:
                 state.isLoggingIn = false
-                return .run { _ in
-                    NotificationCenter.default.post(name: .loginCompleted, object: nil)
-                }
-
+                return .none
+                
             case .loginFailed(let error):
                 state.isLoggingIn = false
                 state.alert = AlertState {
@@ -145,10 +143,10 @@ struct LoginFeature: Sendable {
                     TextState(error.localizedDescription)
                 }
                 return .none
-
+                
             case .destination:
                 return .none
-
+                
             case .alert:
                 return .none
             }
@@ -163,7 +161,7 @@ struct LoginFeature: Sendable {
     @Dependency(\.saveTokens) var saveTokensUseCase
     @Dependency(\.appleLogin) var appleLoginUseCase
     @Dependency(\.kakaoLogin) var kakaoLoginUseCase
-
+    
     enum Alert: Sendable {}
 }
 

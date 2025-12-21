@@ -16,10 +16,10 @@ public struct RootView: View {
             RootFeature()
         }
     }
-
+    
     public var body: some View {
-        WithPerceptionTracking {
-            switch store.state {
+        SwitchStore(store) { state in
+            switch state {
             case .loading:
                 ProgressView()
                     .onAppear {
@@ -27,19 +27,15 @@ public struct RootView: View {
                     }
 
             case .loggedIn:
-                TabBarView(
-                    store: Store(initialState: TabBarFeature.State()) {
-                        TabBarFeature()
-                    }
-                )
+                if let tabBarStore = store.scope(state: \.loggedIn, action: \.loggedIn) {
+                    TabBarView(store: tabBarStore)
+                }
 
             case .loggedOut:
                 NavigationStack {
-                    LoginView(
-                        store: Store(initialState: LoginFeature.State()) {
-                            LoginFeature()
-                        }
-                    )
+                    if let loginStore = store.scope(state: \.loggedOut, action: \.loggedOut) {
+                        LoginView(store: loginStore)
+                    }
                 }
             }
         }

@@ -10,37 +10,37 @@ import ComposableArchitecture
 
 struct TabBarView: View {
     let store: StoreOf<TabBarFeature>
-
+    
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
-
+            
             ZStack(alignment: .bottom) {
                 // Tab Content Views
                 ZStack {
                     TabContentView(tab: .home)
                         .opacity(store.selectedTab == .home ? 1 : 0)
-
+                    
                     TabContentView(tab: .order)
                         .opacity(store.selectedTab == .order ? 1 : 0)
-
+                    
                     TabContentView(tab: .community)
                         .opacity(store.selectedTab == .community ? 1 : 0)
-
+                    
                     TabContentView(tab: .profile)
                         .opacity(store.selectedTab == .profile ? 1 : 0)
                 }
-
+                
                 // TabBar UI
                 GeometryReader { geometry in
                     let width = geometry.size.width - 2 * AppPadding.xLarge.value
                     let tabWidth = width / 5
                     let barHeight: CGFloat = 70
-
+                    
                     ZStack(alignment: .bottom) {
                         // TabBar Background
                         TabBarBackgroundView(height: barHeight)
-
+                        
                         // TabBar Icon
                         HStack(spacing: 0) {
                             ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
@@ -59,7 +59,7 @@ struct TabBarView: View {
                             }
                         }
                         .frame(height: barHeight)
-
+                        
                         CenterButton {
                             store.send(.centerButtonTapped)
                         }

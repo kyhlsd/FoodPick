@@ -20,15 +20,15 @@ struct SignUpFeature: Sendable {
         var nickname = ""
         var isEmailChecked = false
         var isEmailDuplicate = false
-
+        
         var emailError: String?
         var passwordError: String?
         var passwordConfirmError: String?
         var nicknameError: String?
-
+        
         var isCheckingEmail = false
         var isSigningUp = false
-
+        
         var isSignUpEnabled: Bool {
             !email.isEmpty &&
             !password.isEmpty &&
@@ -41,40 +41,40 @@ struct SignUpFeature: Sendable {
             isEmailChecked &&
             !isEmailDuplicate
         }
-
+        
         var isEmailCheckEnabled: Bool {
             !email.isEmpty && emailError == nil
         }
-
+        
         var emailValidationMessage: String? {
             if let emailError = emailError {
                 return emailError
             }
             guard isEmailChecked else { return nil }
             return isEmailDuplicate
-                ? "이미 사용 중인 이메일입니다"
-                : "사용 가능한 이메일입니다"
+            ? "이미 사용 중인 이메일입니다"
+            : "사용 가능한 이메일입니다"
         }
-
+        
         var passwordValidationMessage: String? {
             passwordError
         }
-
+        
         var passwordConfirmMessage: String? {
             passwordConfirmError
         }
-
+        
         var nicknameValidationMessage: String? {
             nicknameError
         }
-
+        
         var isEmailError: Bool {
             emailError != nil || isEmailDuplicate
         }
-
+        
         @Presents var alert: AlertState<SignUpFeature.Alert>?
     }
-
+    
     // MARK: - Action
     enum Action {
         case emailChanged(String)
@@ -89,7 +89,7 @@ struct SignUpFeature: Sendable {
         case signUpFailed(Error)
         case alert(PresentationAction<SignUpFeature.Alert>)
     }
-
+        
     // MARK: - Body
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -100,7 +100,7 @@ struct SignUpFeature: Sendable {
                     state.isEmailDuplicate = false
                 }
                 state.email = email
-
+                
                 // 이메일 유효성 검증
                 if email.isEmpty {
                     state.emailError = nil
@@ -112,14 +112,14 @@ struct SignUpFeature: Sendable {
                         state.emailError = error.errorDescription
                     }
                 }
-
+                
                 return .none
-
+                
             case let .passwordChanged(password):
                 guard state.password != password else { return .none }
-
+                
                 state.password = password
-
+                
                 // 비밀번호 유효성 검증
                 if password.isEmpty {
                     state.passwordError = nil
@@ -131,7 +131,7 @@ struct SignUpFeature: Sendable {
                         state.passwordError = error.errorDescription
                     }
                 }
-
+                
                 // 비밀번호 확인 검증
                 if !state.passwordConfirm.isEmpty {
                     if password.isEmpty {
@@ -146,12 +146,12 @@ struct SignUpFeature: Sendable {
                     }
                 }
                 return .none
-
+                
             case let .passwordConfirmChanged(passwordConfirm):
                 guard state.passwordConfirm != passwordConfirm else { return .none }
-
+                
                 state.passwordConfirm = passwordConfirm
-
+                
                 // 비밀번호 확인 검증
                 if passwordConfirm.isEmpty {
                     state.passwordConfirmError = nil
@@ -164,12 +164,12 @@ struct SignUpFeature: Sendable {
                     }
                 }
                 return .none
-
+                
             case let .nicknameChanged(nickname):
                 guard state.nickname != nickname else { return .none }
-
+                
                 state.nickname = nickname
-
+                
                 // 닉네임 유효성 검증
                 if nickname.isEmpty {
                     state.nicknameError = nil
@@ -182,11 +182,11 @@ struct SignUpFeature: Sendable {
                     }
                 }
                 return .none
-
+                
             case .checkEmailButtonTapped:
                 let email = state.email
                 state.isCheckingEmail = true
-
+                
                 // 이메일 중복 검증
                 return .run { send in
                     do {
@@ -196,13 +196,13 @@ struct SignUpFeature: Sendable {
                         await send(.emailCheckFailed(error))
                     }
                 }
-
+                
             case let .emailCheckCompleted(success):
                 state.isEmailChecked = true
                 state.isEmailDuplicate = !success
                 state.isCheckingEmail = false
                 return .none
-
+                
             case .emailCheckFailed(let error):
                 state.isCheckingEmail = false
                 state.alert = AlertState {
@@ -215,17 +215,17 @@ struct SignUpFeature: Sendable {
                     TextState(error.localizedDescription)
                 }
                 return .none
-
+                
             case .signUpButtonTapped:
                 let email = state.email
                 let password = state.password
                 let nickname = state.nickname
                 state.isSigningUp = true
-
+                
                 return .run { send in
                     do {
                         let deviceToken = (try? await getDeviceTokenUseCase.execute()) ?? ""
-
+                        
                         let request = JoinRequest(
                             email: email,
                             password: password,
@@ -233,24 +233,24 @@ struct SignUpFeature: Sendable {
                             phoneNumber: "",
                             deviceToken: deviceToken
                         )
-
+                        
                         let response = try await joinUseCase.execute(request: request)
-
+                        
                         try await saveTokensUseCase.execute(
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-
+                        
                         await send(.signUpCompleted)
                     } catch {
                         await send(.signUpFailed(error))
                     }
                 }
-            
+                
             case .signUpCompleted:
                 state.isSigningUp = false
                 return .none
-
+                
             case .signUpFailed(let error):
                 state.isSigningUp = false
                 state.alert = AlertState {
@@ -263,7 +263,7 @@ struct SignUpFeature: Sendable {
                     TextState(error.localizedDescription)
                 }
                 return .none
-
+                
             case .alert:
                 return .none
             }
@@ -277,6 +277,6 @@ struct SignUpFeature: Sendable {
     @Dependency(\.getDeviceToken) var getDeviceTokenUseCase
     @Dependency(\.join) var joinUseCase
     @Dependency(\.saveTokens) var saveTokensUseCase
-
+    
     enum Alert: Sendable {}
 }

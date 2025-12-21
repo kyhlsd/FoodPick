@@ -21,8 +21,6 @@ struct PickFeature: Sendable {
         // 임시 액션
     }
 
-    init() {}
-
     // MARK: - Body
     var body: some ReducerOf<Self> {
         EmptyReducer()
