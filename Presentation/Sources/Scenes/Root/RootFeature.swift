@@ -16,14 +16,14 @@ public struct RootFeature: Sendable {
     public enum State: Sendable {
         case loading
         case loggedIn
-        case loggedOut(LoginFeature.State)
+        case loggedOut
     }
 
     public enum Action {
         case onAppear
         case authChecked(Bool)
         case handleOpenURL(URL)
-        case loggedOut(LoginFeature.Action)
+        case loginCompleted
         case logout
         case shouldNavigateToLogin
     }
@@ -52,6 +52,11 @@ public struct RootFeature: Sendable {
                     for await _ in NotificationCenter.default.notifications(named: .shouldNavigateToLogin) {
                         await send(.shouldNavigateToLogin)
                     }
+
+                    // 로그인 완료 Notification 구독
+                    for await _ in NotificationCenter.default.notifications(named: .loginCompleted) {
+                        await send(.loginCompleted)
+                    }
                 }
 
             case let .handleOpenURL(url):
@@ -63,7 +68,7 @@ public struct RootFeature: Sendable {
                 if isLoggedIn {
                     state = .loggedIn
                 } else {
-                    state = .loggedOut(LoginFeature.State())
+                    state = .loggedOut
                 }
                 return .none
 
@@ -77,20 +82,14 @@ public struct RootFeature: Sendable {
                     }
                 }
 
-            case .loggedOut(.loginCompleted):
+            case .loginCompleted:
                 state = .loggedIn
                 return .none
 
-            case .loggedOut:
-                return .none
-
             case .logout:
-                state = .loggedOut(LoginFeature.State())
+                state = .loggedOut
                 return .none
             }
-        }
-        .ifCaseLet(\.loggedOut, action: \.loggedOut) {
-            LoginFeature()
         }
     }
     

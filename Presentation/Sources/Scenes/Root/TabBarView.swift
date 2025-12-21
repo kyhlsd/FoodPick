@@ -1,46 +1,91 @@
-import SwiftUI
+//
+//  TabBarView.swift
+//  Presentation
+//
+//  Created by Claude on 12/20/25.
+//
 
-struct CustomTabBarView: View {
-    @State private var selectedTab: MyTab = .home
-    
+import SwiftUI
+import ComposableArchitecture
+
+struct TabBarView: View {
+    let store: StoreOf<TabBarFeature>
+
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color.gray.opacity(0.05).ignoresSafeArea()
-            
-            GeometryReader { geometry in
-                let width = geometry.size.width - 2 * AppPadding.xLarge.value
-                let tabWidth = width / 5
-                let barHeight: CGFloat = 70
-                
-                ZStack(alignment: .bottom) {
-                    // TabBar Background
-                    TabBarBackgroundView(height: barHeight)
-                    
-                    // TabBar Icon
-                    HStack(spacing: 0) {
-                        ForEach(MyTab.allCases, id: \.self) { tab in
-                            if tab == .pick {
-                                Spacer().frame(width: tabWidth)
-                            } else {
-                                TabBarButton(tab: tab,
-                                             selectedTab: $selectedTab,
-                                             width: tabWidth,
-                                             height: barHeight
-                                )
+        WithPerceptionTracking {
+            @Perception.Bindable var store = store
+
+            ZStack(alignment: .bottom) {
+                // Tab Content Views
+                ZStack {
+                    TabContentView(tab: .home)
+                        .opacity(store.selectedTab == .home ? 1 : 0)
+
+                    TabContentView(tab: .order)
+                        .opacity(store.selectedTab == .order ? 1 : 0)
+
+                    TabContentView(tab: .community)
+                        .opacity(store.selectedTab == .community ? 1 : 0)
+
+                    TabContentView(tab: .profile)
+                        .opacity(store.selectedTab == .profile ? 1 : 0)
+                }
+
+                // TabBar UI
+                GeometryReader { geometry in
+                    let width = geometry.size.width - 2 * AppPadding.xLarge.value
+                    let tabWidth = width / 5
+                    let barHeight: CGFloat = 70
+
+                    ZStack(alignment: .bottom) {
+                        // TabBar Background
+                        TabBarBackgroundView(height: barHeight)
+
+                        // TabBar Icon
+                        HStack(spacing: 0) {
+                            ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
+                                if tab == .pick {
+                                    Spacer().frame(width: tabWidth)
+                                } else {
+                                    TabBarButton(
+                                        tab: tab,
+                                        isSelected: store.selectedTab == tab,
+                                        width: tabWidth,
+                                        height: barHeight
+                                    ) {
+                                        store.send(.tabSelected(tab))
+                                    }
+                                }
                             }
                         }
+                        .frame(height: barHeight)
+
+                        CenterButton {
+                            store.send(.centerButtonTapped)
+                        }
+                        .offset(y: -barHeight + 28)
                     }
-                    .frame(height: barHeight)
-                    
-                    CenterButton {
-                        
-                    }
-                    .offset(y: -barHeight + 28)
+                    .padding(.horizontal, .xLarge)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
                 }
-                .padding(.horizontal, .xLarge)
-                .frame(maxHeight: .infinity, alignment: .bottom)
+                .frame(height: 110)
             }
-            .frame(height: 110)
+            .fullScreenCover(
+                item: $store.scope(state: \.destination?.pick, action: \.destination.pick)
+            ) { pickStore in
+                PickView(store: pickStore)
+            }
+        }
+    }
+}
+
+// MARK: - Tab Content View
+private struct TabContentView: View {
+    let tab: TabBarFeature.Tab
+    
+    var body: some View {
+        NavigationStack {
+            ContentView()
         }
     }
 }
@@ -97,18 +142,19 @@ private struct SineTabBarShape: Shape {
 
 // MARK: - TabBar Button
 private struct TabBarButton: View {
-    let tab: MyTab
-    @Binding var selectedTab: MyTab
+    let tab: TabBarFeature.Tab
+    let isSelected: Bool
     let width: CGFloat
     let height: CGFloat
+    let action: () -> Void
     
     var body: some View {
         Button {
             withAnimation(.easeInOut(duration: 0.2)) {
-                selectedTab = tab
+                action()
             }
         } label: {
-            if selectedTab == tab {
+            if isSelected {
                 tab.selectedIcon
                     .font(.system(size: 28))
                     .frame(width: width, height: height)
@@ -134,7 +180,7 @@ private struct CenterButton: View {
                     .fill(Color.custom(.brand(.blackSprout)))
                     .shadow(color: .custom(.gray(.gray75)).opacity(0.4), radius: 8, x: 0, y: 4)
                 
-                MyTab.pick.selectedIcon
+                TabBarFeature.Tab.pick.selectedIcon
                     .font(.system(size: 24))
             }
             .frame(width: 60, height: 60)
@@ -142,14 +188,8 @@ private struct CenterButton: View {
     }
 }
 
-// MARK: - Tab 종류
-private enum MyTab: CaseIterable {
-    case home
-    case order
-    case pick
-    case community
-    case profile
-    
+// MARK: - Tab Icon Extension
+extension TabBarFeature.Tab {
     var selectedIcon: some View {
         switch self {
         case .home:
@@ -189,5 +229,9 @@ private enum MyTab: CaseIterable {
 }
 
 #Preview {
-        CustomTabBarView()
+    TabBarView(
+        store: Store(initialState: TabBarFeature.State()) {
+            TabBarFeature()
+        }
+    )
 }

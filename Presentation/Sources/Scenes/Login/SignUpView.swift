@@ -8,14 +8,10 @@
 import SwiftUI
 import ComposableArchitecture
 
-public struct SignUpView: View {
+struct SignUpView: View {
     let store: StoreOf<SignUpFeature>
 
-    public init(store: StoreOf<SignUpFeature>) {
-        self.store = store
-    }
-
-    public var body: some View {
+    var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
 

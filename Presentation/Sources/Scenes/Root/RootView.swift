@@ -27,13 +27,19 @@ public struct RootView: View {
                     }
 
             case .loggedIn:
-                ContentView()
+                TabBarView(
+                    store: Store(initialState: TabBarFeature.State()) {
+                        TabBarFeature()
+                    }
+                )
 
             case .loggedOut:
                 NavigationStack {
-                    if let loginStore = store.scope(state: \.loggedOut, action: \.loggedOut) {
-                        LoginView(store: loginStore)
-                    }
+                    LoginView(
+                        store: Store(initialState: LoginFeature.State()) {
+                            LoginFeature()
+                        }
+                    )
                 }
             }
         }

@@ -10,10 +10,10 @@ import Domain
 import ComposableArchitecture
 
 @Reducer
-public struct LoginFeature: Sendable {
+struct LoginFeature: Sendable {
     // MARK: - State
     @ObservableState
-    public struct State: Sendable {
+    struct State: Sendable {
         var email = ""
         var password = ""
 
@@ -25,12 +25,10 @@ public struct LoginFeature: Sendable {
 
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<LoginFeature.Alert>?
-
-        public init() {}
     }
 
     // MARK: - Action
-    public enum Action {
+    enum Action {
         case emailChanged(String)
         case passwordChanged(String)
         case loginButtonTapped
@@ -43,10 +41,8 @@ public struct LoginFeature: Sendable {
         case alert(PresentationAction<LoginFeature.Alert>)
     }
 
-    public init() {}
-
     // MARK: - Body
-    public var body: some ReducerOf<Self> {
+    var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .emailChanged(email):
@@ -133,7 +129,9 @@ public struct LoginFeature: Sendable {
                 
             case .loginCompleted:
                 state.isLoggingIn = false
-                return .none
+                return .run { _ in
+                    NotificationCenter.default.post(name: .loginCompleted, object: nil)
+                }
 
             case .loginFailed(let error):
                 state.isLoggingIn = false
@@ -166,13 +164,13 @@ public struct LoginFeature: Sendable {
     @Dependency(\.appleLogin) var appleLoginUseCase
     @Dependency(\.kakaoLogin) var kakaoLoginUseCase
 
-    public enum Alert: Sendable {}
+    enum Alert: Sendable {}
 }
 
 // MARK: - Destinations
 extension LoginFeature {
     @Reducer
-    public enum Destination {
+    enum Destination {
         case signUp(SignUpFeature)
     }
 }

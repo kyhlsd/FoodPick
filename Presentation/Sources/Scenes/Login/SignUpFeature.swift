@@ -10,10 +10,10 @@ import Domain
 import ComposableArchitecture
 
 @Reducer
-public struct SignUpFeature: Sendable {
+struct SignUpFeature: Sendable {
     // MARK: - State
     @ObservableState
-    public struct State: Sendable {
+    struct State: Sendable {
         var email = ""
         var password = ""
         var passwordConfirm = ""
@@ -73,12 +73,10 @@ public struct SignUpFeature: Sendable {
         }
 
         @Presents var alert: AlertState<SignUpFeature.Alert>?
-
-        public init() {}
     }
 
     // MARK: - Action
-    public enum Action {
+    enum Action {
         case emailChanged(String)
         case passwordChanged(String)
         case passwordConfirmChanged(String)
@@ -92,10 +90,8 @@ public struct SignUpFeature: Sendable {
         case alert(PresentationAction<SignUpFeature.Alert>)
     }
 
-    public init() {}
-
     // MARK: - Body
-    public var body: some ReducerOf<Self> {
+    var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .emailChanged(email):
@@ -282,5 +278,5 @@ public struct SignUpFeature: Sendable {
     @Dependency(\.join) var joinUseCase
     @Dependency(\.saveTokens) var saveTokensUseCase
 
-    public enum Alert: Sendable {}
+    enum Alert: Sendable {}
 }
