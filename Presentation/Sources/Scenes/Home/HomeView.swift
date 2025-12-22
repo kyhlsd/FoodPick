@@ -26,6 +26,7 @@ struct HomeView: View {
                     let isShowingAllCategories = store.isShowingAllCategories
                     let selectedCategory = store.selectedCategory
                     let popularRestaurants = store.popularRestaurants
+                    let isLoadingPopularRestaurants = store.isLoadingPopularRestaurants
 
                     VStack(spacing: AppPadding.large.value) {
                         // 위치
@@ -67,9 +68,11 @@ struct HomeView: View {
                             // 인기 가게
                             PopularRestaurantView(
                                 restaurants: popularRestaurants,
-                                selectedCategory: selectedCategory
-                            )
-                            .padding(.top, .xLarge)
+                                selectedCategory: selectedCategory,
+                                isLoading: isLoadingPopularRestaurants
+                            ) { id, like in
+                                store.send(.toggleRestaurantLike(id, like))
+                            }
                         }
                         .padding(.horizontal, .xLarge)
                         .frame(maxWidth: .infinity)
@@ -78,7 +81,7 @@ struct HomeView: View {
                                 topLeadingRadius: 20,
                                 topTrailingRadius: 20
                             )
-                            .fill(Color.custom(.gray(.gray15)))
+                            .fill(.custom(.gray(.gray15)))
                             .ignoresSafeArea(edges: .bottom)
                         )
                     }
@@ -89,6 +92,7 @@ struct HomeView: View {
                 }
             }
             .hideKeyboardOnTap()
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
 }
@@ -291,7 +295,7 @@ private struct CategoryItemView: View {
                     }
                 
                 Text(item.displayName)
-                    .font(.custom(.pretendard(.body3)))
+                    .font(isSelected ? .custom(.pretendard(.body4)) : .custom(.pretendard(.body3)) )
                     .foregroundStyle(isSelected ? .custom(.brand(.blackSprout)) : .custom(.gray(.gray60)))
                     .lineLimit(1)
             }
@@ -302,6 +306,8 @@ private struct CategoryItemView: View {
 private struct PopularRestaurantView: View {
     let restaurants: [Restaurant]
     let selectedCategory: RestaurantCategory?
+    let isLoading: Bool
+    let onLikeToggle: (String, Bool) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -309,22 +315,31 @@ private struct PopularRestaurantView: View {
                 .font(.custom(.pretendard(.body1)))
                 .foregroundStyle(.custom(.gray(.gray90)))
 
-            if restaurants.isEmpty {
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 176)
+            } else if restaurants.isEmpty {
                 Text("인기 가게가 없습니다")
                     .font(.custom(.pretendard(.body2)))
                     .foregroundStyle(.custom(.gray(.gray60)))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, .large)
+                    .frame(height: 176)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: AppPadding.large.value) {
                             ForEach(restaurants, id: \.restaurantId) { restaurant in
-                                PopularRestaurantItemView(restaurant: restaurant)
-                                    .id(restaurant.restaurantId)
+                                PopularRestaurantItemView(
+                                    restaurant: restaurant,
+                                    onLikeToggle: onLikeToggle
+                                )
+                                .id(restaurant.restaurantId)
                             }
                         }
                     }
+                    .frame(height: 176)
                     .onChange(of: selectedCategory) { _ in
                         if let firstRestaurant = restaurants.first {
                             proxy.scrollTo(firstRestaurant.restaurantId, anchor: .leading)

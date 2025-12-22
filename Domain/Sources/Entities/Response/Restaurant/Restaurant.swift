@@ -14,8 +14,8 @@ public struct Restaurant: Sendable {
     public let close: String
     public let restaurantImageURLs: [String]
     public let isPicchelin: Bool
-    public let isPick: Bool
-    public let pickCount: Int
+    public var isPick: Bool
+    public var pickCount: Int
     public let hashTags: [String]
     public let totalRating: Float
     public let totalOrderCount: Int

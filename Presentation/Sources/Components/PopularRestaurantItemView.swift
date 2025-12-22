@@ -10,6 +10,7 @@ import Domain
 
 struct PopularRestaurantItemView: View {
     let restaurant: Restaurant
+    let onLikeToggle: (String, Bool) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,7 +29,7 @@ struct PopularRestaurantItemView: View {
                 // 상단 Overlay Items
                 HStack(alignment: .top) {
                     HeartButton(isLike: restaurant.isPick) {
-
+                        onLikeToggle(restaurant.restaurantId, !restaurant.isPick)
                     }
 
                     Spacer()
@@ -39,6 +40,7 @@ struct PopularRestaurantItemView: View {
 
             // 가게 정보
             RestaurantInfoView(restaurant: restaurant)
+                .frame(height: 56)
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .custom(.gray(.gray75)).opacity(0.08),
@@ -113,7 +115,7 @@ private struct RestaurantInfoView: View {
         VStack(spacing: 6) {
             HStack(spacing: AppPadding.medium.value) {
                 Text(restaurant.name)
-                    .font(.custom(.pretendard(.body3)))
+                    .font(.custom(.pretendard(.body4)))
                     .foregroundStyle(.custom(.gray(.gray90)))
 
                 HStack(spacing: 2) {
@@ -148,7 +150,6 @@ private struct RestaurantInfoView: View {
         }
         .padding(.vertical, .small)
         .padding(.horizontal, .medium)
-        .frame(height: 56)
         .frame(maxWidth: .infinity)
         .background(.custom(.gray(.gray0)))
     }
@@ -196,6 +197,8 @@ private struct InfoItemView: View {
                 createdAt: Date(),
                 updatedAt: Date()
             )
-        )
+        ) { _, _ in
+            
+        }
     }
 }

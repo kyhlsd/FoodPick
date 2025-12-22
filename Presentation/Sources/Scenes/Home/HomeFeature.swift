@@ -21,6 +21,8 @@ struct HomeFeature: Sendable {
         var isShowingAllCategories = false
         var popularRestaurants: [Restaurant] = []
         var isLoadingPopularRestaurants = false
+
+        @Presents var alert: AlertState<HomeFeature.Alert>?
     }
 
     // MARK: - Action
@@ -39,6 +41,10 @@ struct HomeFeature: Sendable {
         case fetchPopularSearches
         case popularSearchesLoaded([String])
         case popularSearchesLoadFailed(Error)
+        case toggleRestaurantLike(String, Bool)
+        case restaurantLikeToggled(String, LikeStatus)
+        case restaurantLikeToggleFailed(Error)
+        case alert(PresentationAction<HomeFeature.Alert>)
     }
 
     // MARK: - Body
@@ -50,8 +56,6 @@ struct HomeFeature: Sendable {
                 return .none
 
             case .searchSubmitted:
-                // 검색 실행 로직
-                print("검색어: \(state.searchText)")
                 return .none
 
             case let .trendingSearchTapped(keyword):
@@ -104,7 +108,15 @@ struct HomeFeature: Sendable {
 
             case let .popularRestaurantsLoadFailed(error):
                 state.isLoadingPopularRestaurants = false
-                print("인기 가게 로드 실패: \(error)")
+                state.alert = AlertState {
+                    TextState("인기 가게 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
                 return .none
 
             case .fetchPopularSearches:
@@ -121,16 +133,65 @@ struct HomeFeature: Sendable {
                 return .send(.setTrendingSearches(searches))
 
             case let .popularSearchesLoadFailed(error):
-                print("인기 검색어 로드 실패: \(error)")
+                state.alert = AlertState {
+                    TextState("인기 검색어 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case let .toggleRestaurantLike(id, like):
+                return .run { send in
+                    do {
+                        let likeStatus = try await toggleRestaurantLikeUseCase.execute(id: id, like: like)
+                        await send(.restaurantLikeToggled(id, likeStatus))
+                    } catch {
+                        await send(.restaurantLikeToggleFailed(error))
+                    }
+                }
+
+            case let .restaurantLikeToggled(id, likeStatus):
+                if let index = state.popularRestaurants.firstIndex(where: { $0.restaurantId == id }) {
+                    let wasLiked = state.popularRestaurants[index].isPick
+                    state.popularRestaurants[index].isPick = likeStatus.likeStatus
+
+                    // pickCount 업데이트 (좋아요 추가 시 +1, 취소 시 -1)
+                    if !wasLiked && likeStatus.likeStatus {
+                        state.popularRestaurants[index].pickCount += 1
+                    } else if wasLiked && !likeStatus.likeStatus {
+                        state.popularRestaurants[index].pickCount -= 1
+                    }
+                }
+                return .none
+
+            case let .restaurantLikeToggleFailed(error):
+                state.alert = AlertState {
+                    TextState("좋아요 변경 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+                
+            case .alert:
                 return .none
             }
         }
+        .ifLet(\.alert, action: \.alert)
     }
     
     // MARK: - Dependencies
     @Dependency(\.continuousClock) var clock
     @Dependency(\.fetchPopularRestaurants) var fetchPopularRestaurantsUseCase
     @Dependency(\.fetchPopularSearches) var fetchPopularSearchesUseCase
+    @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
 
     enum Alert: Sendable {}
 }
@@ -142,3 +203,5 @@ extension HomeFeature {
         
     }
 }
+
+extension HomeFeature.Destination.State: Sendable {}
