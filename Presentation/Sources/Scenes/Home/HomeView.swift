@@ -21,6 +21,11 @@ struct HomeView: View {
                     .ignoresSafeArea()
                 
                 ScrollView {
+                    let trendingSearches = store.trendingSearches
+                    let currentTrendingIndex = store.currentTrendingIndex
+                    let isShowingAllCategories = store.isShowingAllCategories
+                    let selectedCategory = store.selectedCategory
+
                     VStack(spacing: AppPadding.large.value) {
                         // 위치
                         LocationView()
@@ -36,18 +41,28 @@ struct HomeView: View {
 
                         // 인기 검색어
                         TrendingSearchView(
-                            store: store,
-                            trendingSearches: store.trendingSearches,
-                            currentIndex: store.currentTrendingIndex
-                        )
+                            trendingSearches: trendingSearches,
+                            currentIndex: currentTrendingIndex,
+                        ) {
+                            store.send(.trendingSearchTapped($0))
+                        }
                         .padding(.horizontal, .xLarge)
 
                         // 흰색 컨테이너 영역
                         VStack(spacing: 0) {
-                            CategorySelectionView(store: store)
-                                .padding(.horizontal, .xLarge)
-                                .padding(.top, .xLarge)
+                            CategorySelectionView(
+                                isShowingAllCategories: isShowingAllCategories,
+                                selectedCategory: selectedCategory,
+                                onCategorySelected: { category in
+                                    store.send(.categorySelected(category))
+                                },
+                                onToggleExpansion: {
+                                    store.send(.toggleCategoryExpansion)
+                                }
+                            )
+                            .padding(.top, .xLarge)
                         }
+                        .padding(.horizontal, .xLarge)
                         .frame(maxWidth: .infinity)
                         .background(
                             UnevenRoundedRectangle(
@@ -90,27 +105,27 @@ private struct LocationView: View {
 }
 
 private struct TrendingSearchView: View {
-    let store: StoreOf<HomeFeature>
     let trendingSearches: [String]
     let currentIndex: Int
-    
+    let onTrendingSearchTapped: (String) -> Void
+
     var body: some View {
         HStack(spacing: 2) {
             AppIcon.glint
                 .resizable()
                 .frame(width: 16, height: 16)
                 .foregroundStyle(.custom(.brand(.deepSprout)))
-            
+
             Text("인기 검색어")
                 .font(.custom(.pretendard(.caption1)))
                 .foregroundStyle(.custom(.brand(.deepSprout)))
-            
+
             if !trendingSearches.isEmpty {
                 let index = currentIndex % trendingSearches.count
                 let keyword = trendingSearches[index]
 
                 Button {
-                    store.send(.trendingSearchTapped(keyword))
+                    onTrendingSearchTapped(keyword)
                 } label: {
                     Text("\(index + 1) \(keyword)")
                         .font(.custom(.pretendard(.caption1)))
@@ -126,7 +141,7 @@ private struct TrendingSearchView: View {
                         )
                 }
             }
-            
+
             Spacer()
         }
         .animation(.spring(duration: 0.6), value: currentIndex)
@@ -136,12 +151,15 @@ private struct TrendingSearchView: View {
 }
 
 private struct CategorySelectionView: View {
-    let store: StoreOf<HomeFeature>
+    let isShowingAllCategories: Bool
+    let selectedCategory: StoreCategory?
+    let onCategorySelected: (StoreCategory?) -> Void
+    let onToggleExpansion: () -> Void
 
     private var displayedCategories: [CategoryItem] {
         let storeCategories = StoreCategory.allCases.map { CategoryItem.store($0) }
 
-        if store.isShowingAllCategories {
+        if isShowingAllCategories {
             return [.all] + storeCategories + [.collapse]
         } else {
             return [.all] + Array(storeCategories.prefix(3)) + [.more]
@@ -156,12 +174,12 @@ private struct CategorySelectionView: View {
             ForEach(displayedCategories, id: \.self) { item in
                 CategoryItemView(
                     item: item,
-                    isSelected: item.category == store.selectedCategory && !item.isMoreButton
+                    isSelected: item.category == selectedCategory && !item.isMoreButton
                 ) {
                     if item.isMoreButton {
-                        store.send(.toggleCategoryExpansion)
+                        onToggleExpansion()
                     } else {
-                        store.send(.categorySelected(item.category))
+                        onCategorySelected(item.category)
                     }
                 }
             }
@@ -174,7 +192,7 @@ private enum CategoryItem: Hashable {
     case store(StoreCategory)
     case more
     case collapse
-
+    
     var displayName: String {
         switch self {
         case .all: return "전체"
@@ -183,21 +201,21 @@ private enum CategoryItem: Hashable {
         case .collapse: return "접기"
         }
     }
-
+    
     var isMoreButton: Bool {
         switch self {
         case .more, .collapse: return true
         default: return false
         }
     }
-
+    
     var category: StoreCategory? {
         switch self {
         case .store(let category): return category
         default: return nil
         }
     }
-
+    
     @ViewBuilder
     var icon: some View {
         switch self {
@@ -242,7 +260,7 @@ private struct CategoryItemView: View {
     let item: CategoryItem
     let isSelected: Bool
     let action: () -> Void
-
+    
     var body: some View {
         Button {
             action()
@@ -255,14 +273,14 @@ private struct CategoryItemView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(isSelected ?
                                 .custom(.brand(.blackSprout)) :
-                                .custom(.gray(.gray30)),
-                                lineWidth: 1.5
+                                    .custom(.gray(.gray30)),
+                                    lineWidth: 1.5
                             )
                     }
                     .overlay {
                         item.icon
                     }
-
+                
                 Text(item.displayName)
                     .font(.custom(.pretendard(.body3)))
                     .foregroundStyle(isSelected ? .custom(.brand(.blackSprout)) : .custom(.gray(.gray60)))
