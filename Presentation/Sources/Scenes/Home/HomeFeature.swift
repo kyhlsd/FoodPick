@@ -17,6 +17,8 @@ struct HomeFeature: Sendable {
         var searchText = ""
         var trendingSearches: [String] = []
         var currentTrendingIndex = 0
+        var selectedCategory: StoreCategory?
+        var isShowingAllCategories = false
     }
 
     // MARK: - Action
@@ -27,6 +29,8 @@ struct HomeFeature: Sendable {
         case trendingTimerTick
         case setTrendingSearches([String])
         case trendingSearchTapped(String)
+        case categorySelected(StoreCategory?)
+        case toggleCategoryExpansion
     }
 
     // MARK: - Body
@@ -62,6 +66,16 @@ struct HomeFeature: Sendable {
             case .trendingTimerTick:
                 guard !state.trendingSearches.isEmpty else { return .none }
                 state.currentTrendingIndex += 1
+                return .none
+
+            case let .categorySelected(category):
+                state.selectedCategory = category
+                // 카테고리 필터링 로직
+                print("선택된 카테고리: \(category?.rawValue ?? "전체")")
+                return .none
+
+            case .toggleCategoryExpansion:
+                state.isShowingAllCategories.toggle()
                 return .none
             }
         }

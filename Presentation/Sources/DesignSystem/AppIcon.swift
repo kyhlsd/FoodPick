@@ -30,9 +30,10 @@ enum AppIcon {
     // Category
     static let coffee = Image("coffee", bundle: .module)
     static let fastfood = Image("fastfood", bundle: .module)
-    static let dessert = Image("dessert", bundle: .module)
+    static let desert = Image("desert", bundle: .module)
     static let bakery = Image("bakery", bundle: .module)
-    static let more = Image("more", bundle: .module)
+    static let total = Image("more", bundle: .module)
+    static let more = Image(systemName: "ellipsis")
     
     // TabBar
     static let homeFill = Image("home_fill", bundle: .module).renderingMode(.template)
@@ -49,4 +50,5 @@ enum AppIcon {
     // etc.
     static let kakao = Image("kakao", bundle: .module)
     static let xmarkCircle = Image(systemName: "xmark.circle.fill")
+    static let up = Image(systemName: "chevron.up")
 }
