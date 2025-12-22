@@ -163,7 +163,8 @@ let project = Project(
                         .target(name: "Domain"),
                         .target(name: "Data"),
                         .target(name: "Core"),
-                        .external(name: "ComposableArchitecture")
+                        .external(name: "ComposableArchitecture"),
+                        .external(name: "Kingfisher")
                     ],
                     settings: .settings(
                         base: [
