@@ -67,7 +67,7 @@ final class AuthInterceptor: RequestInterceptor {
         }
 
         switch response.statusCode {
-        case 418:
+        case 419:
             // Access Token 만료 - 토큰 갱신 후 재시도
             Task {
                 let shouldRefresh = await refreshCoordinator.startRefresh(completion: completion)
@@ -89,8 +89,8 @@ final class AuthInterceptor: RequestInterceptor {
                 }
             }
 
-        case 419, 401:
-            // 419: Refresh Token 만료
+        case 418, 401:
+            // 418: Refresh Token 만료
             // 401: 인증할 수 없는 토큰
             // 로그인 화면으로 이동
             Task { @MainActor in
