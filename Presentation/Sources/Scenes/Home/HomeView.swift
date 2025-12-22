@@ -50,7 +50,8 @@ struct HomeView: View {
                         .padding(.horizontal, .xLarge)
 
                         // 흰색 컨테이너 영역
-                        VStack(spacing: 0) {
+                        VStack(spacing: AppPadding.xLarge.value) {
+                            // 카테고리 선택
                             CategorySelectionView(
                                 isShowingAllCategories: isShowingAllCategories,
                                 selectedCategory: selectedCategory,
@@ -63,8 +64,12 @@ struct HomeView: View {
                             )
                             .padding(.top, .xLarge)
 
-                            PopularRestaurantView(restaurants: popularRestaurants)
-                                .padding(.top, .xLarge)
+                            // 인기 가게
+                            PopularRestaurantView(
+                                restaurants: popularRestaurants,
+                                selectedCategory: selectedCategory
+                            )
+                            .padding(.top, .xLarge)
                         }
                         .padding(.horizontal, .xLarge)
                         .frame(maxWidth: .infinity)
@@ -296,11 +301,12 @@ private struct CategoryItemView: View {
 
 private struct PopularRestaurantView: View {
     let restaurants: [Restaurant]
+    let selectedCategory: RestaurantCategory?
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
-            Text("인기 가게")
-                .font(.custom(.pretendard(.title1)))
+            Text("실시간 인기 가게")
+                .font(.custom(.pretendard(.body1)))
                 .foregroundStyle(.custom(.gray(.gray90)))
 
             if restaurants.isEmpty {
@@ -310,10 +316,18 @@ private struct PopularRestaurantView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, .large)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: AppPadding.medium.value) {
-                        ForEach(restaurants, id: \.restaurantId) { restaurant in
-                            PopularRestaurantItemView(restaurant: restaurant)
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: AppPadding.large.value) {
+                            ForEach(restaurants, id: \.restaurantId) { restaurant in
+                                PopularRestaurantItemView(restaurant: restaurant)
+                                    .id(restaurant.restaurantId)
+                            }
+                        }
+                    }
+                    .onChange(of: selectedCategory) { _ in
+                        if let firstRestaurant = restaurants.first {
+                            proxy.scrollTo(firstRestaurant.restaurantId, anchor: .leading)
                         }
                     }
                 }

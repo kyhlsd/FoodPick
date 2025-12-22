@@ -36,6 +36,9 @@ struct HomeFeature: Sendable {
         case fetchPopularRestaurants
         case popularRestaurantsLoaded([Restaurant])
         case popularRestaurantsLoadFailed(Error)
+        case fetchPopularSearches
+        case popularSearchesLoaded([String])
+        case popularSearchesLoadFailed(Error)
     }
 
     // MARK: - Body
@@ -56,9 +59,8 @@ struct HomeFeature: Sendable {
                 return .send(.searchSubmitted)
 
             case .onAppear:
-                let mockData = ["스타벅스", "투썸플레이스", "메가커피", "이디야", "할리스"]
                 return .merge(
-                    .send(.setTrendingSearches(mockData)),
+                    .send(.fetchPopularSearches),
                     .send(.fetchPopularRestaurants)
                 )
 
@@ -104,6 +106,23 @@ struct HomeFeature: Sendable {
                 state.isLoadingPopularRestaurants = false
                 print("인기 가게 로드 실패: \(error)")
                 return .none
+
+            case .fetchPopularSearches:
+                return .run { send in
+                    do {
+                        let searches = try await fetchPopularSearchesUseCase.execute()
+                        await send(.popularSearchesLoaded(searches))
+                    } catch {
+                        await send(.popularSearchesLoadFailed(error))
+                    }
+                }
+
+            case let .popularSearchesLoaded(searches):
+                return .send(.setTrendingSearches(searches))
+
+            case let .popularSearchesLoadFailed(error):
+                print("인기 검색어 로드 실패: \(error)")
+                return .none
             }
         }
     }
@@ -111,6 +130,7 @@ struct HomeFeature: Sendable {
     // MARK: - Dependencies
     @Dependency(\.continuousClock) var clock
     @Dependency(\.fetchPopularRestaurants) var fetchPopularRestaurantsUseCase
+    @Dependency(\.fetchPopularSearches) var fetchPopularSearchesUseCase
 
     enum Alert: Sendable {}
 }
