@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol DeleteReviewUseCase: Sendable {
-    func execute(storeId: String, reviewId: String) async throws
+    func execute(restaurantId: String, reviewId: String) async throws
 }
 
 public final class DeleteReviewUseCaseImpl: DeleteReviewUseCase, @unchecked Sendable {
@@ -18,7 +18,7 @@ public final class DeleteReviewUseCaseImpl: DeleteReviewUseCase, @unchecked Send
         self.reviewRepository = reviewRepository
     }
 
-    public func execute(storeId: String, reviewId: String) async throws {
-        try await reviewRepository.deleteReview(storeId: storeId, reviewId: reviewId)
+    public func execute(restaurantId: String, reviewId: String) async throws {
+        try await reviewRepository.deleteReview(restaurantId: restaurantId, reviewId: reviewId)
     }
 }

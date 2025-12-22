@@ -25,6 +25,7 @@ struct HomeView: View {
                     let currentTrendingIndex = store.currentTrendingIndex
                     let isShowingAllCategories = store.isShowingAllCategories
                     let selectedCategory = store.selectedCategory
+                    let popularRestaurants = store.popularRestaurants
 
                     VStack(spacing: AppPadding.large.value) {
                         // 위치
@@ -61,6 +62,9 @@ struct HomeView: View {
                                 }
                             )
                             .padding(.top, .xLarge)
+
+                            PopularRestaurantView(restaurants: popularRestaurants)
+                                .padding(.top, .xLarge)
                         }
                         .padding(.horizontal, .xLarge)
                         .frame(maxWidth: .infinity)
@@ -152,17 +156,17 @@ private struct TrendingSearchView: View {
 
 private struct CategorySelectionView: View {
     let isShowingAllCategories: Bool
-    let selectedCategory: StoreCategory?
-    let onCategorySelected: (StoreCategory?) -> Void
+    let selectedCategory: RestaurantCategory?
+    let onCategorySelected: (RestaurantCategory?) -> Void
     let onToggleExpansion: () -> Void
 
     private var displayedCategories: [CategoryItem] {
-        let storeCategories = StoreCategory.allCases.map { CategoryItem.store($0) }
+        let restaurantCategories = RestaurantCategory.allCases.map { CategoryItem.restaurant($0) }
 
         if isShowingAllCategories {
-            return [.all] + storeCategories + [.collapse]
+            return [.all] + restaurantCategories + [.collapse]
         } else {
-            return [.all] + Array(storeCategories.prefix(3)) + [.more]
+            return [.all] + Array(restaurantCategories.prefix(3)) + [.more]
         }
     }
 
@@ -189,29 +193,29 @@ private struct CategorySelectionView: View {
 
 private enum CategoryItem: Hashable {
     case all
-    case store(StoreCategory)
+    case restaurant(RestaurantCategory)
     case more
     case collapse
-    
+
     var displayName: String {
         switch self {
         case .all: return "전체"
-        case .store(let category): return category.rawValue
+        case .restaurant(let category): return category.rawValue
         case .more: return "more"
         case .collapse: return "접기"
         }
     }
-    
+
     var isMoreButton: Bool {
         switch self {
         case .more, .collapse: return true
         default: return false
         }
     }
-    
-    var category: StoreCategory? {
+
+    var category: RestaurantCategory? {
         switch self {
-        case .store(let category): return category
+        case .restaurant(let category): return category
         default: return nil
         }
     }
@@ -221,7 +225,7 @@ private enum CategoryItem: Hashable {
         switch self {
         case .all:
             AppIcon.total
-        case .store(let category):
+        case .restaurant(let category):
             switch category {
             case .cafe:
                 AppIcon.coffee
@@ -287,6 +291,35 @@ private struct CategoryItemView: View {
                     .lineLimit(1)
             }
         }
+    }
+}
+
+private struct PopularRestaurantView: View {
+    let restaurants: [Restaurant]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppPadding.medium.value) {
+            Text("인기 가게")
+                .font(.custom(.pretendard(.title1)))
+                .foregroundStyle(.custom(.gray(.gray90)))
+
+            if restaurants.isEmpty {
+                Text("인기 가게가 없습니다")
+                    .font(.custom(.pretendard(.body2)))
+                    .foregroundStyle(.custom(.gray(.gray60)))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, .large)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: AppPadding.medium.value) {
+                        ForEach(restaurants, id: \.restaurantId) { restaurant in
+                            PopularRestaurantItemView(restaurant: restaurant)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

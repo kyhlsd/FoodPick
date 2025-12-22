@@ -46,7 +46,7 @@ struct OrderItemForPaymentDTO: ResponseDTO {
     private let orderId: String
     private let orderCode: String
     private let totalPrice: Int
-    private let store: StoreDTO
+    private let restaurant: RestaurantDTO
     private let orderMenuList: [MenuForOrderDTO]
     private let paidAt: String
     private let createdAt: String
@@ -56,7 +56,7 @@ struct OrderItemForPaymentDTO: ResponseDTO {
         case orderId = "order_id"
         case orderCode = "order_code"
         case totalPrice = "total_price"
-        case store
+        case restaurant = "store"
         case orderMenuList = "order_menu_list"
         case paidAt
         case createdAt
@@ -68,7 +68,7 @@ struct OrderItemForPaymentDTO: ResponseDTO {
         self.orderId = try container.decode(String.self, forKey: .orderId)
         self.orderCode = try container.decode(String.self, forKey: .orderCode)
         self.totalPrice = try container.decode(Int.self, forKey: .totalPrice)
-        self.store = try container.decode(StoreDTO.self, forKey: .store)
+        self.restaurant = try container.decode(RestaurantDTO.self, forKey: .restaurant)
         self.orderMenuList = try container.decode([MenuForOrderDTO].self, forKey: .orderMenuList)
         self.paidAt = try container.decode(String.self, forKey: .paidAt)
         self.createdAt = try container.decode(String.self, forKey: .createdAt)
@@ -82,7 +82,7 @@ extension OrderItemForPaymentDTO {
         return .init(orderId: orderId,
                      orderCode: orderCode,
                      totalPrice: totalPrice,
-                     store: store.toDomain,
+                     restaurant: restaurant.toDomain,
                      orderMenuList: orderMenuList.map { $0.toDomain },
                      paidAt: formatter.date(from: paidAt) ?? Date(),
                      createdAt: formatter.date(from: createdAt) ?? Date(),

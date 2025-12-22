@@ -11,7 +11,7 @@ struct CreatePostRequestDTO: Encodable {
     private let category: String
     private let title: String
     private let content: String
-    private let storeId: String
+    private let restaurantId: String
     private let latitude: Float
     private let longitude: Float
     private let files: [String]
@@ -20,7 +20,7 @@ struct CreatePostRequestDTO: Encodable {
         case category
         case title
         case content
-        case storeId = "store_id"
+        case restaurantId = "store_id"
         case latitude
         case longitude
         case files
@@ -32,7 +32,7 @@ extension CreatePostRequestDTO {
         self.init(category: domain.category.rawValue,
                   title: domain.title,
                   content: domain.content,
-                  storeId: domain.storeId,
+                  restaurantId: domain.restaurantId,
                   latitude: domain.latitude,
                   longitude: domain.longitude,
                   files: domain.files

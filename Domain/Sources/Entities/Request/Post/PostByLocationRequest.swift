@@ -6,7 +6,7 @@
 //
 
 public struct PostByLocationRequest {
-    public let category: StoreCategory?
+    public let category: RestaurantCategory?
     public let longitude: Float?
     public let latitude: Float?
     public let maxDistance: Float?
@@ -14,7 +14,7 @@ public struct PostByLocationRequest {
     public let limit: Int?
     public let orderBy: PostOrderBy
     
-    public init(category: StoreCategory?, longitude: Float?, latitude: Float?, maxDistance: Float?, next: String?, limit: Int?, orderBy: PostOrderBy) {
+    public init(category: RestaurantCategory?, longitude: Float?, latitude: Float?, maxDistance: Float?, next: String?, limit: Int?, orderBy: PostOrderBy) {
         self.category = category
         self.longitude = longitude
         self.latitude = latitude

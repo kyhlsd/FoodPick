@@ -8,19 +8,19 @@
 import Domain
 
 struct OrderRequestDTO: Encodable {
-    private let storeId: String
+    private let restaurantId: String
     private let orderMenuList: [MenuRequestDTO]
     private let totalPrice: Int
     
     enum CodingKeys: String, CodingKey {
-        case storeId = "store_id"
+        case restaurantId = "store_id"
         case orderMenuList = "order_menu_list"
         case totalPrice = "total_price"
     }
     
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.storeId, forKey: .storeId)
+        try container.encode(self.restaurantId, forKey: .restaurantId)
         try container.encode(self.orderMenuList, forKey: .orderMenuList)
         try container.encode(self.totalPrice, forKey: .totalPrice)
     }
@@ -29,7 +29,7 @@ struct OrderRequestDTO: Encodable {
 extension OrderRequestDTO {
     init(from domain: OrderRequest) {
         self.init(
-            storeId: domain.storeId,
+            restaurantId: domain.restaurantId,
             orderMenuList: domain.orderMenuList.map {
                 .init(from: .init(menuId: $0.menuId, quantity: $0.quantity))
             },

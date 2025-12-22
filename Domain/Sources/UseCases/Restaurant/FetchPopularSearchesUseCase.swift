@@ -10,13 +10,13 @@ public protocol FetchPopularSearchesUseCase: Sendable {
 }
 
 public final class FetchPopularSearchesUseCaseImpl: FetchPopularSearchesUseCase, @unchecked Sendable {
-    private let storeRepository: StoreRepository
+    private let restaurantRepository: RestaurantRepository
 
-    public init(storeRepository: StoreRepository) {
-        self.storeRepository = storeRepository
+    public init(restaurantRepository: RestaurantRepository) {
+        self.restaurantRepository = restaurantRepository
     }
 
     public func execute() async throws -> [String] {
-        return try await storeRepository.fetchPopularSearches()
+        return try await restaurantRepository.fetchPopularSearches()
     }
 }

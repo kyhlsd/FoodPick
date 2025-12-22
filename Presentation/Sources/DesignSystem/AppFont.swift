@@ -33,7 +33,7 @@ extension AppFont.Family {
             case .title1: return Font.custom("Pretendard-Bold", size: 20)
             case .body1: return Font.custom("Pretendard-Bold", size: 16)
             case .body2: return Font.custom("Pretendard-Medium", size: 14)
-            case .body3: return Font.custom("Pretendard-Medium", size: 13)
+            case .body3: return Font.custom("Pretendard-Bold", size: 13)
             case .caption1: return Font.custom("Pretendard-SemiBold", size: 12)
             case .caption2: return Font.custom("Pretendard-Regular", size: 10)
             case .caption3: return Font.custom("Pretendard-Regular", size: 8)

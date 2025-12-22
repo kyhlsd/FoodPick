@@ -90,7 +90,7 @@ private struct TabBarBackgroundView: View {
             .clipShape(
                 RoundedRectangle(cornerRadius: height / 2, style: .continuous)
             )
-            .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 8)
+            .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 12)
     }
 }
 
@@ -167,7 +167,7 @@ private struct CenterButton: View {
             ZStack {
                 Circle()
                     .fill(Color.custom(.brand(.blackSprout)))
-                    .shadow(color: .custom(.gray(.gray75)).opacity(0.4), radius: 8, x: 0, y: 4)
+                    .shadow(color: .custom(.gray(.gray75)).opacity(0.3), radius: 12, x: 0, y: 0)
                 
                 TabBarFeature.Tab.pick.selectedIcon
                     .font(.system(size: 24))

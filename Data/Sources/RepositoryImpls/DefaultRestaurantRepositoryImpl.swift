@@ -1,5 +1,5 @@
 //
-//  DefaultStoreRepositoryImpl.swift
+//  DefaultRestaurantRepositoryImpl.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,35 +7,35 @@
 
 import Domain
 
-public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Sendable {
+public final class DefaultRestaurantRepositoryImpl: RestaurantRepository, @unchecked Sendable {
     private let networkManager = NetworkManager.shared
 
     public init() {}
 
-    public func fetchStores(request: StoreByLocationRequest) async throws -> ResponseListWithCursor<Store> {
+    public func fetchRestaurants(request: RestaurantByLocationRequest) async throws -> ResponseListWithCursor<Restaurant> {
         let dto = ByLocationRequestDTO(from: request)
         guard let response = try await networkManager.request(
-            StoreRouter.stores(dto: dto),
-            responseType: ResponseListWithCursorDTO<StoreDTO>.self
+            RestaurantRouter.restaurants(dto: dto),
+            responseType: ResponseListWithCursorDTO<RestaurantDTO>.self
         ) else {
             throw APIError.empty
         }
         return response.toDomain
     }
 
-    public func fetchStoreInfo(id: String) async throws -> StoreDetail {
+    public func fetchRestaurantInfo(id: String) async throws -> RestaurantDetail {
         guard let response = try await networkManager.request(
-            StoreRouter.detail(id: id),
-            responseType: StoreDetailDTO.self
+            RestaurantRouter.detail(id: id),
+            responseType: RestaurantDetailDTO.self
         ) else {
             throw APIError.empty
         }
         return response.toDomain
     }
 
-    public func toggleStoreLike(id: String, like: Bool) async throws -> LikeStatus {
+    public func toggleRestaurantLike(id: String, like: Bool) async throws -> LikeStatus {
         guard let response = try await networkManager.request(
-            StoreRouter.like(id: id, like: like),
+            RestaurantRouter.like(id: id, like: like),
             responseType: LikeStatusDTO.self
         ) else {
             throw APIError.empty
@@ -43,20 +43,20 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func searchStores(name: String) async throws -> [Store] {
+    public func searchRestaurants(name: String) async throws -> [Restaurant] {
         guard let response = try await networkManager.request(
-            StoreRouter.search(name: name),
-            responseType: ResponseListDTO<StoreDTO>.self
+            RestaurantRouter.search(name: name),
+            responseType: ResponseListDTO<RestaurantDTO>.self
         ) else {
             throw APIError.empty
         }
         return response.toDomain
     }
 
-    public func fetchPopularStores(category: StoreCategory?) async throws -> [Store] {
+    public func fetchPopularRestaurants(category: RestaurantCategory?) async throws -> [Restaurant] {
         guard let response = try await networkManager.request(
-            StoreRouter.popularStores(category: category?.rawValue),
-            responseType: ResponseListDTO<StoreDTO>.self
+            RestaurantRouter.popularRestaurants(category: category?.rawValue),
+            responseType: ResponseListDTO<RestaurantDTO>.self
         ) else {
             throw APIError.empty
         }
@@ -65,7 +65,7 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
 
     public func fetchPopularSearches() async throws -> [String] {
         guard let response = try await networkManager.request(
-            StoreRouter.popularSearches,
+            RestaurantRouter.popularSearches,
             responseType: PopularSearchDTO.self
         ) else {
             throw APIError.empty
@@ -73,22 +73,22 @@ public final class DefaultStoreRepositoryImpl: StoreRepository, @unchecked Senda
         return response.toDomain
     }
 
-    public func fetchMyLikes(request: BasicRequest) async throws -> ResponseListWithCursor<Store> {
+    public func fetchMyLikes(request: BasicRequest) async throws -> ResponseListWithCursor<Restaurant> {
         let dto = BasicRequestDTO(from: request)
         guard let response = try await networkManager.request(
-            StoreRouter.myLikes(dto: dto),
-            responseType: ResponseListWithCursorDTO<StoreDTO>.self
+            RestaurantRouter.myLikes(dto: dto),
+            responseType: ResponseListWithCursorDTO<RestaurantDTO>.self
         ) else {
             throw APIError.empty
         }
         return response.toDomain
     }
 
-    public func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<ReviewForStore> {
+    public func fetchReviews(userId: String, request: BasicRequest) async throws -> ResponseListWithCursor<ReviewForRestaurant> {
         let dto = BasicRequestDTO(from: request)
         guard let response = try await networkManager.request(
-            StoreRouter.reviews(id: userId, dto: dto),
-            responseType: ResponseListWithCursorDTO<ReviewForStoreDTO>.self
+            RestaurantRouter.reviews(id: userId, dto: dto),
+            responseType: ResponseListWithCursorDTO<ReviewForRestaurantDTO>.self
         ) else {
             throw APIError.empty
         }

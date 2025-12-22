@@ -9,7 +9,7 @@ import Foundation
 import Core
 
 public protocol UploadReviewFilesUseCase: Sendable {
-    func execute(storeId: String, files: [(Data, MediaType)]) async throws -> [String]
+    func execute(restaurantId: String, files: [(Data, MediaType)]) async throws -> [String]
 }
 
 public final class UploadReviewFilesUseCaseImpl: UploadReviewFilesUseCase, @unchecked Sendable {
@@ -19,7 +19,7 @@ public final class UploadReviewFilesUseCaseImpl: UploadReviewFilesUseCase, @unch
         self.reviewRepository = reviewRepository
     }
 
-    public func execute(storeId: String, files: [(Data, MediaType)]) async throws -> [String] {
-        return try await reviewRepository.uploadFiles(storeId: storeId, files: files)
+    public func execute(restaurantId: String, files: [(Data, MediaType)]) async throws -> [String] {
+        return try await reviewRepository.uploadFiles(restaurantId: restaurantId, files: files)
     }
 }

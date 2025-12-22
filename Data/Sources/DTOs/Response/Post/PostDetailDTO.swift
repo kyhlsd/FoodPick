@@ -14,7 +14,7 @@ struct PostDetailDTO: ResponseDTO {
     private let category: String
     private let title: String
     private let content: String
-    private let store: StoreDTO
+    private let restaurant: RestaurantDTO
     private let geolocation: GeolocationDTO
     private let creator: ProfileDTO
     private let files: [String]
@@ -29,7 +29,7 @@ struct PostDetailDTO: ResponseDTO {
         case category
         case title
         case content
-        case store
+        case restaurant = "store"
         case geolocation
         case creator
         case files
@@ -46,7 +46,7 @@ struct PostDetailDTO: ResponseDTO {
         self.category = try container.decode(String.self, forKey: .category)
         self.title = try container.decode(String.self, forKey: .title)
         self.content = try container.decode(String.self, forKey: .content)
-        self.store = try container.decode(StoreDTO.self, forKey: .store)
+        self.restaurant = try container.decode(RestaurantDTO.self, forKey: .restaurant)
         self.geolocation = try container.decode(GeolocationDTO.self, forKey: .geolocation)
         self.creator = try container.decode(ProfileDTO.self, forKey: .creator)
         self.files = try container.decode([String].self, forKey: .files)
@@ -65,7 +65,7 @@ extension PostDetailDTO {
                      category: category,
                      title: title,
                      content: content,
-                     store: store.toDomain,
+                     restaurant: restaurant.toDomain,
                      geolocation: geolocation.toDomain,
                      creator: creator.toDomain,
                      files: files,

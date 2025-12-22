@@ -11,7 +11,7 @@ import Core
 
 struct MenuDTO: ResponseDTO {
     private let menuId: String
-    private let storeId: String
+    private let restaurantId: String
     private let category: String
     private let name: String
     private let description: String
@@ -25,7 +25,7 @@ struct MenuDTO: ResponseDTO {
     
     enum CodingKeys: String, CodingKey {
         case menuId = "menu_id"
-        case storeId = "store_id"
+        case restaurantId = "store_id"
         case category
         case name
         case description
@@ -41,7 +41,7 @@ struct MenuDTO: ResponseDTO {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.menuId = try container.decode(String.self, forKey: .menuId)
-        self.storeId = try container.decode(String.self, forKey: .storeId)
+        self.restaurantId = try container.decode(String.self, forKey: .restaurantId)
         self.category = try container.decode(String.self, forKey: .category)
         self.name = try container.decode(String.self, forKey: .name)
         self.description = try container.decode(String.self, forKey: .description)
@@ -59,7 +59,7 @@ extension MenuDTO {
     var toDomain: Menu {
         let formatter = Core.DateFormatterProvider.iso8601
         return .init(menuId: menuId,
-                     storeId: storeId,
+                     restaurantId: restaurantId,
                      category: category,
                      name: name,
                      description: description,

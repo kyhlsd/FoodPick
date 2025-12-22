@@ -9,7 +9,7 @@ import Foundation
 
 public struct Menu {
     public let menuId: String
-    public let storeId: String
+    public let restaurantId: String
     public let category: String
     public let name: String
     public let description: String
@@ -21,9 +21,9 @@ public struct Menu {
     public let createdAt: Date
     public let updatedAt: Date
     
-    public init(menuId: String, storeId: String, category: String, name: String, description: String, originInfo: String, price: Int, isSoldOut: Bool, tags: [String], menuImageURL: String, createdAt: Date, updatedAt: Date) {
+    public init(menuId: String, restaurantId: String, category: String, name: String, description: String, originInfo: String, price: Int, isSoldOut: Bool, tags: [String], menuImageURL: String, createdAt: Date, updatedAt: Date) {
         self.menuId = menuId
-        self.storeId = storeId
+        self.restaurantId = restaurantId
         self.category = category
         self.name = name
         self.description = description

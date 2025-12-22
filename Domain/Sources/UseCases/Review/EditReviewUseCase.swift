@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol EditReviewUseCase: Sendable {
-    func execute(storeId: String, reviewId: String, request: EditReviewRequest) async throws -> ReviewResponse
+    func execute(restaurantId: String, reviewId: String, request: EditReviewRequest) async throws -> ReviewResponse
 }
 
 public final class EditReviewUseCaseImpl: EditReviewUseCase, @unchecked Sendable {
@@ -18,7 +18,7 @@ public final class EditReviewUseCaseImpl: EditReviewUseCase, @unchecked Sendable
         self.reviewRepository = reviewRepository
     }
 
-    public func execute(storeId: String, reviewId: String, request: EditReviewRequest) async throws -> ReviewResponse {
-        return try await reviewRepository.editReview(storeId: storeId, reviewId: reviewId, request: request)
+    public func execute(restaurantId: String, reviewId: String, request: EditReviewRequest) async throws -> ReviewResponse {
+        return try await reviewRepository.editReview(restaurantId: restaurantId, reviewId: reviewId, request: request)
     }
 }

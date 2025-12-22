@@ -19,35 +19,35 @@ struct ByLocationRequestDTO {
 }
 
 extension ByLocationRequestDTO {
-    init(from domain: StoreByLocationRequest) {
+    init(from domain: RestaurantByLocationRequest) {
         let longitude: String?
         if let domainLongitude = domain.longitude {
             longitude = String(domainLongitude)
         } else {
             longitude = nil
         }
-        
+
         let latitude: String?
         if let domainLatitude = domain.latitude {
             latitude = String(domainLatitude)
         } else {
             latitude = nil
         }
-        
+
         let maxDistance: String?
         if let domainMaxDistance = domain.maxDistance {
             maxDistance = String(domainMaxDistance)
         } else {
             maxDistance = nil
         }
-        
+
         let limit: String?
         if let domainLimit = domain.limit {
             limit = String(domainLimit)
         } else {
             limit = nil
         }
-        
+
         self.init(category: domain.category?.rawValue, longitude: longitude, latitude: latitude, maxDistance: maxDistance, next: domain.next, limit: limit, orderBy: domain.orderBy.rawValue)
     }
     

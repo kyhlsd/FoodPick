@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol FetchReviewDetailUseCase: Sendable {
-    func execute(storeId: String, reviewId: String) async throws -> ReviewResponse
+    func execute(restaurantId: String, reviewId: String) async throws -> ReviewResponse
 }
 
 public final class FetchReviewDetailUseCaseImpl: FetchReviewDetailUseCase, @unchecked Sendable {
@@ -18,7 +18,7 @@ public final class FetchReviewDetailUseCaseImpl: FetchReviewDetailUseCase, @unch
         self.reviewRepository = reviewRepository
     }
 
-    public func execute(storeId: String, reviewId: String) async throws -> ReviewResponse {
-        return try await reviewRepository.fetchReviewDetail(storeId: storeId, reviewId: reviewId)
+    public func execute(restaurantId: String, reviewId: String) async throws -> ReviewResponse {
+        return try await reviewRepository.fetchReviewDetail(restaurantId: restaurantId, reviewId: reviewId)
     }
 }

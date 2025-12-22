@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol FetchReviewListUseCase: Sendable {
-    func execute(storeId: String, request: ReviewPageRequest) async throws -> ResponseListWithCursor<ReviewForListResponse>
+    func execute(restaurantId: String, request: ReviewPageRequest) async throws -> ResponseListWithCursor<ReviewForListResponse>
 }
 
 public final class FetchReviewListUseCaseImpl: FetchReviewListUseCase, @unchecked Sendable {
@@ -18,7 +18,7 @@ public final class FetchReviewListUseCaseImpl: FetchReviewListUseCase, @unchecke
         self.reviewRepository = reviewRepository
     }
 
-    public func execute(storeId: String, request: ReviewPageRequest) async throws -> ResponseListWithCursor<ReviewForListResponse> {
-        return try await reviewRepository.fetchReviewList(storeId: storeId, request: request)
+    public func execute(restaurantId: String, request: ReviewPageRequest) async throws -> ResponseListWithCursor<ReviewForListResponse> {
+        return try await reviewRepository.fetchReviewList(restaurantId: restaurantId, request: request)
     }
 }

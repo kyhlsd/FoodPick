@@ -6,12 +6,12 @@
 //
 
 public struct OrderRequest {
-    public let storeId: String
+    public let restaurantId: String
     public let orderMenuList: [MenuRequest]
     public let totalPrice: Int
     
-    public init(storeId: String, orderMenuList: [MenuRequest], totalPrice: Int) {
-        self.storeId = storeId
+    public init(restaurantId: String, orderMenuList: [MenuRequest], totalPrice: Int) {
+        self.restaurantId = restaurantId
         self.orderMenuList = orderMenuList
         self.totalPrice = totalPrice
     }

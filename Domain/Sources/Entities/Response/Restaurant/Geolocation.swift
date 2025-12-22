@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/16/25.
 //
 
-public struct Geolocation {
+public struct Geolocation: Sendable {
     public let longitude: Float
     public let latitude: Float
     

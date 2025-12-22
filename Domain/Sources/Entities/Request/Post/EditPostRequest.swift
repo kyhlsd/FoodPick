@@ -6,19 +6,19 @@
 //
 
 public struct EditPostRequest {
-    public let category: StoreCategory?
+    public let category: RestaurantCategory?
     public let title: String?
     public let content: String?
-    public let storeId: String?
+    public let restaurantId: String?
     public let latitude: Float?
     public let longitude: Float?
     public let files: [String]?
     
-    public init(category: StoreCategory? = nil, title: String? = nil, content: String? = nil, storeId: String? = nil, latitude: Float? = nil, longitude: Float? = nil, files: [String]? = nil) {
+    public init(category: RestaurantCategory? = nil, title: String? = nil, content: String? = nil, restaurantId: String? = nil, latitude: Float? = nil, longitude: Float? = nil, files: [String]? = nil) {
         self.category = category
         self.title = title
         self.content = content
-        self.storeId = storeId
+        self.restaurantId = restaurantId
         self.latitude = latitude
         self.longitude = longitude
         self.files = files

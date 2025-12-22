@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-public struct PrimaryButton: View {
+struct PrimaryButton: View {
     let title: String
     let height: CGFloat
     let isEnabled: Bool
     let isLoading: Bool
     let action: () -> Void
 
-    public init(
+    init(
         title: String,
         height: CGFloat = 50,
         isEnabled: Bool = true,
@@ -27,8 +27,8 @@ public struct PrimaryButton: View {
         self.isLoading = isLoading
         self.action = action
     }
-
-    public var body: some View {
+    
+    var body: some View {
         Button(action: action) {
             ZStack {
                 Text(title)

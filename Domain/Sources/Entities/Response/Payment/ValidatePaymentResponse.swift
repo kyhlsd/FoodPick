@@ -25,17 +25,17 @@ public struct OrderItemForPayment {
     public let orderId: String
     public let orderCode: String
     public let totalPrice: Int
-    public let store: Store
+    public let restaurant: Restaurant
     public let orderMenuList: [MenuForOrder]
     public let paidAt: Date
     public let createdAt: Date
     public let updatedAt: Date
     
-    public init(orderId: String, orderCode: String, totalPrice: Int, store: Store, orderMenuList: [MenuForOrder], paidAt: Date, createdAt: Date, updatedAt: Date) {
+    public init(orderId: String, orderCode: String, totalPrice: Int, restaurant: Restaurant, orderMenuList: [MenuForOrder], paidAt: Date, createdAt: Date, updatedAt: Date) {
         self.orderId = orderId
         self.orderCode = orderCode
         self.totalPrice = totalPrice
-        self.store = store
+        self.restaurant = restaurant
         self.orderMenuList = orderMenuList
         self.paidAt = paidAt
         self.createdAt = createdAt

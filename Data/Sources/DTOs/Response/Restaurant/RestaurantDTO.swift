@@ -1,5 +1,5 @@
 //
-//  StoreDTO.swift
+//  RestaurantDTO.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -9,12 +9,12 @@ import Foundation
 import Domain
 import Core
 
-struct StoreDTO: ResponseDTO {
-    private let storeId: String
+struct RestaurantDTO: ResponseDTO {
+    private let restaurantId: String
     private let category: String
     private let name: String
     private let close: String
-    private let storeImageURLs: [String]
+    private let restaurantImageURLs: [String]
     private let isPicchelin: Bool
     private let isPick: Bool
     private let pickCount: Int
@@ -26,14 +26,14 @@ struct StoreDTO: ResponseDTO {
     private let distance: Float?
     private let createdAt: String
     private let updatedAt: String
-    
+
     enum CodingKeys: String, CodingKey {
-        case storeId = "store_id"
+        case restaurantId = "store_id"
         case id
         case category
         case name
         case close
-        case storeImageURLs = "store_image_urls"
+        case restaurantImageURLs = "store_image_urls"
         case isPicchelin = "is_picchelin"
         case isPick = "is_pick"
         case pickCount = "pick_count"
@@ -46,15 +46,15 @@ struct StoreDTO: ResponseDTO {
         case createdAt
         case updatedAt
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.storeId = try container.decodeIfPresent(String.self, forKey: .storeId)
+        self.restaurantId = try container.decodeIfPresent(String.self, forKey: .restaurantId)
             ?? container.decode(String.self, forKey: .id)
         self.category = try container.decode(String.self, forKey: .category)
         self.name = try container.decode(String.self, forKey: .name)
         self.close = try container.decode(String.self, forKey: .close)
-        self.storeImageURLs = try container.decode([String].self, forKey: .storeImageURLs)
+        self.restaurantImageURLs = try container.decode([String].self, forKey: .restaurantImageURLs)
         self.isPicchelin = try container.decode(Bool.self, forKey: .isPicchelin)
         self.isPick = try container.decode(Bool.self, forKey: .isPick)
         self.pickCount = try container.decode(Int.self, forKey: .pickCount)
@@ -69,14 +69,14 @@ struct StoreDTO: ResponseDTO {
     }
 }
 
-extension StoreDTO {
-    var toDomain: Store {
+extension RestaurantDTO {
+    var toDomain: Restaurant {
         let formatter = Core.DateFormatterProvider.iso8601
-        return .init(storeId: storeId,
-                     category: StoreCategory(rawValue: category) ?? .etc,
+        return .init(restaurantId: restaurantId,
+                     category: RestaurantCategory(rawValue: category) ?? .etc,
                      name: name,
                      close: close,
-                     storeImageURLs: storeImageURLs,
+                     restaurantImageURLs: restaurantImageURLs,
                      isPicchelin: isPicchelin,
                      isPick: isPick,
                      pickCount: pickCount,

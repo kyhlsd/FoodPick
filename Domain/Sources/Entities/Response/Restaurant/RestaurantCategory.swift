@@ -1,11 +1,11 @@
 //
-//  StoreCategory.swift
+//  RestaurantCategory.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
 //
 
-public enum StoreCategory: String, CaseIterable, Sendable {
+public enum RestaurantCategory: String, CaseIterable, Sendable {
     case cafe = "카페"
     case fastfood = "패스트푸드"
     case desert = "디저트"

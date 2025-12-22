@@ -6,19 +6,19 @@
 //
 
 public struct CreatePostRequest {
-    public let category: StoreCategory
+    public let category: RestaurantCategory
     public let title: String
     public let content: String
-    public let storeId: String
+    public let restaurantId: String
     public let latitude: Float
     public let longitude: Float
     public let files: [String]
     
-    public init(category: StoreCategory, title: String, content: String, storeId: String, latitude: Float, longitude: Float, files: [String]) {
+    public init(category: RestaurantCategory, title: String, content: String, restaurantId: String, latitude: Float, longitude: Float, files: [String]) {
         self.category = category
         self.title = title
         self.content = content
-        self.storeId = storeId
+        self.restaurantId = restaurantId
         self.latitude = latitude
         self.longitude = longitude
         self.files = files

@@ -14,7 +14,7 @@ struct OrderDTO: ResponseDTO {
     private let orderCode: String
     private let totalPrice: Int
     private let review: ReviewForOrderDTO?
-    private let store: StoreDTO
+    private let restaurant: RestaurantDTO
     private let orderMenuList: [MenuForOrderDTO]
     private let currentOrderStatus: OrderStatusDTO
     private let orderStatusTimeline: [OrderStatusTimelineItemDTO]
@@ -27,7 +27,7 @@ struct OrderDTO: ResponseDTO {
         case orderCode = "order_code"
         case totalPrice = "total_price"
         case review
-        case store
+        case restaurant = "store"
         case orderMenuList = "order_menu_list"
         case currentOrderStatus = "current_order_status"
         case orderStatusTimeline = "order_status_timeline"
@@ -42,7 +42,7 @@ struct OrderDTO: ResponseDTO {
         self.orderCode = try container.decode(String.self, forKey: .orderCode)
         self.totalPrice = try container.decode(Int.self, forKey: .totalPrice)
         self.review = try container.decodeIfPresent(ReviewForOrderDTO.self, forKey: .review)
-        self.store = try container.decode(StoreDTO.self, forKey: .store)
+        self.restaurant = try container.decode(RestaurantDTO.self, forKey: .restaurant)
         self.orderMenuList = try container.decode([MenuForOrderDTO].self, forKey: .orderMenuList)
         self.currentOrderStatus = try container.decode(OrderStatusDTO.self, forKey: .currentOrderStatus)
         self.orderStatusTimeline = try container.decode([OrderStatusTimelineItemDTO].self, forKey: .orderStatusTimeline)
@@ -59,7 +59,7 @@ extension OrderDTO {
                      orderCode: orderCode,
                      totalPrice: totalPrice,
                      review: review?.toDomain,
-                     store: store.toDomain,
+                     restaurant: restaurant.toDomain,
                      orderMenuList: orderMenuList.map { $0.toDomain },
                      currentOrderStatus: currentOrderStatus.toDomain,
                      orderStatusTimeline: orderStatusTimeline.map { $0.toDomain },

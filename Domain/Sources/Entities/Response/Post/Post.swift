@@ -12,7 +12,7 @@ public struct Post {
     public let category: String
     public let title: String
     public let content: String
-    public let store: Store
+    public let restaurant: Restaurant
     public let geolocation: Geolocation
     public let creator: Profile
     public let files: [String]
@@ -21,12 +21,12 @@ public struct Post {
     public let createdAt: Date
     public let updatedAt: Date
     
-    public init(postId: String, category: String, title: String, content: String, store: Store, geolocation: Geolocation, creator: Profile, files: [String], isLike: Bool, likeCount: Int, createdAt: Date, updatedAt: Date) {
+    public init(postId: String, category: String, title: String, content: String, restaurant: Restaurant, geolocation: Geolocation, creator: Profile, files: [String], isLike: Bool, likeCount: Int, createdAt: Date, updatedAt: Date) {
         self.postId = postId
         self.category = category
         self.title = title
         self.content = content
-        self.store = store
+        self.restaurant = restaurant
         self.geolocation = geolocation
         self.creator = creator
         self.files = files

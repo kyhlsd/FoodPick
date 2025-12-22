@@ -13,7 +13,7 @@ struct ReviewResponseDTO: ResponseDTO {
     private let reviewId: String
     private let content: String
     private let rating: Int
-    private let store: StoreDTO
+    private let restaurant: RestaurantDTO
     private let reviewImageURLs: [String]
     private let orderMenuList: [String]
     private let creator: ProfileDTO
@@ -24,7 +24,7 @@ struct ReviewResponseDTO: ResponseDTO {
         case reviewId = "review_id"
         case content
         case rating
-        case store
+        case restaurant = "store"
         case reviewImageURLs = "review_image_urls"
         case orderMenuList = "order_menu_list"
         case creator
@@ -37,7 +37,7 @@ struct ReviewResponseDTO: ResponseDTO {
         self.reviewId = try container.decode(String.self, forKey: .reviewId)
         self.content = try container.decode(String.self, forKey: .content)
         self.rating = try container.decode(Int.self, forKey: .rating)
-        self.store = try container.decode(StoreDTO.self, forKey: .store)
+        self.restaurant = try container.decode(RestaurantDTO.self, forKey: .restaurant)
         self.reviewImageURLs = try container.decode([String].self, forKey: .reviewImageURLs)
         self.orderMenuList = try container.decode([String].self, forKey: .orderMenuList)
         self.creator = try container.decode(ProfileDTO.self, forKey: .creator)
@@ -52,7 +52,7 @@ extension ReviewResponseDTO {
         return .init(reviewId: reviewId,
                      content: content,
                      rating: rating,
-                     store: store.toDomain,
+                     restaurant: restaurant.toDomain,
                      reviewImageURLs: reviewImageURLs,
                      orderMenuList: orderMenuList,
                      creator: creator.toDomain,

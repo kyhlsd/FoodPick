@@ -17,8 +17,10 @@ struct HomeFeature: Sendable {
         var searchText = ""
         var trendingSearches: [String] = []
         var currentTrendingIndex = 0
-        var selectedCategory: StoreCategory?
+        var selectedCategory: RestaurantCategory?
         var isShowingAllCategories = false
+        var popularRestaurants: [Restaurant] = []
+        var isLoadingPopularRestaurants = false
     }
 
     // MARK: - Action
@@ -29,8 +31,11 @@ struct HomeFeature: Sendable {
         case trendingTimerTick
         case setTrendingSearches([String])
         case trendingSearchTapped(String)
-        case categorySelected(StoreCategory?)
+        case categorySelected(RestaurantCategory?)
         case toggleCategoryExpansion
+        case fetchPopularRestaurants
+        case popularRestaurantsLoaded([Restaurant])
+        case popularRestaurantsLoadFailed(Error)
     }
 
     // MARK: - Body
@@ -52,7 +57,10 @@ struct HomeFeature: Sendable {
 
             case .onAppear:
                 let mockData = ["스타벅스", "투썸플레이스", "메가커피", "이디야", "할리스"]
-                return .send(.setTrendingSearches(mockData))
+                return .merge(
+                    .send(.setTrendingSearches(mockData)),
+                    .send(.fetchPopularRestaurants)
+                )
 
             case let .setTrendingSearches(searches):
                 state.trendingSearches = searches
@@ -70,12 +78,31 @@ struct HomeFeature: Sendable {
 
             case let .categorySelected(category):
                 state.selectedCategory = category
-                // 카테고리 필터링 로직
-                print("선택된 카테고리: \(category?.rawValue ?? "전체")")
-                return .none
+                return .send(.fetchPopularRestaurants)
 
             case .toggleCategoryExpansion:
                 state.isShowingAllCategories.toggle()
+                return .none
+
+            case .fetchPopularRestaurants:
+                state.isLoadingPopularRestaurants = true
+                return .run { [category = state.selectedCategory] send in
+                    do {
+                        let restaurants = try await fetchPopularRestaurantsUseCase.execute(category: category)
+                        await send(.popularRestaurantsLoaded(restaurants))
+                    } catch {
+                        await send(.popularRestaurantsLoadFailed(error))
+                    }
+                }
+
+            case let .popularRestaurantsLoaded(restaurants):
+                state.isLoadingPopularRestaurants = false
+                state.popularRestaurants = restaurants
+                return .none
+
+            case let .popularRestaurantsLoadFailed(error):
+                state.isLoadingPopularRestaurants = false
+                print("인기 가게 로드 실패: \(error)")
                 return .none
             }
         }
@@ -83,7 +110,8 @@ struct HomeFeature: Sendable {
     
     // MARK: - Dependencies
     @Dependency(\.continuousClock) var clock
-    
+    @Dependency(\.fetchPopularRestaurants) var fetchPopularRestaurantsUseCase
+
     enum Alert: Sendable {}
 }
 

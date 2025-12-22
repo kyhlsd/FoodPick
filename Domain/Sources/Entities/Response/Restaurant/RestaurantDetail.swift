@@ -1,5 +1,5 @@
 //
-//  StoreDetail.swift
+//  RestaurantDetail.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,9 +7,9 @@
 
 import Foundation
 
-public struct StoreDetail {
-    public let storeId: String
-    public let category: StoreCategory
+public struct RestaurantDetail {
+    public let restaurantId: String
+    public let category: RestaurantCategory
     public let name: String
     public let description: String
     public let hashTags: [String]
@@ -18,7 +18,7 @@ public struct StoreDetail {
     public let address: String
     public let estimatedPickupTime: Int
     public let parkingGuide: String
-    public let storeImageURLs: [String]
+    public let restaurantImageURLs: [String]
     public let isPicchelin: Bool
     public let isPick: Bool
     public let pickCount: Int
@@ -30,9 +30,9 @@ public struct StoreDetail {
     public let menuList: [Menu]
     public let createdAt: Date
     public let updatedAt: Date
-    
-    public init(storeId: String, category: StoreCategory, name: String, description: String, hashTags: [String], open: String, close: String, address: String, estimatedPickupTime: Int, parkingGuide: String, storeImageURLs: [String], isPicchelin: Bool, isPick: Bool, pickCount: Int, totalReviewCount: Int, totalOrderCount: Int, totalRating: Float, creator: Profile, geoLocation: Geolocation, menuList: [Menu], createdAt: Date, updatedAt: Date) {
-        self.storeId = storeId
+
+    public init(restaurantId: String, category: RestaurantCategory, name: String, description: String, hashTags: [String], open: String, close: String, address: String, estimatedPickupTime: Int, parkingGuide: String, restaurantImageURLs: [String], isPicchelin: Bool, isPick: Bool, pickCount: Int, totalReviewCount: Int, totalOrderCount: Int, totalRating: Float, creator: Profile, geoLocation: Geolocation, menuList: [Menu], createdAt: Date, updatedAt: Date) {
+        self.restaurantId = restaurantId
         self.category = category
         self.name = name
         self.description = description
@@ -42,7 +42,7 @@ public struct StoreDetail {
         self.address = address
         self.estimatedPickupTime = estimatedPickupTime
         self.parkingGuide = parkingGuide
-        self.storeImageURLs = storeImageURLs
+        self.restaurantImageURLs = restaurantImageURLs
         self.isPicchelin = isPicchelin
         self.isPick = isPick
         self.pickCount = pickCount

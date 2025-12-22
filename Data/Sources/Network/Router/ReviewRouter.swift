@@ -13,9 +13,9 @@ enum ReviewRouter {
     case files(id: String, files: [(Data, MediaType)])
     case review(id: String, dto: ReviewRequestDTO)
     case reviewList(id: String, dto: ReviewPageRequestDTO)
-    case detail(storeId: String, reviewId: String)
-    case edit(storeId: String, reviewId: String, dto: EditReviewRequestDTO)
-    case delete(storeId: String, reviewId: String)
+    case detail(restaurantId: String, reviewId: String)
+    case edit(restaurantId: String, reviewId: String, dto: EditReviewRequestDTO)
+    case delete(restaurantId: String, reviewId: String)
     case statistics(id: String)
 }
 
@@ -40,9 +40,9 @@ extension ReviewRouter: Router {
             return base + "/\(id)/reviews/files"
         case .review(let id, _), .reviewList(let id, _):
             return base + "/\(id)/reviews"
-        case .detail(let storeId, let reviewId), .edit(let storeId, let reviewId, _),
-                .delete(let storeId, let reviewId):
-            return base + "/\(storeId)/reviews/\(reviewId)"
+        case .detail(let restaurantId, let reviewId), .edit(let restaurantId, let reviewId, _),
+                .delete(let restaurantId, let reviewId):
+            return base + "/\(restaurantId)/reviews/\(reviewId)"
         case .statistics(let id):
             return base + "/\(id)/reviews/reviews-ratings"
         }

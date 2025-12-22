@@ -1,5 +1,5 @@
 //
-//  StoreRouter.swift
+//  RestaurantRouter.swift
 //  Data
 //
 //  Created by 김영훈 on 12/16/25.
@@ -8,31 +8,31 @@
 import Foundation
 import Alamofire
 
-enum StoreRouter {
-    case stores(dto: ByLocationRequestDTO)
+enum RestaurantRouter {
+    case restaurants(dto: ByLocationRequestDTO)
     case detail(id: String)
     case like(id: String, like: Bool)
     case search(name: String)
-    case popularStores(category: String? = nil)
+    case popularRestaurants(category: String? = nil)
     case popularSearches
     case myLikes(dto: BasicRequestDTO)
     case reviews(id: String, dto: BasicRequestDTO)
 }
 
-extension StoreRouter: Router {
+extension RestaurantRouter: Router {
     var method: HTTPMethod {
         switch self {
-        case .stores, .detail, .search, .popularStores, .popularSearches, .myLikes, .reviews:
+        case .restaurants, .detail, .search, .popularRestaurants, .popularSearches, .myLikes, .reviews:
             return .get
         case .like:
             return .post
         }
     }
-    
+
     var path: String {
         let base = "/stores"
         switch self {
-        case .stores:
+        case .restaurants:
             return base
         case .detail(let id):
             return base + "/\(id)"
@@ -40,7 +40,7 @@ extension StoreRouter: Router {
             return base + "/\(id)/like"
         case .search:
             return base + "/search"
-        case .popularStores:
+        case .popularRestaurants:
             return base + "/popular-stores"
         case .popularSearches:
             return base + "/searches-popular"
@@ -50,7 +50,7 @@ extension StoreRouter: Router {
             return base + "/reviews/users/\(id)"
         }
     }
-    
+
     var body: RequestBody {
         switch self {
         case .like(_, let like):
@@ -59,16 +59,16 @@ extension StoreRouter: Router {
             return .none
         }
     }
-    
+
     var queryItems: [URLQueryItem] {
         switch self {
-        case .stores(let dto):
+        case .restaurants(let dto):
             return dto.toQueryItems
         case .detail, .like, .popularSearches:
             return []
         case .search(let name):
             return [.init(name: "name", value: name)]
-        case .popularStores(let category):
+        case .popularRestaurants(let category):
             var items = [URLQueryItem]()
             if let category {
                 items.append(.init(name: "category", value: category))
@@ -78,7 +78,7 @@ extension StoreRouter: Router {
             return dto.toQueryItems
         }
     }
-    
+
     var multipartFormData: ((MultipartFormData) -> Void)? {
         return nil
     }

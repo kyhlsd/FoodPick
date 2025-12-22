@@ -1,5 +1,5 @@
 //
-//  ReviewForStore.swift
+//  ReviewForRestaurant.swift
 //  Domain
 //
 //  Created by 김영훈 on 12/16/25.
@@ -7,22 +7,22 @@
 
 import Foundation
 
-public struct ReviewForStore {
+public struct ReviewForRestaurant {
     public let reviewId: String
     public let content: String
     public let rating: Int
-    public let store: Store
+    public let restaurant: Restaurant
     public let reviewImageURLs: [String]
     public let orderMenuList: [String]
     public let creator: Profile
     public let createdAt: Date
     public let updatedAt: Date
-    
-    public init(reviewId: String, content: String, rating: Int, store: Store, reviewImageURLs: [String], orderMenuList: [String], creator: Profile, createdAt: Date, updatedAt: Date) {
+
+    public init(reviewId: String, content: String, rating: Int, restaurant: Restaurant, reviewImageURLs: [String], orderMenuList: [String], creator: Profile, createdAt: Date, updatedAt: Date) {
         self.reviewId = reviewId
         self.content = content
         self.rating = rating
-        self.store = store
+        self.restaurant = restaurant
         self.reviewImageURLs = reviewImageURLs
         self.orderMenuList = orderMenuList
         self.creator = creator
