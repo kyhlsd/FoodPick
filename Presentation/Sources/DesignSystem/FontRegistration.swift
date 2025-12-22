@@ -19,6 +19,7 @@ final class FontRegistration {
             // Pretendard Static Fonts
             ("Pretendard-Regular", "otf"),
             ("Pretendard-Medium", "otf"),
+            ("Pretendard-SemiBold", "otf"),
             ("Pretendard-Bold", "otf"),
             // Jalnan Gothic
             ("JalnanGothicTTF", "ttf")

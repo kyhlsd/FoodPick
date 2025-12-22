@@ -14,30 +14,39 @@ struct TabBarFeature: Sendable {
     @ObservableState
     struct State: Sendable {
         var selectedTab: Tab = .home
-        
+        var home = HomeFeature.State()
+
         @Presents var destination: Destination.State?
     }
-    
+
     // MARK: - Action
     enum Action {
         case tabSelected(Tab)
         case centerButtonTapped
         case destination(PresentationAction<Destination.Action>)
+        case home(HomeFeature.Action)
     }
     
     // MARK: - Body
     var body: some ReducerOf<Self> {
+        Scope(state: \.home, action: \.home) {
+            HomeFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
-                
+
             case .centerButtonTapped:
                 state.destination = .pick(PickFeature.State())
                 return .none
-                
+
             case .destination:
+                return .none
+
+            case .home:
                 return .none
             }
         }

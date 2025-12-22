@@ -20,13 +20,13 @@ struct TabBarView: View {
                 TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
                     ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
                         NavigationStack {
-                            tab.view
+                            tab.view(store: store)
                         }
                         .tag(tab)
                         .toolbar(.hidden, for: .tabBar)
                     }
                 }
-                
+
                 // TabBar UI
                 GeometryReader { geometry in
                     WithPerceptionTracking {
@@ -34,11 +34,11 @@ struct TabBarView: View {
                         let width = geometry.size.width - 2 * AppPadding.xLarge.value
                         let tabWidth = width / 5
                         let barHeight: CGFloat = 70
-                        
+
                         ZStack(alignment: .bottom) {
                             // TabBar Background
                             TabBarBackgroundView(height: barHeight)
-                            
+
                             // TabBar Icon
                             HStack(spacing: 0) {
                                 ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
@@ -57,7 +57,7 @@ struct TabBarView: View {
                                 }
                             }
                             .frame(height: barHeight)
-                            
+
                             CenterButton {
                                 store.send(.centerButtonTapped)
                             }
@@ -69,6 +69,7 @@ struct TabBarView: View {
                 }
                 .frame(height: 110)
             }
+            .ignoresSafeArea(.keyboard)
             .fullScreenCover(
                 item: $store.scope(state: \.destination?.pick, action: \.destination.pick)
             ) { pickStore in
@@ -216,10 +217,11 @@ extension TabBarFeature.Tab {
     }
     
     @ViewBuilder
-    var view: some View {
+    @MainActor
+    func view(store: StoreOf<TabBarFeature>) -> some View {
         switch self {
         case .home:
-            Text("Home")
+            HomeView(store: store.scope(state: \.home, action: \.home))
         case .order:
             Text("Order")
         case .pick:
