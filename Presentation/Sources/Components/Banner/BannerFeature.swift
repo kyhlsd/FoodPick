@@ -6,4 +6,80 @@
 //
 
 import Foundation
+import Domain
 import ComposableArchitecture
+
+@Reducer
+struct BannerFeature: Sendable {
+    // MARK: - State
+    @ObservableState
+    struct State: Sendable {
+        var banners: [Banner] = []
+        var isLoading = false
+        var currentPage = 0
+
+        @Presents var alert: AlertState<BannerFeature.Alert>?
+    }
+
+    // MARK: - Action
+    enum Action {
+        case onAppear
+        case fetchBanners
+        case bannersLoaded([Banner])
+        case bannersLoadFailed(Error)
+        case currentPageChanged(Int)
+        case alert(PresentationAction<BannerFeature.Alert>)
+    }
+
+    // MARK: - Body
+    var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                return .send(.fetchBanners)
+
+            case .fetchBanners:
+                state.isLoading = true
+                return .run { send in
+                    do {
+                        let banners = try await fetchMainBannersUseCase.execute()
+                        await send(.bannersLoaded(banners))
+                    } catch {
+                        await send(.bannersLoadFailed(error))
+                    }
+                }
+
+            case let .bannersLoaded(banners):
+                state.isLoading = false
+                state.banners = banners
+                return .none
+
+            case let .bannersLoadFailed(error):
+                state.isLoading = false
+                state.alert = AlertState {
+                    TextState("배너 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case let .currentPageChanged(page):
+                state.currentPage = page
+                return .none
+
+            case .alert:
+                return .none
+            }
+        }
+        .ifLet(\.alert, action: \.alert)
+    }
+
+    // MARK: - Dependencies
+    @Dependency(\.fetchMainBanners) var fetchMainBannersUseCase
+
+    enum Alert: Sendable {}
+}

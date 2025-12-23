@@ -64,6 +64,7 @@ struct HomeView: View {
                                 }
                             )
                             .padding(.top, .xLarge)
+                            .padding(.horizontal, .xLarge)
 
                             // 인기 가게
                             PopularRestaurantView(
@@ -73,8 +74,14 @@ struct HomeView: View {
                             ) { id, like in
                                 store.send(.toggleRestaurantLike(id, like))
                             }
+                            .padding(.horizontal, .xLarge)
+
+                            // 배너
+                            BannerListView(
+                                store: store.scope(state: \.banner, action: \.banner)
+                            )
+
                         }
-                        .padding(.horizontal, .xLarge)
                         .frame(maxWidth: .infinity)
                         .background(
                             UnevenRoundedRectangle(

@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/17/25.
 //
 
-public struct Banner {
+public struct Banner: Sendable, Hashable {
     public let name: String
     public let imageURL: String
     public let payload: Payload
@@ -17,7 +17,7 @@ public struct Banner {
     }
 }
 
-public struct Payload {
+public struct Payload: Sendable, Hashable {
     public let type: PayloadType
     public let value: String
     
@@ -27,6 +27,6 @@ public struct Payload {
     }
 }
 
-public enum PayloadType {
+public enum PayloadType: Sendable {
     case webView
 }

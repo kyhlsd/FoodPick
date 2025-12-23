@@ -36,10 +36,10 @@ struct AuthenticatedImage: View {
                         AppIcon.photo
                             .resizable()
                             .frame(width: 40, height: 40)
-                            .foregroundStyle(.custom(.gray(.gray45)))
+                            .foregroundStyle(.custom(.gray(.gray30)))
                         Text("이미지가 없습니다")
                             .font(.custom(.pretendard(.body3)))
-                            .foregroundStyle(.custom(.gray(.gray45)))
+                            .foregroundStyle(.custom(.gray(.gray30)))
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(.custom(.gray(.gray30)))
@@ -68,6 +68,7 @@ struct AuthenticatedImage: View {
                         .resizable()
                 } else {
                     placeholder
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
         }

@@ -21,6 +21,7 @@ struct HomeFeature: Sendable {
         var isShowingAllCategories = false
         var popularRestaurants: [Restaurant] = []
         var isLoadingPopularRestaurants = false
+        var banner = BannerFeature.State()
 
         @Presents var alert: AlertState<HomeFeature.Alert>?
     }
@@ -44,11 +45,16 @@ struct HomeFeature: Sendable {
         case toggleRestaurantLike(String, Bool)
         case restaurantLikeToggled(String, LikeStatus)
         case restaurantLikeToggleFailed(Error)
+        case banner(BannerFeature.Action)
         case alert(PresentationAction<HomeFeature.Alert>)
     }
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
+        Scope(state: \.banner, action: \.banner) {
+            BannerFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case let .searchTextChanged(text):
@@ -179,7 +185,10 @@ struct HomeFeature: Sendable {
                     TextState(error.localizedDescription)
                 }
                 return .none
-                
+
+            case .banner:
+                return .none
+
             case .alert:
                 return .none
             }
