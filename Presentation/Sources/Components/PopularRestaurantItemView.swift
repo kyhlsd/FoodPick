@@ -15,17 +15,15 @@ struct PopularRestaurantItemView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
-                // 배경
+                // 배경 및 이미지
                 RoundedStepShape()
                     .fill(.custom(.gray(.gray30)))
                     .frame(height: 120)
-                    // .overlay(
-                    //     Image("your_image_name")
-                    //         .resizable()
-                    //         .scaledToFill()
-                    //         .clipShape(CustomTopBackgroundShape())
-                    // )
-                
+                    .overlay {
+                        AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
+                            .clipShape(RoundedStepShape())
+                    }
+
                 // 상단 Overlay Items
                 HStack(alignment: .top) {
                     HeartButton(isLike: restaurant.isPick) {
@@ -184,7 +182,7 @@ private struct InfoItemView: View {
                 category: .cafe,
                 name: "스타벅스 강남점",
                 close: "22:00",
-                restaurantImageURLs: [],
+                restaurantImageURLs: ["restaurants/starbucks.jpg"],
                 isPicchelin: true,
                 isPick: true,
                 pickCount: 120,
@@ -198,7 +196,7 @@ private struct InfoItemView: View {
                 updatedAt: Date()
             )
         ) { _, _ in
-            
+
         }
     }
 }

@@ -51,4 +51,6 @@ enum AppIcon {
     static let kakao = Image("kakao", bundle: .module)
     static let xmarkCircle = Image(systemName: "xmark.circle.fill")
     static let up = Image(systemName: "chevron.up")
+    static let exclamationMark = Image(systemName: "exclamationmark.triangle.fill")
+    static let photo = Image(systemName: "photo")
 }
