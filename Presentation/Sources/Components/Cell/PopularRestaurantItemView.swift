@@ -31,7 +31,7 @@ struct PopularRestaurantItemView: View {
                     }
 
                     Spacer()
-                    
+
                     if restaurant.isPicchelin {
                         PicchelinView()
                     }
@@ -45,11 +45,6 @@ struct PopularRestaurantItemView: View {
                 .frame(height: 56)
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .custom(.gray(.gray75)).opacity(0.08),
-                radius: 12,
-                x: 0,
-                y: 4
-        )
         .frame(width: 240)
     }
 }
