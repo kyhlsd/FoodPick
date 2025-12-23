@@ -64,32 +64,10 @@ struct BannerListView: View {
             .onAppear {
                 store.send(.onAppear)
             }
-            .overlay {
-                if case let .webView(urlString) = store.destination {
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            store.send(.dismissDestination)
-                        }
-
-                    VStack(spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Button {
-                                store.send(.dismissDestination)
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .foregroundStyle(.custom(.gray(.gray60)))
-                                    .padding()
-                            }
-                        }
-
-                        AuthenticatedEventWebView(urlPath: urlString)
-                    }
-                    .frame(width: UIScreen.main.bounds.width * 0.85, height: UIScreen.main.bounds.height * 0.7)
-                    .background(.white)
-                    .cornerRadius(16)
-                }
+            .fullScreenCover(
+                item: $store.scope(state: \.destination?.webView, action: \.destination.webView)
+            ) { webViewStore in
+                EventWebView(store: webViewStore)
             }
             .alert($store.scope(state: \.alert, action: \.alert))
         }

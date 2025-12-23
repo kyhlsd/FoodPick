@@ -19,7 +19,7 @@ struct HomeView: View {
             ZStack {
                 Color.custom(.brand(.brightSprout))
                     .ignoresSafeArea()
-                
+
                 ScrollView {
                     let trendingSearches = store.trendingSearches
                     let currentTrendingIndex = store.currentTrendingIndex

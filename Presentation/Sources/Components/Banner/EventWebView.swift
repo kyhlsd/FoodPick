@@ -10,36 +10,50 @@ import WebKit
 import ComposableArchitecture
 import Domain
 
-struct AuthenticatedEventWebView: View {
-    let urlPath: String
-
-    @Dependency(\.webViewService) var webViewService
-    @State private var authInfo: (urlRequest: URLRequest, accessToken: String)?
+struct EventWebView: View {
+    let store: StoreOf<EventWebFeature>
 
     var body: some View {
-        Group {
-            if let authInfo = authInfo {
-                EventWebView(
-                    urlRequest: authInfo.urlRequest,
-                    accessToken: authInfo.accessToken
-                )
-            } else {
-                ProgressView()
-            }
-        }
-        .task {
-            do {
-                authInfo = try await webViewService.getAuthenticationInfo(urlPath: urlPath)
-            } catch {
+        WithPerceptionTracking {
+            @Perception.Bindable var store = store
 
+            ZStack(alignment: .topTrailing) {
+                Group {
+                    if store.isLoading {
+                        ProgressView()
+                    } else if let urlRequest = store.urlRequest, let accessToken = store.accessToken {
+                        EventWebViewRepresentable(
+                            urlRequest: urlRequest,
+                            accessToken: accessToken
+                        ) {
+                            store.send(.attendanceCompleted($0))
+                        }
+                    }
+                }
+
+                // 닫기 버튼
+                Button {
+                    store.send(.dismiss)
+                } label: {
+                    AppIcon.xmarkCircle
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(.custom(.gray(.gray0)))
+                }
+                .padding([.trailing, .top], .large)
             }
+            .onAppear {
+                store.send(.onAppear)
+            }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
 }
 
-private struct EventWebView: UIViewRepresentable {
+private struct EventWebViewRepresentable: UIViewRepresentable {
     let urlRequest: URLRequest
     let accessToken: String
+    let onAttendanceCompleted: (Int) -> Void
 
     func makeUIView(context: Context) -> WKWebView {
         let contentController = WKUserContentController()
@@ -59,26 +73,26 @@ private struct EventWebView: UIViewRepresentable {
         if uiView.url != nil { return }
         uiView.load(urlRequest)
     }
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     class Coordinator: NSObject, WKScriptMessageHandler {
-        var parent: EventWebView
-        
-        init(_ parent: EventWebView) {
+        var parent: EventWebViewRepresentable
+
+        init(_ parent: EventWebViewRepresentable) {
             self.parent = parent
         }
-        
+
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             switch message.name {
             case "click_attendance_button":
                 message.webView?.evaluateJavaScript("requestAttendance('\(parent.accessToken)')")
-                
+
             case "complete_attendance":
                 if let attendanceCount = message.body as? Int {
-                    
+                    parent.onAttendanceCompleted(attendanceCount)
                 }
             default:
                 break
