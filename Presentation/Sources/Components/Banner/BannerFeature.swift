@@ -18,6 +18,7 @@ struct BannerFeature: Sendable {
         var isLoading = false
         var currentPage = 0
 
+        var destination: Destination.State?
         @Presents var alert: AlertState<BannerFeature.Alert>?
     }
 
@@ -28,6 +29,8 @@ struct BannerFeature: Sendable {
         case bannersLoaded([Banner])
         case bannersLoadFailed(Error)
         case currentPageChanged(Int)
+        case bannerTapped(Banner)
+        case dismissDestination
         case alert(PresentationAction<BannerFeature.Alert>)
     }
 
@@ -71,6 +74,14 @@ struct BannerFeature: Sendable {
                 state.currentPage = page
                 return .none
 
+            case let .bannerTapped(banner):
+                state.destination = .webView(banner.payload.value)
+                return .none
+
+            case .dismissDestination:
+                state.destination = nil
+                return .none
+
             case .alert:
                 return .none
             }
@@ -82,4 +93,13 @@ struct BannerFeature: Sendable {
     @Dependency(\.fetchMainBanners) var fetchMainBannersUseCase
 
     enum Alert: Sendable {}
+}
+
+// MARK: - Destination
+extension BannerFeature {
+    enum Destination {
+        enum State: Sendable {
+            case webView(String)
+        }
+    }
 }

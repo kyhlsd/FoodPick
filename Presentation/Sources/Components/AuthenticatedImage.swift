@@ -62,7 +62,7 @@ struct AuthenticatedImage: View {
                         .placeholder { placeholder }
                         .cacheOriginalImage(false)
                         .diskCacheExpiration(.days(7))
-                        .onFailure { error in
+                        .onFailure { _ in
                             loadingFailed = true
                         }
                         .resizable()

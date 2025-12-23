@@ -16,16 +16,10 @@ public final class KingfisherImageService: ImageService {
     }
 
     public func makeAuthenticatedRequest(for imagePath: String) async throws -> URLRequest {
-        let urlString = "\(APIInfos.baseURL)/v1/\(imagePath)"
-
-        guard let url = URL(string: urlString) else {
-            throw ImageServiceError.invalidURL(imagePath)
-        }
-
-        var request = URLRequest(url: url)
+        let router = PathRouter.file(path: imagePath)
+        var request = try router.asURLRequest()
 
         let accessToken = try await tokenRepository.getAccessToken()
-        request.setValue(APIInfos.key, forHTTPHeaderField: "SesacKey")
         request.setValue(accessToken, forHTTPHeaderField: "Authorization")
 
         return request

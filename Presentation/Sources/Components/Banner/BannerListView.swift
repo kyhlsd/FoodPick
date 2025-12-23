@@ -36,8 +36,12 @@ struct BannerListView: View {
                     ZStack(alignment: .bottomTrailing) {
                         TabView(selection: $store.currentPage.sending(\.currentPageChanged)) {
                             ForEach(Array(banners.enumerated()), id: \.element) { index, banner in
-                                BannerItemView(imagePath: banner.imageURL)
-                                    .tag(index)
+                                BannerItemButton(
+                                    banner: banner
+                                ) {
+                                    store.send(.bannerTapped(banner))
+                                }
+                                .tag(index)
                             }
                         }
                         .tabViewStyle(.page(indexDisplayMode: .never))
@@ -60,16 +64,49 @@ struct BannerListView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .overlay {
+                if case let .webView(urlString) = store.destination {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            store.send(.dismissDestination)
+                        }
+
+                    VStack(spacing: 0) {
+                        HStack {
+                            Spacer()
+                            Button {
+                                store.send(.dismissDestination)
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .foregroundStyle(.custom(.gray(.gray60)))
+                                    .padding()
+                            }
+                        }
+
+                        AuthenticatedEventWebView(urlPath: urlString)
+                    }
+                    .frame(width: UIScreen.main.bounds.width * 0.85, height: UIScreen.main.bounds.height * 0.7)
+                    .background(.white)
+                    .cornerRadius(16)
+                }
+            }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
 }
 
-private struct BannerItemView: View {
-    let imagePath: String?
+private struct BannerItemButton: View {
+    let banner: Banner
+    let onTap: () -> Void
 
     var body: some View {
-        AuthenticatedImage(imagePath: imagePath)
+        Button {
+            onTap()
+        } label: {
+            AuthenticatedImage(imagePath: banner.imageURL)
+        }
+        .buttonStyle(.plain)
     }
 }
 
