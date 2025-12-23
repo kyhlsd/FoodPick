@@ -18,7 +18,7 @@ struct PopularRestaurantItemView: View {
                 // 배경 및 이미지
                 RoundedStepShape()
                     .fill(.custom(.gray(.gray30)))
-                    .frame(height: 120)
+                    .frame(height: 122)
                     .overlay {
                         AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
                             .clipShape(RoundedStepShape())
@@ -43,7 +43,13 @@ struct PopularRestaurantItemView: View {
             // 가게 정보
             RestaurantInfoView(restaurant: restaurant)
                 .frame(height: 56)
+                .offset(y: -2)
         }
+        .shadow(color: .custom(.gray(.gray60)).opacity(0.08),
+                radius: 8,
+                x: 0,
+                y: 2
+        )
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .frame(width: 240)
     }
@@ -148,7 +154,15 @@ private struct RestaurantInfoView: View {
         .padding(.vertical, .small)
         .padding(.horizontal, .medium)
         .frame(maxWidth: .infinity)
-        .background(.custom(.gray(.gray0)))
+        .background(
+            UnevenRoundedRectangle(
+                topLeadingRadius: 0,
+                bottomLeadingRadius: 20,
+                bottomTrailingRadius: 20,
+                topTrailingRadius: 0
+            )
+            .fill(.custom(.gray(.gray0)))
+        )
     }
 }
 
