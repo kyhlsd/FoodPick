@@ -81,7 +81,14 @@ struct HomeView: View {
                                 store: store.scope(state: \.banner, action: \.banner)
                             )
 
-                            
+//                            NearbyRestaurantView(
+//                                restaurants: nearbyRestaurants,
+//                                orderBy: orderBy,
+//                                isLoading: isLoadingNearbyRestaurants
+//                            ) { id, like in
+//                                store.send(.toggleRestaurantLike(id, like))
+//                            }
+//                            .padding(.horizontal, xLarge)
                         }
                         .frame(maxWidth: .infinity)
                         .background(
@@ -111,8 +118,8 @@ private struct LocationView: View {
             AppIcon.location
             
             Text("문래역, 영등포구")
-                .font(.custom(.pretendard(.body1)))
-            
+                .font(.pretendard(size: .body1, weight: .bold))
+
             Button {
                 
             } label: {
@@ -138,7 +145,7 @@ private struct TrendingSearchView: View {
                 .foregroundStyle(.custom(.brand(.deepSprout)))
 
             Text("인기 검색어")
-                .font(.custom(.pretendard(.caption1)))
+                .font(.pretendard(size: .caption1, weight: .semiBold))
                 .foregroundStyle(.custom(.brand(.deepSprout)))
 
             if !trendingSearches.isEmpty {
@@ -149,7 +156,7 @@ private struct TrendingSearchView: View {
                     onTrendingSearchTapped(keyword)
                 } label: {
                     Text("\(index + 1) \(keyword)")
-                        .font(.custom(.pretendard(.caption1)))
+                        .font(.pretendard(size: .caption1, weight: .semiBold))
                         .foregroundStyle(.custom(.brand(.blackSprout)))
                         .padding(.leading, .small)
                         .frame(height: 20)
@@ -303,7 +310,7 @@ private struct CategoryItemView: View {
                     }
                 
                 Text(item.displayName)
-                    .font(isSelected ? .custom(.pretendard(.body4)) : .custom(.pretendard(.body3)) )
+                    .font(.pretendard(size: .body3, weight: isSelected ? .bold : .medium))
                     .foregroundStyle(isSelected ? .custom(.brand(.blackSprout)) : .custom(.gray(.gray60)))
                     .lineLimit(1)
             }
@@ -320,7 +327,7 @@ private struct PopularRestaurantView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
             Text("실시간 인기 가게")
-                .font(.custom(.pretendard(.body1)))
+                .font(.pretendard(size: .body2, weight: .bold))
                 .foregroundStyle(.custom(.gray(.gray90)))
 
             if isLoading {
@@ -330,7 +337,7 @@ private struct PopularRestaurantView: View {
                     .frame(height: 176)
             } else if restaurants.isEmpty {
                 Text("인기 가게가 없습니다")
-                    .font(.custom(.pretendard(.body2)))
+                    .font(.pretendard(size: .body2, weight: .medium))
                     .foregroundStyle(.custom(.gray(.gray60)))
                     .frame(maxWidth: .infinity)
                     .frame(height: 176)
@@ -354,6 +361,92 @@ private struct PopularRestaurantView: View {
                         }
                     }
                 }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct NearbyRestaurantView: View {
+    let restaurants: [Restaurant]
+    let orderBy: RestaurantOrderBy
+    let isLoading: Bool
+    let onLikeToggle: (String, Bool) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppPadding.medium.value) {
+            HStack {
+                Text("픽업 가게")
+                    .font(.pretendard(size: .body3, weight: .bold))
+                    .foregroundStyle(.custom(.gray(.gray90)))
+                
+                Spacer()
+                
+                HStack(spacing: AppPadding.tiny.value) {
+                    Text(orderBy.rawValue)
+                        .font(.pretendard(size: .caption1, weight: .semiBold))
+                        .foregroundStyle(.custom(.brand(.blackSprout)))
+                    
+                    AppIcon.list
+                        .resizable()
+                        .frame(width: 12, height: 9.5)
+                        .foregroundStyle(.custom(.brand(.blackSprout)))
+                }
+            }
+            
+            HStack {
+                Button {
+                    
+                } label: {
+                    HStack(spacing: AppPadding.tiny.value) {
+                        AppIcon.checkMarkFill
+                            .resizable()
+                            .frame(width: 12, height: 12)
+                            .foregroundStyle(.custom(.brand(.blackSprout)))
+                        
+                        Text("픽슐랭")
+                            .font(.pretendard(size: .caption1, weight: .semiBold))
+                            .foregroundStyle(.custom(.brand(.blackSprout)))
+                    }
+                }
+                
+                Button {
+                    
+                } label: {
+                    HStack(spacing: AppPadding.tiny.value) {
+                        AppIcon.checkMarkEmpty
+                            .resizable()
+                            .frame(width: 12, height: 12)
+                            .foregroundStyle(.custom(.brand(.brightSprout)))
+                        
+                        Text("My Pick")
+                            .font(.pretendard(size: .caption1, weight: .semiBold))
+                            .foregroundStyle(.custom(.brand(.brightSprout)))
+                    }
+                }
+            }
+
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 176)
+            } else if restaurants.isEmpty {
+                Text("주위 가게가 없습니다")
+                    .font(.pretendard(size: .body2, weight: .medium))
+                    .foregroundStyle(.custom(.gray(.gray60)))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 176)
+            } else {
+                LazyVStack(spacing: AppPadding.large.value) {
+                    ForEach(restaurants, id: \.restaurantId) { restaurant in
+                        RestaurantDetailItemView(
+                            restaurant: restaurant,
+                            onLikeToggle: onLikeToggle
+                        )
+                    }
+                }
+                .frame(height: 176)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

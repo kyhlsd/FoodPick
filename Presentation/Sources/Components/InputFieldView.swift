@@ -17,12 +17,12 @@ struct InputFieldView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.small.value) {
             Text(title)
-                .font(.custom(.pretendard(.body2)))
+                .font(.pretendard(size: .body2, weight: .medium))
                 .foregroundStyle(.custom(.gray(.gray75)))
 
             if isSecure {
                 SecureField(placeholder, text: $text)
-                    .font(.custom(.pretendard(.body1)))
+                    .font(.pretendard(size: .body1, weight: .bold))
                     .padding(.all, .medium)
                     .background(Color.custom(.gray(.gray0)))
                     .overlay(
@@ -33,7 +33,7 @@ struct InputFieldView: View {
                     .autocorrectionDisabled()
             } else {
                 TextField(placeholder, text: $text)
-                    .font(.custom(.pretendard(.body1)))
+                    .font(.pretendard(size: .body1, weight: .bold))
                     .padding(.all, .medium)
                     .background(Color.custom(.gray(.gray0)))
                     .overlay(
@@ -71,11 +71,11 @@ struct InputFieldWithMessageView: View {
             Group {
                 if let message = message {
                     Text(message)
-                        .font(.custom(.pretendard(.caption1)))
+                        .font(.pretendard(size: .caption1, weight: .semiBold))
                         .foregroundStyle(isError ? .red : .green)
                 } else {
                     Text(" ")
-                        .font(.custom(.pretendard(.caption1)))
+                        .font(.pretendard(size: .caption1, weight: .semiBold))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -32,7 +32,7 @@ struct PrimaryButton: View {
         Button(action: action) {
             ZStack {
                 Text(title)
-                    .font(.custom(.pretendard(.title1)))
+                    .font(.pretendard(size: .title1, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray0)))
                     .opacity(isLoading ? 0 : 1)
 

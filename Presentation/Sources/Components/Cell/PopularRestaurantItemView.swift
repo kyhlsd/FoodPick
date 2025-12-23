@@ -117,7 +117,7 @@ private struct RestaurantInfoView: View {
         VStack(spacing: 6) {
             HStack(spacing: AppPadding.medium.value) {
                 Text(restaurant.name)
-                    .font(.custom(.pretendard(.body4)))
+                    .font(.pretendard(size: .body3, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray90)))
 
                 HStack(spacing: 2) {
@@ -127,7 +127,7 @@ private struct RestaurantInfoView: View {
                         .foregroundStyle(Color(hex: "#FDC020"))
 
                     Text("\(restaurant.pickCount)개")
-                        .font(.custom(.pretendard(.body3)))
+                        .font(.pretendard(size: .body3, weight: .medium))
                         .foregroundStyle(.custom(.gray(.gray90)))
                 }
 
@@ -169,7 +169,7 @@ private struct InfoItemView: View {
                 .foregroundStyle(.custom(.brand(.blackSprout)))
 
             Text(text)
-                .font(.custom(.pretendard(.caption1)))
+                .font(.pretendard(size: .caption1, weight: .semiBold))
                 .foregroundStyle(.custom(.gray(.gray75)))
         }
 

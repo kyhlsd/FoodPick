@@ -54,7 +54,7 @@ struct LoginView: View {
                         MyDivider()
                         
                         Text("또는")
-                            .font(.custom(.pretendard(.caption1)))
+                            .font(.pretendard(size: .caption1, weight: .semiBold))
                             .foregroundStyle(.custom(.gray(.gray60)))
                             .padding(.horizontal, .small)
                         
@@ -96,7 +96,7 @@ struct LoginView: View {
 private struct TitleView: View {
     var body: some View {
         Text("FoodPick")
-            .font(.custom(.jalnan(.title1)))
+            .font(.jalnan(.title1))
             .foregroundStyle(.custom(.brand(.blackSprout)))
     }
 }
@@ -118,7 +118,7 @@ private struct KakaoLoginButton: View {
                         } else {
                             AppIcon.kakao
                                 .resizable()
-                                .font(.custom(.pretendard(.title1)))
+                                .font(.pretendard(size: .title1, weight: .bold))
                         }
                     }
                 )
@@ -162,11 +162,11 @@ private struct SignUpButton: View {
         Button(action: action) {
             HStack(spacing: AppPadding.tiny.value) {
                 Text("아직 회원이 아니신가요?")
-                    .font(.custom(.pretendard(.caption1)))
+                    .font(.pretendard(size: .caption1, weight: .semiBold))
                     .foregroundStyle(.custom(.gray(.gray60)))
 
                 Text("회원가입")
-                    .font(.custom(.pretendard(.caption1)))
+                    .font(.pretendard(size: .caption1, weight: .semiBold))
                     .foregroundStyle(.custom(.brand(.blackSprout)))
                     .underline()
             }

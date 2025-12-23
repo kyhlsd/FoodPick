@@ -30,7 +30,7 @@ struct MySearchBar: View {
                 .foregroundStyle(.custom(.brand(.blackSprout)))
 
             TextField(placeholder, text: $text)
-                .font(.custom(.pretendard(.body2)))
+                .font(.pretendard(size: .body2, weight: .medium))
                 .foregroundStyle(.custom(.gray(.gray90)))
                 .submitLabel(.search)
                 .onSubmit {

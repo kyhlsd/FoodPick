@@ -28,7 +28,7 @@ struct BannerListView: View {
                         .frame(height: 100)
                 } else if banners.isEmpty {
                     Text("배너가 없습니다")
-                        .font(.custom(.pretendard(.body2)))
+                        .font(.pretendard(size: .body2, weight: .medium))
                         .foregroundStyle(.custom(.gray(.gray60)))
                         .frame(maxWidth: .infinity)
                         .frame(height: 100)
@@ -49,7 +49,7 @@ struct BannerListView: View {
 
                         // 페이지 인디케이터
                         Text("\(currentPage + 1) / \(banners.count)")
-                            .font(.custom(.pretendard(.caption2)))
+                            .font(.pretendard(size: .caption2, weight: .regular))
                             .foregroundStyle(.custom(.gray(.gray0)))
                             .frame(width: 44, height: 20)
                             .background(.custom(.gray(.gray75)).opacity(0.5), in: Capsule())

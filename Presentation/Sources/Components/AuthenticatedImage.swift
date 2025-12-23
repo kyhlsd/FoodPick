@@ -38,7 +38,7 @@ struct AuthenticatedImage: View {
                             .frame(width: 40, height: 40)
                             .foregroundStyle(.custom(.gray(.gray30)))
                         Text("이미지가 없습니다")
-                            .font(.custom(.pretendard(.body3)))
+                            .font(.pretendard(size: .body3, weight: .medium))
                             .foregroundStyle(.custom(.gray(.gray30)))
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -50,7 +50,7 @@ struct AuthenticatedImage: View {
                             .frame(width: 40, height: 40)
                             .foregroundStyle(.custom(.gray(.gray45)))
                         Text("이미지 로딩 실패")
-                            .font(.custom(.pretendard(.body3)))
+                            .font(.pretendard(size: .body3, weight: .medium))
                             .foregroundStyle(.custom(.gray(.gray45)))
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

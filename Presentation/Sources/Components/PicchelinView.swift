@@ -25,7 +25,7 @@ struct PicchelinView: View {
                     .foregroundStyle(.custom(.gray(.gray0)))
 
                 Text("픽슐랭")
-                    .font(.custom(.pretendard(.caption2)))
+                    .font(.pretendard(size: .caption2, weight: .regular))
                     .foregroundStyle(.custom(.gray(.gray0)))
                 
                 Spacer()
