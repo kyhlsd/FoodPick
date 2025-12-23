@@ -81,6 +81,7 @@ struct HomeView: View {
                                 store: store.scope(state: \.banner, action: \.banner)
                             )
 
+                            
                         }
                         .frame(maxWidth: .infinity)
                         .background(

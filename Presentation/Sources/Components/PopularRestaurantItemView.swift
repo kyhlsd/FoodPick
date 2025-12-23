@@ -31,6 +31,10 @@ struct PopularRestaurantItemView: View {
                     }
 
                     Spacer()
+                    
+                    if restaurant.isPicchelin {
+                        PicchelinView()
+                    }
                 }
                 .padding(.horizontal, AppPadding.small.value)
                 .padding(.top, AppPadding.small.value)
