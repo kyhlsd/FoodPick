@@ -26,14 +26,12 @@ struct BannerListView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
                         .frame(maxWidth: .infinity)
                         .frame(height: 100)
-                        .background(.custom(.gray(.gray30)))
                 } else if banners.isEmpty {
                     Text("배너가 없습니다")
                         .font(.custom(.pretendard(.body2)))
                         .foregroundStyle(.custom(.gray(.gray60)))
                         .frame(maxWidth: .infinity)
                         .frame(height: 100)
-                        .background(.custom(.gray(.gray30)))
                 } else {
                     ZStack(alignment: .bottomTrailing) {
                         TabView(selection: $store.currentPage.sending(\.currentPageChanged)) {
@@ -44,7 +42,6 @@ struct BannerListView: View {
                         }
                         .tabViewStyle(.page(indexDisplayMode: .never))
                         .frame(height: 100)
-                        .background(.custom(.gray(.gray30)))
 
                         // 페이지 인디케이터
                         Text("\(currentPage + 1) / \(banners.count)")
