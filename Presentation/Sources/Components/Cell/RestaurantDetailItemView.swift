@@ -13,7 +13,7 @@ struct RestaurantDetailItemView: View {
     let onLikeToggle: (String, Bool) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: AppPadding.large.value) {
             // 이미지 영역
             HStack(spacing: AppPadding.tiny.value) {
                 // 첫번째 사진
@@ -70,12 +70,12 @@ struct RestaurantDetailItemView: View {
                 .frame(width: 78)
             }
             .frame(height: 127)
-            .padding(AppPadding.small.value)
 
             // 가게 정보
             RestaurantInfoView(restaurant: restaurant)
+            
+            MyDivider()
         }
-        .background(.custom(.gray(.gray0)))
     }
 }
 
@@ -84,7 +84,7 @@ private struct RestaurantInfoView: View {
     let restaurant: Restaurant
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppPadding.small.value) {
             // 첫번째 줄: 가게명, 좋아요, 별점
             HStack(spacing: AppPadding.medium.value) {
                 Text(restaurant.name)
@@ -138,17 +138,21 @@ private struct RestaurantInfoView: View {
             }
 
             // 세번째 줄: 해시태그
-            HStack(spacing: 6) {
+            HStack(spacing: AppPadding.small.value) {
                 ForEach(restaurant.hashTags, id: \.self) { tag in
-                    Text("#\(tag)")
+                    Text(tag)
                         .font(.pretendard(size: .caption1, weight: .semiBold))
-                        .foregroundStyle(.custom(.brand(.blackSprout)))
+                        .foregroundStyle(.custom(.gray(.gray0)))
+                        .padding(.horizontal, AppPadding.small.value)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(.custom(.brand(.deepSprout)))
+                        )
                 }
                 Spacer()
             }
         }
-        .padding(.vertical, AppPadding.small.value)
-        .padding(.horizontal, AppPadding.medium.value)
     }
 }
 
@@ -164,8 +168,8 @@ private struct InfoItemView: View {
                 .foregroundStyle(.custom(.brand(.blackSprout)))
 
             Text(text)
-                .font(.pretendard(size: .caption1, weight: .semiBold))
-                .foregroundStyle(.custom(.gray(.gray75)))
+                .font(.pretendard(size: .body2, weight: .regular))
+                .foregroundStyle(.custom(.gray(.gray60)))
         }
     }
 }
