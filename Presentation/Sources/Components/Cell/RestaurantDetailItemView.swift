@@ -124,7 +124,7 @@ private struct RestaurantInfoView: View {
             HStack(spacing: AppPadding.large.value) {
                 InfoItemView(
                     icon: AppIcon.distance,
-                    text: String(format: "%.1fkm", restaurant.distance ?? 0.0)
+                    text: DistanceFormatter.format(restaurant.distance)
                 )
                 InfoItemView(
                     icon: AppIcon.time,
@@ -186,8 +186,7 @@ private struct InfoItemView: View {
                 close: "22:00",
                 restaurantImageURLs: [
                     "restaurants/starbucks1.jpg",
-                    "restaurants/starbucks2.jpg",
-                    "restaurants/starbucks3.jpg"
+                    "restaurants/starbucks2.jpg"
                 ],
                 isPicchelin: true,
                 isPick: true,

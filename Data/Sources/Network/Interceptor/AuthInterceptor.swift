@@ -46,6 +46,9 @@ final class AuthInterceptor: RequestInterceptor {
             do {
                 if urlRequest.url?.path.contains("/auth/refresh") == true {
                     let refreshToken = try await tokenRepository.getRefreshToken()
+                    let accessToken = try await tokenRepository.getAccessToken()
+                    print(accessToken)
+                    print(refreshToken)
                     urlRequest.setValue(refreshToken, forHTTPHeaderField: "RefreshToken")
                 } else if urlRequest.url?.path.contains("/validation/email") == false
                             && urlRequest.url?.path.contains("/join") == false

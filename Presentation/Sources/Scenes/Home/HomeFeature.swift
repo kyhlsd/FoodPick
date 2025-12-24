@@ -227,7 +227,7 @@ struct HomeFeature: Sendable {
                             latitude: nil,
                             maxDistance: nil,
                             next: nil,
-                            limit: nil,
+                            limit: 10,
                             orderBy: orderBy
                         )
                         let response = try await fetchRestaurantsUseCase.execute(request: request)
