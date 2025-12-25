@@ -27,8 +27,10 @@ struct HomeView: View {
                     let selectedCategory = store.selectedCategory
                     let popularRestaurants = store.popularRestaurants
                     let isLoadingPopularRestaurants = store.isLoadingPopularRestaurants
-                    let nearbyRestaurants = store.nearbyRestaurants
+                    let filteredNearbyRestaurants = store.filteredNearbyRestaurants
                     let isLoadingNearbyRestaurants = store.isLoadingNearbyRestaurants
+                    let isLoadingMoreNearbyRestaurants = store.isLoadingMoreNearbyRestaurants
+                    let canLoadMoreNearbyRestaurants = store.canLoadMoreNearbyRestaurants
                     let orderBy = store.orderBy
                     let isShowingOrderByMenu = store.isShowingOrderByMenu
                     let isPicchelinFilterEnabled = store.isPicchelinFilterEnabled
@@ -89,9 +91,11 @@ struct HomeView: View {
                             
                             // 주변 식당
                             NearbyRestaurantView(
-                                restaurants: nearbyRestaurants,
+                                restaurants: filteredNearbyRestaurants,
                                 orderBy: orderBy,
                                 isLoading: isLoadingNearbyRestaurants,
+                                isLoadingMore: isLoadingMoreNearbyRestaurants,
+                                canLoadMore: canLoadMoreNearbyRestaurants,
                                 isShowingOrderByMenu: isShowingOrderByMenu,
                                 isPicchelinFilterEnabled: isPicchelinFilterEnabled,
                                 isMyPickFilterEnabled: isMyPickFilterEnabled,
@@ -109,6 +113,9 @@ struct HomeView: View {
                                 },
                                 onLikeToggle: { id, like in
                                     store.send(.toggleRestaurantLike(id, like))
+                                },
+                                onLoadMore: {
+                                    store.send(.loadMoreNearbyRestaurants)
                                 }
                             )
                             .padding(.horizontal, .xLarge)
@@ -399,6 +406,8 @@ private struct NearbyRestaurantView: View {
     let restaurants: [Restaurant]
     let orderBy: RestaurantOrderBy
     let isLoading: Bool
+    let isLoadingMore: Bool
+    let canLoadMore: Bool
     let isShowingOrderByMenu: Bool
     let isPicchelinFilterEnabled: Bool
     let isMyPickFilterEnabled: Bool
@@ -407,20 +416,7 @@ private struct NearbyRestaurantView: View {
     let onPicchelinFilterToggle: () -> Void
     let onMyPickFilterToggle: () -> Void
     let onLikeToggle: (String, Bool) -> Void
-    
-    private var filteredRestaurants: [Restaurant] {
-        var filtered = restaurants
-        
-        if isPicchelinFilterEnabled {
-            filtered = filtered.filter { $0.isPicchelin }
-        }
-        
-        if isMyPickFilterEnabled {
-            filtered = filtered.filter { $0.isPick }
-        }
-        
-        return filtered
-    }
+    let onLoadMore: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -509,7 +505,7 @@ private struct NearbyRestaurantView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
                     .frame(maxWidth: .infinity)
                     .frame(height: 235)
-            } else if filteredRestaurants.isEmpty {
+            } else if restaurants.isEmpty {
                 Text("주위 가게가 없습니다")
                     .font(.pretendard(size: .body2, weight: .medium))
                     .foregroundStyle(.custom(.gray(.gray60)))
@@ -517,12 +513,24 @@ private struct NearbyRestaurantView: View {
                     .frame(height: 235)
             } else {
                 LazyVStack(spacing: AppPadding.large.value) {
-                    ForEach(filteredRestaurants, id: \.restaurantId) { restaurant in
+                    ForEach(restaurants, id: \.restaurantId) { restaurant in
                         RestaurantDetailItemView(
                             restaurant: restaurant,
                             onLikeToggle: onLikeToggle
                         )
                         .frame(height: 235)
+                        .onAppear {
+                            if restaurant.restaurantId == restaurants.last?.restaurantId {
+                                onLoadMore()
+                            }
+                        }
+                    }
+
+                    if isLoadingMore {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, AppPadding.medium.value)
                     }
                 }
             }

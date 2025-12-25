@@ -22,7 +22,9 @@ struct HomeFeature: Sendable {
         var popularRestaurants: [Restaurant] = []
         var isLoadingPopularRestaurants = false
         var nearbyRestaurants: [Restaurant] = []
+        var nearbyRestaurantsNextCursor: String?
         var isLoadingNearbyRestaurants = false
+        var isLoadingMoreNearbyRestaurants = false
         var orderBy: RestaurantOrderBy = .distance
         var isShowingOrderByMenu = false
         var isPicchelinFilterEnabled = false
@@ -30,6 +32,24 @@ struct HomeFeature: Sendable {
         var banner = BannerFeature.State()
 
         @Presents var alert: AlertState<HomeFeature.Alert>?
+
+        var canLoadMoreNearbyRestaurants: Bool {
+            !isLoadingMoreNearbyRestaurants && nearbyRestaurantsNextCursor != "0" && nearbyRestaurantsNextCursor != nil
+        }
+
+        var filteredNearbyRestaurants: [Restaurant] {
+            var filtered = nearbyRestaurants
+
+            if isPicchelinFilterEnabled {
+                filtered = filtered.filter { $0.isPicchelin }
+            }
+
+            if isMyPickFilterEnabled {
+                filtered = filtered.filter { $0.isPick }
+            }
+
+            return filtered
+        }
     }
 
     // MARK: - Action
@@ -49,7 +69,8 @@ struct HomeFeature: Sendable {
         case popularSearchesLoaded([String])
         case popularSearchesLoadFailed(Error)
         case fetchNearbyRestaurants
-        case nearbyRestaurantsLoaded(ResponseListWithCursor<Restaurant>)
+        case loadMoreNearbyRestaurants
+        case nearbyRestaurantsLoaded(ResponseListWithCursor<Restaurant>, isLoadingMore: Bool)
         case nearbyRestaurantsLoadFailed(Error)
         case orderByChanged(RestaurantOrderBy)
         case toggleOrderByMenu
@@ -219,6 +240,7 @@ struct HomeFeature: Sendable {
 
             case .fetchNearbyRestaurants:
                 state.isLoadingNearbyRestaurants = true
+                state.nearbyRestaurantsNextCursor = nil
                 return .run { [orderBy = state.orderBy, category = state.selectedCategory] send in
                     do {
                         let request = RestaurantByLocationRequest(
@@ -231,19 +253,53 @@ struct HomeFeature: Sendable {
                             orderBy: orderBy
                         )
                         let response = try await fetchRestaurantsUseCase.execute(request: request)
-                        await send(.nearbyRestaurantsLoaded(response))
+                        await send(.nearbyRestaurantsLoaded(response, isLoadingMore: false))
                     } catch {
                         await send(.nearbyRestaurantsLoadFailed(error))
                     }
                 }
 
-            case let .nearbyRestaurantsLoaded(response):
+            case .loadMoreNearbyRestaurants:
+                guard state.canLoadMoreNearbyRestaurants else { return .none }
+                state.isLoadingMoreNearbyRestaurants = true
+
+                let orderBy = state.orderBy
+                let category = state.selectedCategory
+                let cursor = state.nearbyRestaurantsNextCursor
+
+                return .run { send in
+                    do {
+                        let request = RestaurantByLocationRequest(
+                            category: category,
+                            longitude: nil,
+                            latitude: nil,
+                            maxDistance: nil,
+                            next: cursor,
+                            limit: 10,
+                            orderBy: orderBy
+                        )
+                        let response = try await fetchRestaurantsUseCase.execute(request: request)
+                        await send(.nearbyRestaurantsLoaded(response, isLoadingMore: true))
+                    } catch {
+                        await send(.nearbyRestaurantsLoadFailed(error))
+                    }
+                }
+
+            case let .nearbyRestaurantsLoaded(response, isLoadingMore):
                 state.isLoadingNearbyRestaurants = false
-                state.nearbyRestaurants = response.data
+                state.isLoadingMoreNearbyRestaurants = false
+                state.nearbyRestaurantsNextCursor = response.nextCursor
+
+                if isLoadingMore {
+                    state.nearbyRestaurants.append(contentsOf: response.data)
+                } else {
+                    state.nearbyRestaurants = response.data
+                }
                 return .none
 
             case let .nearbyRestaurantsLoadFailed(error):
                 state.isLoadingNearbyRestaurants = false
+                state.isLoadingMoreNearbyRestaurants = false
                 state.alert = AlertState {
                     TextState("주변 가게 로드 실패")
                 } actions: {
