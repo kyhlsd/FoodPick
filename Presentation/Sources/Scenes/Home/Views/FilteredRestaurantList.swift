@@ -18,6 +18,7 @@ struct FilteredRestaurantList: View {
     let onMyPickFilterToggle: () -> Void
     let onLikeToggle: (String, Bool) -> Void
     let onLoadMore: () -> Void
+    var emptyMessage: String = "주위 가게가 없습니다"
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -43,7 +44,7 @@ struct FilteredRestaurantList: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 235)
             } else if restaurants.isEmpty {
-                Text("주위 가게가 없습니다")
+                Text(emptyMessage)
                     .font(.pretendard(size: .body2, weight: .medium))
                     .foregroundStyle(.custom(.gray(.gray60)))
                     .frame(maxWidth: .infinity)
@@ -75,7 +76,7 @@ struct FilteredRestaurantList: View {
     }
 }
 
-struct FilterToggleButton: View {
+private struct FilterToggleButton: View {
     let label: String
     let isEnabled: Bool
     let onToggle: () -> Void

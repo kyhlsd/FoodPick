@@ -23,6 +23,7 @@ struct HomeFeature: Sendable {
         var nearbyRestaurant = NearbyRestaurantFeature.State()
         var banner = BannerFeature.State()
 
+        @Presents var destination: Destination.State?
         @Presents var alert: AlertState<HomeFeature.Alert>?
     }
 
@@ -45,6 +46,7 @@ struct HomeFeature: Sendable {
         case popularRestaurant(PopularRestaurantFeature.Action)
         case nearbyRestaurant(NearbyRestaurantFeature.Action)
         case banner(BannerFeature.Action)
+        case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<HomeFeature.Alert>)
     }
 
@@ -69,6 +71,12 @@ struct HomeFeature: Sendable {
                 return .none
 
             case .searchSubmitted:
+                guard !state.searchText.isEmpty else { return .none }
+                let searchWord = state.searchText
+                state.searchText = ""
+                state.destination = .search(
+                    SearchRestaurantFeature.State(searchWord: searchWord)
+                )
                 return .none
 
             case let .trendingSearchTapped(keyword):
@@ -85,11 +93,15 @@ struct HomeFeature: Sendable {
             case let .setTrendingSearches(searches):
                 state.trendingSearches = searches
                 state.currentTrendingIndex = 0
-                return .run { send in
-                    for await _ in self.clock.timer(interval: .seconds(2)) {
-                        await send(.trendingTimerTick)
+                return .merge(
+                    .cancel(id: CancelID.trendingTimer),
+                    .run { send in
+                        for await _ in self.clock.timer(interval: .seconds(2)) {
+                            await send(.trendingTimerTick)
+                        }
                     }
-                }
+                    .cancellable(id: CancelID.trendingTimer)
+                )
 
             case .trendingTimerTick:
                 guard !state.trendingSearches.isEmpty else { return .none }
@@ -206,11 +218,39 @@ struct HomeFeature: Sendable {
             case .banner:
                 return .none
 
+            case .destination(.presented(.search(.restaurantsLoadFailed(let error)))):
+                state.alert = AlertState {
+                    TextState("검색 결과 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case .destination(.presented(.search(.restaurantLikeToggleFailed(let error)))):
+                state.alert = AlertState {
+                    TextState("좋아요 변경 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case .destination:
+                return .none
+
             case .alert:
                 return .none
             }
         }
-        .ifLet(\.alert, action: \.alert)
+        .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
     }
 
     // MARK: - Dependencies
@@ -219,13 +259,17 @@ struct HomeFeature: Sendable {
     @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
 
     enum Alert: Sendable {}
+
+    enum CancelID {
+        case trendingTimer
+    }
 }
 
 // MARK: - Destinations
 extension HomeFeature {
     @Reducer
     enum Destination {
-
+        case search(SearchRestaurantFeature)
     }
 }
 
