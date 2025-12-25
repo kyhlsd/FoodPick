@@ -45,7 +45,9 @@ public final class DefaultTokenRepositoryImpl: TokenRepository {
 
     public func refreshTokens() async throws {
         let refreshToken = try await getRefreshToken()
-
+        let accessToken = try await getAccessToken()
+        print(accessToken)
+        print(refreshToken)
         return try await withCheckedThrowingContinuation { continuation in
             do {
                 var urlRequest = try AuthRouter.refresh.asURLRequest()

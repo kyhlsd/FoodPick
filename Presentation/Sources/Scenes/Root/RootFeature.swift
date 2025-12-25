@@ -71,7 +71,7 @@ struct RootFeature: Sendable {
                 return .run { [state] send in
                     // 이미 로그아웃 상태가 아닌 경우에만 토큰 삭제 및 로그아웃 처리
                     if case .loggedIn = state {
-                        try? await tokenRepository.deleteTokens()
+//                        try? await tokenRepository.deleteTokens()
                         await send(.logout)
                     }
                 }

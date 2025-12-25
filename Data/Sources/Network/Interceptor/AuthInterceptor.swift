@@ -44,15 +44,10 @@ final class AuthInterceptor: RequestInterceptor {
 
         Task {
             do {
-                if urlRequest.url?.path.contains("/auth/refresh") == true {
-                    let refreshToken = try await tokenRepository.getRefreshToken()
-                    let accessToken = try await tokenRepository.getAccessToken()
-                    print(accessToken)
-                    print(refreshToken)
-                    urlRequest.setValue(refreshToken, forHTTPHeaderField: "RefreshToken")
-                } else if urlRequest.url?.path.contains("/validation/email") == false
-                            && urlRequest.url?.path.contains("/join") == false
-                            && urlRequest.url?.path.contains("/login") == false {
+                // 인증이 필요 없는 엔드포인트 제외
+                if urlRequest.url?.path.contains("/validation/email") == false
+                    && urlRequest.url?.path.contains("/join") == false
+                    && urlRequest.url?.path.contains("/login") == false {
                     let accessToken = try await tokenRepository.getAccessToken()
                     urlRequest.setValue(accessToken, forHTTPHeaderField: "Authorization")
                 }
