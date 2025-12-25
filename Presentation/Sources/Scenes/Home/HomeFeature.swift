@@ -19,37 +19,11 @@ struct HomeFeature: Sendable {
         var currentTrendingIndex = 0
         var selectedCategory: RestaurantCategory?
         var isShowingAllCategories = false
-        var popularRestaurants: [Restaurant] = []
-        var isLoadingPopularRestaurants = false
-        var nearbyRestaurants: [Restaurant] = []
-        var nearbyRestaurantsNextCursor: String?
-        var isLoadingNearbyRestaurants = false
-        var isLoadingMoreNearbyRestaurants = false
-        var orderBy: RestaurantOrderBy = .distance
-        var isShowingOrderByMenu = false
-        var isPicchelinFilterEnabled = false
-        var isMyPickFilterEnabled = false
+        var popularRestaurant = PopularRestaurantFeature.State()
+        var nearbyRestaurant = NearbyRestaurantFeature.State()
         var banner = BannerFeature.State()
 
         @Presents var alert: AlertState<HomeFeature.Alert>?
-
-        var canLoadMoreNearbyRestaurants: Bool {
-            !isLoadingMoreNearbyRestaurants && nearbyRestaurantsNextCursor != "0" && nearbyRestaurantsNextCursor != nil
-        }
-
-        var filteredNearbyRestaurants: [Restaurant] {
-            var filtered = nearbyRestaurants
-
-            if isPicchelinFilterEnabled {
-                filtered = filtered.filter { $0.isPicchelin }
-            }
-
-            if isMyPickFilterEnabled {
-                filtered = filtered.filter { $0.isPick }
-            }
-
-            return filtered
-        }
     }
 
     // MARK: - Action
@@ -62,29 +36,28 @@ struct HomeFeature: Sendable {
         case trendingSearchTapped(String)
         case categorySelected(RestaurantCategory?)
         case toggleCategoryExpansion
-        case fetchPopularRestaurants
-        case popularRestaurantsLoaded([Restaurant])
-        case popularRestaurantsLoadFailed(Error)
         case fetchPopularSearches
         case popularSearchesLoaded([String])
         case popularSearchesLoadFailed(Error)
-        case fetchNearbyRestaurants
-        case loadMoreNearbyRestaurants
-        case nearbyRestaurantsLoaded(ResponseListWithCursor<Restaurant>, isLoadingMore: Bool)
-        case nearbyRestaurantsLoadFailed(Error)
-        case orderByChanged(RestaurantOrderBy)
-        case toggleOrderByMenu
-        case togglePicchelinFilter
-        case toggleMyPickFilter
         case toggleRestaurantLike(String, Bool)
         case restaurantLikeToggled(String, LikeStatus)
         case restaurantLikeToggleFailed(Error)
+        case popularRestaurant(PopularRestaurantFeature.Action)
+        case nearbyRestaurant(NearbyRestaurantFeature.Action)
         case banner(BannerFeature.Action)
         case alert(PresentationAction<HomeFeature.Alert>)
     }
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
+        Scope(state: \.popularRestaurant, action: \.popularRestaurant) {
+            PopularRestaurantFeature()
+        }
+
+        Scope(state: \.nearbyRestaurant, action: \.nearbyRestaurant) {
+            NearbyRestaurantFeature()
+        }
+
         Scope(state: \.banner, action: \.banner) {
             BannerFeature()
         }
@@ -105,8 +78,8 @@ struct HomeFeature: Sendable {
             case .onAppear:
                 return .merge(
                     .send(.fetchPopularSearches),
-                    .send(.fetchPopularRestaurants),
-                    .send(.fetchNearbyRestaurants)
+                    .send(.popularRestaurant(.fetch(category: nil))),
+                    .send(.nearbyRestaurant(.fetch(category: nil)))
                 )
 
             case let .setTrendingSearches(searches):
@@ -126,41 +99,12 @@ struct HomeFeature: Sendable {
             case let .categorySelected(category):
                 state.selectedCategory = category
                 return .merge(
-                    .send(.fetchPopularRestaurants),
-                    .send(.fetchNearbyRestaurants)
+                    .send(.popularRestaurant(.fetch(category: category))),
+                    .send(.nearbyRestaurant(.fetch(category: category)))
                 )
 
             case .toggleCategoryExpansion:
                 state.isShowingAllCategories.toggle()
-                return .none
-
-            case .fetchPopularRestaurants:
-                state.isLoadingPopularRestaurants = true
-                return .run { [category = state.selectedCategory] send in
-                    do {
-                        let restaurants = try await fetchPopularRestaurantsUseCase.execute(category: category)
-                        await send(.popularRestaurantsLoaded(restaurants))
-                    } catch {
-                        await send(.popularRestaurantsLoadFailed(error))
-                    }
-                }
-
-            case let .popularRestaurantsLoaded(restaurants):
-                state.isLoadingPopularRestaurants = false
-                state.popularRestaurants = restaurants
-                return .none
-
-            case let .popularRestaurantsLoadFailed(error):
-                state.isLoadingPopularRestaurants = false
-                state.alert = AlertState {
-                    TextState("인기 가게 로드 실패")
-                } actions: {
-                    ButtonState(role: .cancel) {
-                        TextState("확인")
-                    }
-                } message: {
-                    TextState(error.localizedDescription)
-                }
                 return .none
 
             case .fetchPopularSearches:
@@ -199,32 +143,20 @@ struct HomeFeature: Sendable {
                 }
 
             case let .restaurantLikeToggled(id, likeStatus):
-                // 인기 가게 업데이트
-                if let index = state.popularRestaurants.firstIndex(where: { $0.restaurantId == id }) {
-                    let wasLiked = state.popularRestaurants[index].isPick
-                    state.popularRestaurants[index].isPick = likeStatus.likeStatus
+                let isPick = likeStatus.likeStatus
 
-                    // pickCount 업데이트 (좋아요 추가 시 +1, 취소 시 -1)
-                    if !wasLiked && likeStatus.likeStatus {
-                        state.popularRestaurants[index].pickCount += 1
-                    } else if wasLiked && !likeStatus.likeStatus {
-                        state.popularRestaurants[index].pickCount -= 1
-                    }
+                // pickCount 계산: 인기 가게 또는 주변 가게에서 현재 pickCount를 가져옴
+                var pickCount = 0
+                if let restaurant = state.popularRestaurant.restaurants.first(where: { $0.restaurantId == id }) {
+                    pickCount = restaurant.pickCount + (isPick ? 1 : -1)
+                } else if let restaurant = state.nearbyRestaurant.restaurants.first(where: { $0.restaurantId == id }) {
+                    pickCount = restaurant.pickCount + (isPick ? 1 : -1)
                 }
 
-                // 주변 가게 업데이트
-                if let index = state.nearbyRestaurants.firstIndex(where: { $0.restaurantId == id }) {
-                    let wasLiked = state.nearbyRestaurants[index].isPick
-                    state.nearbyRestaurants[index].isPick = likeStatus.likeStatus
-
-                    // pickCount 업데이트 (좋아요 추가 시 +1, 취소 시 -1)
-                    if !wasLiked && likeStatus.likeStatus {
-                        state.nearbyRestaurants[index].pickCount += 1
-                    } else if wasLiked && !likeStatus.likeStatus {
-                        state.nearbyRestaurants[index].pickCount -= 1
-                    }
-                }
-                return .none
+                return .merge(
+                    .send(.popularRestaurant(.updateRestaurantLikeStatus(id, isPick, pickCount))),
+                    .send(.nearbyRestaurant(.updateRestaurantLikeStatus(id, isPick, pickCount)))
+                )
 
             case let .restaurantLikeToggleFailed(error):
                 state.alert = AlertState {
@@ -238,68 +170,19 @@ struct HomeFeature: Sendable {
                 }
                 return .none
 
-            case .fetchNearbyRestaurants:
-                state.isLoadingNearbyRestaurants = true
-                state.nearbyRestaurantsNextCursor = nil
-                return .run { [orderBy = state.orderBy, category = state.selectedCategory] send in
-                    do {
-                        let request = RestaurantByLocationRequest(
-                            category: category,
-                            longitude: nil,
-                            latitude: nil,
-                            maxDistance: nil,
-                            next: nil,
-                            limit: 10,
-                            orderBy: orderBy
-                        )
-                        let response = try await fetchRestaurantsUseCase.execute(request: request)
-                        await send(.nearbyRestaurantsLoaded(response, isLoadingMore: false))
-                    } catch {
-                        await send(.nearbyRestaurantsLoadFailed(error))
+            case .popularRestaurant(.restaurantsLoadFailed(let error)):
+                state.alert = AlertState {
+                    TextState("인기 가게 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
                     }
-                }
-
-            case .loadMoreNearbyRestaurants:
-                guard state.canLoadMoreNearbyRestaurants else { return .none }
-                state.isLoadingMoreNearbyRestaurants = true
-
-                let orderBy = state.orderBy
-                let category = state.selectedCategory
-                let cursor = state.nearbyRestaurantsNextCursor
-
-                return .run { send in
-                    do {
-                        let request = RestaurantByLocationRequest(
-                            category: category,
-                            longitude: nil,
-                            latitude: nil,
-                            maxDistance: nil,
-                            next: cursor,
-                            limit: 10,
-                            orderBy: orderBy
-                        )
-                        let response = try await fetchRestaurantsUseCase.execute(request: request)
-                        await send(.nearbyRestaurantsLoaded(response, isLoadingMore: true))
-                    } catch {
-                        await send(.nearbyRestaurantsLoadFailed(error))
-                    }
-                }
-
-            case let .nearbyRestaurantsLoaded(response, isLoadingMore):
-                state.isLoadingNearbyRestaurants = false
-                state.isLoadingMoreNearbyRestaurants = false
-                state.nearbyRestaurantsNextCursor = response.nextCursor
-
-                if isLoadingMore {
-                    state.nearbyRestaurants.append(contentsOf: response.data)
-                } else {
-                    state.nearbyRestaurants = response.data
+                } message: {
+                    TextState(error.localizedDescription)
                 }
                 return .none
 
-            case let .nearbyRestaurantsLoadFailed(error):
-                state.isLoadingNearbyRestaurants = false
-                state.isLoadingMoreNearbyRestaurants = false
+            case .nearbyRestaurant(.restaurantsLoadFailed(let error)):
                 state.alert = AlertState {
                     TextState("주변 가게 로드 실패")
                 } actions: {
@@ -311,21 +194,13 @@ struct HomeFeature: Sendable {
                 }
                 return .none
 
-            case let .orderByChanged(orderBy):
-                state.orderBy = orderBy
-                state.isShowingOrderByMenu = false
-                return .send(.fetchNearbyRestaurants)
+            case .nearbyRestaurant(.orderByChanged):
+                return .send(.nearbyRestaurant(.fetch(category: state.selectedCategory)))
 
-            case .toggleOrderByMenu:
-                state.isShowingOrderByMenu.toggle()
+            case .popularRestaurant:
                 return .none
 
-            case .togglePicchelinFilter:
-                state.isPicchelinFilterEnabled.toggle()
-                return .none
-
-            case .toggleMyPickFilter:
-                state.isMyPickFilterEnabled.toggle()
+            case .nearbyRestaurant:
                 return .none
 
             case .banner:
@@ -337,12 +212,10 @@ struct HomeFeature: Sendable {
         }
         .ifLet(\.alert, action: \.alert)
     }
-    
+
     // MARK: - Dependencies
     @Dependency(\.continuousClock) var clock
-    @Dependency(\.fetchPopularRestaurants) var fetchPopularRestaurantsUseCase
     @Dependency(\.fetchPopularSearches) var fetchPopularSearchesUseCase
-    @Dependency(\.fetchRestaurants) var fetchRestaurantsUseCase
     @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
 
     enum Alert: Sendable {}
@@ -352,7 +225,7 @@ struct HomeFeature: Sendable {
 extension HomeFeature {
     @Reducer
     enum Destination {
-        
+
     }
 }
 
