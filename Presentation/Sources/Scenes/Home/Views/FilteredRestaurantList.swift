@@ -64,6 +64,10 @@ struct FilteredRestaurantList: View {
                                 onLoadMore()
                             }
                         }
+                        
+                        if restaurant.restaurantId != restaurants.last?.restaurantId {
+                            MyDivider()
+                        }
                     }
                     
                     if isLoadingMore {
