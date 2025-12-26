@@ -18,6 +18,8 @@ struct RestaurantDetailFeature: Sendable {
         var restaurantInfo: RestaurantDetail?
         var isLoading = false
         var currentImageIndex = 0
+
+        @Presents var alert: AlertState<RestaurantDetailFeature.Alert>?
     }
 
     // MARK: - Action
@@ -30,6 +32,7 @@ struct RestaurantDetailFeature: Sendable {
         case toggleRestaurantLike
         case restaurantLikeToggled(LikeStatus)
         case restaurantLikeToggleFailed(Error)
+        case alert(PresentationAction<RestaurantDetailFeature.Alert>)
     }
 
     // MARK: - Body
@@ -55,8 +58,17 @@ struct RestaurantDetailFeature: Sendable {
                 state.restaurantInfo = restaurantInfo
                 return .none
 
-            case .restaurantInfoLoadFailed:
+            case let .restaurantInfoLoadFailed(error):
                 state.isLoading = false
+                state.alert = AlertState {
+                    TextState("가게 정보 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
                 return .none
 
             case let .imageIndexChanged(index):
@@ -84,13 +96,28 @@ struct RestaurantDetailFeature: Sendable {
                 }
                 return .none
 
-            case .restaurantLikeToggleFailed:
+            case let .restaurantLikeToggleFailed(error):
+                state.alert = AlertState {
+                    TextState("좋아요 변경 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case .alert:
                 return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
     }
 
     // MARK: - Dependencies
     @Dependency(\.fetchRestaurantInfo) var fetchRestaurantInfoUseCase
     @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
+
+    enum Alert: Sendable {}
 }
