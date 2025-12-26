@@ -32,7 +32,6 @@ struct MenuItemView: View {
                 }
             }
             
-            
             HStack(alignment: .top, spacing: AppPadding.medium.value) {
                 // 왼쪽: 메뉴 이름, 설명, 가격
                 VStack(alignment: .leading) {
@@ -61,9 +60,22 @@ struct MenuItemView: View {
                 Spacer(minLength: AppPadding.medium.value)
                 
                 // 오른쪽: 이미지
-                AuthenticatedImage(imagePath: menu.menuImageURL)
-                    .frame(width: 100, height: 100)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                ZStack {
+                    AuthenticatedImage(imagePath: menu.menuImageURL)
+                        .frame(width: 100, height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                    if menu.isSoldOut {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(hex: "#2D3031").opacity(0.6))
+                            .frame(width: 100, height: 100)
+
+                        Text("품절")
+                            .font(.pretendard(size: .body1, weight: .bold))
+                            .foregroundStyle(.custom(.gray(.gray0)))
+                    }
+                }
+                .frame(width: 100, height: 100)
             }
         }
     }
