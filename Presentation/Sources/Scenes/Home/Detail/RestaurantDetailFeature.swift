@@ -23,6 +23,7 @@ struct RestaurantDetailFeature: Sendable {
         var menuSearchText = ""
 
         @Presents var alert: AlertState<RestaurantDetailFeature.Alert>?
+        @Presents var destination: Destination.State?
 
         var menuCategories: [String] {
             guard let restaurantInfo = restaurantInfo else { return [] }
@@ -82,7 +83,9 @@ struct RestaurantDetailFeature: Sendable {
         case toggleMenuSearch
         case menuSearchTextChanged(String)
         case menuSearchSubmitted
+        case menuTapped(Menu)
         case alert(PresentationAction<RestaurantDetailFeature.Alert>)
+        case destination(PresentationAction<Destination.Action>)
     }
 
     // MARK: - Body
@@ -191,11 +194,19 @@ struct RestaurantDetailFeature: Sendable {
                 state.selectedMenuCategory = "검색한 메뉴"
                 return .none
 
+            case let .menuTapped(menu):
+                state.destination = .menuDetail(MenuDetailFeature.State(menu: menu))
+                return .none
+
             case .alert:
+                return .none
+
+            case .destination:
                 return .none
             }
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$destination, action: \.destination)
     }
 
     // MARK: - Dependencies
@@ -204,3 +215,13 @@ struct RestaurantDetailFeature: Sendable {
 
     enum Alert: Sendable {}
 }
+
+// MARK: - Destinations
+extension RestaurantDetailFeature {
+    @Reducer
+    enum Destination {
+        case menuDetail(MenuDetailFeature)
+    }
+}
+
+extension RestaurantDetailFeature.Destination.State: Sendable {}

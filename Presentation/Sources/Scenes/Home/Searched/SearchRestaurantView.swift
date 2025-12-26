@@ -76,3 +76,14 @@ struct SearchRestaurantView: View {
         }
     }
 }
+
+// MARK: - Preview
+#Preview {
+    NavigationStack {
+        SearchRestaurantView(
+            store: Store(initialState: SearchRestaurantFeature.State(searchWord: "커피")) {
+                SearchRestaurantFeature()
+            }
+        )
+    }
+}

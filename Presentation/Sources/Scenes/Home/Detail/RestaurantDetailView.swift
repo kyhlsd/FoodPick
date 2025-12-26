@@ -126,9 +126,15 @@ struct RestaurantDetailView: View {
                                     // 메뉴 리스트
                                     VStack(spacing: 0) {
                                         ForEach(filteredMenuList, id: \.menuId) { menu in
-                                            MenuItemView(menu: menu)
-                                                .padding(.horizontal, .xLarge)
-                                                .padding(.vertical, .medium)
+                                            Button {
+                                                store.send(.menuTapped(menu))
+                                            } label: {
+                                                MenuItemView(menu: menu)
+                                                    .padding(.horizontal, .xLarge)
+                                                    .padding(.vertical, .medium)
+                                                    .contentShape(Rectangle())
+                                            }
+                                            .buttonStyle(.plain)
 
                                             if menu.menuId != lastMenuId {
                                                 MyDivider()
@@ -164,6 +170,11 @@ struct RestaurantDetailView: View {
             }
             .hideKeyboardOnTap()
             .alert($store.scope(state: \.alert, action: \.alert))
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.menuDetail, action: \.destination.menuDetail)
+            ) { store in
+                MenuDetailView(store: store)
+            }
             .onAppear {
                 store.send(.onAppear)
             }
@@ -467,5 +478,16 @@ private struct MenuCategoryTitleView: View {
         }
 
         return attributedString
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    NavigationStack {
+        RestaurantDetailView(
+            store: Store(initialState: RestaurantDetailFeature.State(restaurantId: "1")) {
+                RestaurantDetailFeature()
+            }
+        )
     }
 }

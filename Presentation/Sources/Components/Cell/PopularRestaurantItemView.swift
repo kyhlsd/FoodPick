@@ -49,6 +49,8 @@ struct PopularRestaurantItemView: View {
                     .frame(height: 56)
                     .offset(y: -2)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .shadow(color: .custom(.gray(.gray60)).opacity(0.08),

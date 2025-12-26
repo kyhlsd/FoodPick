@@ -55,4 +55,6 @@ enum AppIcon {
     static let photo = Image(systemName: "photo")
     static let checkMarkFill = Image(systemName: "checkmark.square.fill")
     static let checkMarkEmpty = Image(systemName: "checkmark.square")
+    static let minusSquare = Image(systemName: "minus.square")
+    static let plusSquare = Image(systemName: "plus.square")
 }

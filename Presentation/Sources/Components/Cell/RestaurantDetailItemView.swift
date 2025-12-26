@@ -28,15 +28,15 @@ struct RestaurantDetailItemView: View {
                                 AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
-                        
+
                         // 픽슐랭, 하트
                         HStack(alignment: .top) {
                             HeartButton(isLike: restaurant.isPick) {
                                 onLikeToggle(restaurant.restaurantId, !restaurant.isPick)
                             }
-                            
+
                             Spacer()
-                            
+
                             if restaurant.isPicchelin {
                                 PicchelinView()
                             }
@@ -45,7 +45,7 @@ struct RestaurantDetailItemView: View {
                         .padding(.top, AppPadding.small.value)
                     }
                     .frame(maxWidth: .infinity)
-                    
+
                     // 두번째, 세번째 사진
                     VStack(spacing: AppPadding.tiny.value) {
                         RoundedRectangle(cornerRadius: 8)
@@ -58,7 +58,7 @@ struct RestaurantDetailItemView: View {
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
-                        
+
                         // 세번째 사진
                         RoundedRectangle(cornerRadius: 8)
                             .fill(.custom(.gray(.gray30)))
@@ -73,11 +73,15 @@ struct RestaurantDetailItemView: View {
                     }
                     .frame(width: 78)
                 }
+                .frame(maxWidth: .infinity)
                 .frame(height: 127)
-                
+
                 // 가게 정보
                 RestaurantInfoView(restaurant: restaurant)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -86,7 +90,7 @@ struct RestaurantDetailItemView: View {
 // MARK: - Restaurant Info View
 private struct RestaurantInfoView: View {
     let restaurant: Restaurant
-    
+
     var body: some View {
         VStack(spacing: AppPadding.small.value) {
             // 첫번째 줄: 가게명, 좋아요, 별점
@@ -94,36 +98,37 @@ private struct RestaurantInfoView: View {
                 Text(restaurant.name)
                     .font(.pretendard(size: .body1, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray90)))
-                
+
                 HStack(spacing: 2) {
                     AppIcon.likeFill
                         .resizable()
                         .frame(width: 20, height: 20)
                         .foregroundStyle(Color(hex: "#FDC020"))
-                    
+
                     Text("\(restaurant.pickCount)개")
                         .font(.pretendard(size: .body1, weight: .bold))
                         .foregroundStyle(.custom(.gray(.gray90)))
                 }
-                
+
                 HStack(spacing: 2) {
                     AppIcon.starFill
                         .resizable()
                         .frame(width: 20, height: 20)
                         .foregroundStyle(Color(hex: "#FDC020"))
-                    
+
                     Text(String(format: "%.1f", restaurant.totalRating))
                         .font(.pretendard(size: .body1, weight: .bold))
                         .foregroundStyle(.custom(.gray(.gray90)))
-                    
+
                     Text("(\(restaurant.totalReviewCount))")
                         .font(.pretendard(size: .body1, weight: .regular))
                         .foregroundStyle(.custom(.gray(.gray60)))
                 }
-                
+
                 Spacer()
             }
-            
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             // 두번째 줄: 거리, 시간, 주문횟수
             HStack(spacing: AppPadding.large.value) {
                 InfoItemView(
@@ -140,7 +145,8 @@ private struct RestaurantInfoView: View {
                 )
                 Spacer()
             }
-            
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             // 세번째 줄: 해시태그
             HStack(spacing: AppPadding.small.value) {
                 ForEach(restaurant.hashTags, id: \.self) { tag in
@@ -156,7 +162,9 @@ private struct RestaurantInfoView: View {
                 }
                 Spacer()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

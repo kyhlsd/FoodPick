@@ -58,13 +58,14 @@ struct FilteredRestaurantList: View {
                             onLikeToggle: onLikeToggle,
                             onRestaurantTap: onRestaurantTap
                         )
+                        .frame(maxWidth: .infinity)
                         .frame(height: 235)
                         .onAppear {
                             if restaurant.restaurantId == restaurants.last?.restaurantId {
                                 onLoadMore()
                             }
                         }
-                        
+
                         if restaurant.restaurantId != restaurants.last?.restaurantId {
                             MyDivider()
                         }
