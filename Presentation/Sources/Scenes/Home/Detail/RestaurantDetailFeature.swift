@@ -18,8 +18,54 @@ struct RestaurantDetailFeature: Sendable {
         var restaurantInfo: RestaurantDetail?
         var isLoading = false
         var currentImageIndex = 0
+        var selectedMenuCategory: String?
+        var isSearching = false
+        var menuSearchText = ""
 
         @Presents var alert: AlertState<RestaurantDetailFeature.Alert>?
+
+        var menuCategories: [String] {
+            guard let restaurantInfo = restaurantInfo else { return [] }
+            let categories = Set(restaurantInfo.menuList.map { $0.category })
+            return categories.sorted()
+        }
+
+        var filteredMenuList: [Menu] {
+            guard let restaurantInfo = restaurantInfo else { return [] }
+
+            // "검색한 메뉴" 카테고리이고 검색어가 있는 경우
+            if selectedMenuCategory == "검색한 메뉴", !menuSearchText.isEmpty {
+                return restaurantInfo.menuList.filter { menu in
+                    menu.name.localizedCaseInsensitiveContains(menuSearchText) ||
+                    menu.description.localizedCaseInsensitiveContains(menuSearchText) ||
+                    menu.category.localizedCaseInsensitiveContains(menuSearchText) ||
+                    menu.originInfo.localizedCaseInsensitiveContains(menuSearchText)
+                }
+            }
+
+            // 다른 카테고리 선택 시
+            if let selectedMenuCategory = selectedMenuCategory, selectedMenuCategory != "검색한 메뉴" {
+                return restaurantInfo.menuList.filter { $0.category == selectedMenuCategory }
+            }
+
+            // 카테고리 선택 안 한 경우 전체
+            return restaurantInfo.menuList
+        }
+
+        var menuCategoryTitle: String? {
+            // "검색한 메뉴" 선택 시
+            if selectedMenuCategory == "검색한 메뉴", !menuSearchText.isEmpty {
+                return "\(menuSearchText)(으)로 검색한 메뉴"
+            }
+
+            // 다른 카테고리 선택 시
+            if let selectedMenuCategory = selectedMenuCategory, selectedMenuCategory != "검색한 메뉴" {
+                return selectedMenuCategory
+            }
+
+            // 전체 (선택 안 함)
+            return nil
+        }
     }
 
     // MARK: - Action
@@ -32,6 +78,10 @@ struct RestaurantDetailFeature: Sendable {
         case toggleRestaurantLike
         case restaurantLikeToggled(LikeStatus)
         case restaurantLikeToggleFailed(Error)
+        case menuCategorySelected(String)
+        case toggleMenuSearch
+        case menuSearchTextChanged(String)
+        case menuSearchSubmitted
         case alert(PresentationAction<RestaurantDetailFeature.Alert>)
     }
 
@@ -106,6 +156,39 @@ struct RestaurantDetailFeature: Sendable {
                 } message: {
                     TextState(error.localizedDescription)
                 }
+                return .none
+
+            case let .menuCategorySelected(category):
+                // 이미 선택된 카테고리를 다시 누르면 선택 해제
+                if state.selectedMenuCategory == category {
+                    state.selectedMenuCategory = nil
+                } else {
+                    state.selectedMenuCategory = category
+                }
+                // 다른 카테고리 선택 시 검색 모드 종료 (검색어는 유지)
+                state.isSearching = false
+                return .none
+
+            case .toggleMenuSearch:
+                // 이미 검색 모드일 때 다시 누르면 검색 해제
+                if state.isSearching {
+                    state.isSearching = false
+                    state.selectedMenuCategory = nil
+                    state.menuSearchText = ""
+                } else {
+                    state.isSearching = true
+                    state.selectedMenuCategory = "검색한 메뉴"
+                }
+                return .none
+
+            case let .menuSearchTextChanged(text):
+                state.menuSearchText = text
+                return .none
+
+            case .menuSearchSubmitted:
+                guard !state.menuSearchText.isEmpty else { return .none }
+                // 검색 제출 시 "검색한 메뉴" 카테고리로 변경
+                state.selectedMenuCategory = "검색한 메뉴"
                 return .none
 
             case .alert:

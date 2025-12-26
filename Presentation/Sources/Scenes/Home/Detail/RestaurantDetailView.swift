@@ -86,14 +86,43 @@ struct RestaurantDetailView: View {
                                 .background(.custom(.gray(.gray15)))
 
                                 // 메뉴 영역
-                                VStack(spacing: AppPadding.xLarge.value) {
-                                    // 메뉴, 리뷰 등 추가 콘텐츠 영역
-                                    Text("추가 콘텐츠 영역")
-                                        .padding(.top, .xLarge)
+                                VStack(alignment: .leading, spacing: AppPadding.medium.value) {
+                                    MenuCategorySelector(
+                                        categories: store.menuCategories,
+                                        selectedCategory: store.selectedMenuCategory,
+                                        isSearching: store.isSearching,
+                                        onCategorySelected: { category in
+                                            store.send(.menuCategorySelected(category))
+                                        },
+                                        onSearchToggle: {
+                                            store.send(.toggleMenuSearch)
+                                        }
+                                    )
+                                    .padding(.top, .xLarge)
+
+                                    if store.isSearching {
+                                        MySearchBar(
+                                            text: $store.menuSearchText.sending(\.menuSearchTextChanged),
+                                            placeholder: "메뉴 검색"
+                                        ) {
+                                            store.send(.menuSearchSubmitted)
+                                        }
+                                        .padding(2)
+                                        .padding(.horizontal, .xLarge)
+                                    }
+
+                                    if let menuCategoryTitle = store.menuCategoryTitle {
+                                        MenuCategoryTitleView(
+                                            title: menuCategoryTitle,
+                                            searchText: store.menuSearchText,
+                                            isSearching: store.isSearching
+                                        )
+                                        .padding(.horizontal, .xLarge)
+                                    }
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.horizontal, .xLarge)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(.custom(.gray(.gray0)))
+                                .animation(.easeInOut(duration: 0.3), value: store.isSearching)
                             }
                             .clipShape(
                                 UnevenRoundedRectangle(
@@ -104,7 +133,7 @@ struct RestaurantDetailView: View {
                             .offset(y: -20)
                         }
                     }
-                    .ignoresSafeArea()
+                    .ignoresSafeArea(edges: .top)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             HeartButton(isLike: restaurant.isPick,
@@ -116,6 +145,7 @@ struct RestaurantDetailView: View {
                     }
                 }
             }
+            .hideKeyboardOnTap()
             .alert($store.scope(state: \.alert, action: \.alert))
             .onAppear {
                 store.send(.onAppear)
@@ -242,12 +272,12 @@ private struct DetailRow: View {
     let content: String
 
     var body: some View {
-        HStack(spacing: AppPadding.medium.value) {
+        HStack(alignment: .top, spacing: AppPadding.medium.value) {
             Text(title)
                 .font(.pretendard(size: .body2, weight: .medium))
                 .foregroundStyle(.custom(.gray(.gray60)))
 
-            HStack(spacing: AppPadding.tiny.value) {
+            HStack(alignment: .top, spacing: AppPadding.tiny.value) {
                 icon
                     .resizable()
                     .frame(width: 20, height: 20)
@@ -273,7 +303,7 @@ private struct EstimatedPickupTimeView: View {
                 AppIcon.run
                     .resizable()
                     .frame(width: 16, height: 16)
-                
+
                 Text("예상 소요시간 \(minutes)분")
                     .font(.pretendard(size: .body3, weight: .medium))
             }
@@ -288,8 +318,137 @@ private struct EstimatedPickupTimeView: View {
                 Capsule()
                     .stroke(.custom(.gray(.gray30)), lineWidth: 1)
             )
-            
+
             Spacer()
         }
+    }
+}
+
+// MARK: - Menu Category Selector
+private struct MenuCategorySelector: View {
+    let categories: [String]
+    let selectedCategory: String?
+    let isSearching: Bool
+    let onCategorySelected: (String) -> Void
+    let onSearchToggle: () -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppPadding.small.value) {
+                // 검색 버튼 (검색한 메뉴 카테고리 역할)
+                Button {
+                    onSearchToggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        AppIcon.search
+                            .resizable()
+                            .frame(width: 16, height: 16)
+
+                        Text("검색한 메뉴")
+                            .font(.pretendard(size: .body2, weight: isSearching ? .bold : .medium))
+                    }
+                    .foregroundStyle(isSearching ? .custom(.brand(.blackSprout)) : .custom(.gray(.gray60)))
+                    .padding(.horizontal, AppPadding.medium.value)
+                    .padding(.vertical, AppPadding.small.value)
+                    .background(
+                        Capsule()
+                            .fill(.custom(.gray(.gray0)))
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(isSearching ? .custom(.brand(.blackSprout)) : .custom(.gray(.gray60)),
+                                    lineWidth: isSearching ? 1.5 : 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                ForEach(categories, id: \.self) { category in
+                    CategoryChip(
+                        title: category,
+                        isSelected: selectedCategory == category
+                    ) {
+                        onCategorySelected(category)
+                    }
+                }
+            }
+            .padding(.horizontal, .xLarge)
+            .padding(2)
+        }
+    }
+}
+
+// MARK: - Category Chip
+private struct CategoryChip: View {
+    let title: String
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button {
+            onTap()
+        } label: {
+            if isSelected {
+                Text(title)
+                    .font(.pretendard(size: .body2, weight: .bold))
+                    .foregroundStyle(.custom(.brand(.blackSprout)))
+                    .padding(.horizontal, AppPadding.medium.value)
+                    .padding(.vertical, AppPadding.small.value)
+                    .background(
+                        Capsule()
+                            .fill(.custom(.gray(.gray0)))
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(.custom(.brand(.blackSprout)), lineWidth: 1.5)
+                    )
+            } else {
+                Text(title)
+                    .font(.pretendard(size: .body2, weight: .medium))
+                    .foregroundStyle(.custom(.gray(.gray60)))
+                    .padding(.horizontal, AppPadding.medium.value)
+                    .padding(.vertical, AppPadding.small.value)
+                    .background(
+                        Capsule()
+                            .fill(.custom(.gray(.gray0)))
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(.custom(.gray(.gray60)), lineWidth: 1)
+                    )
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Menu Category Title View
+private struct MenuCategoryTitleView: View {
+    let title: String
+    let searchText: String
+    let isSearching: Bool
+
+    var body: some View {
+        if isSearching, !searchText.isEmpty {
+            // 검색한 메뉴: 검색어 부분만 deepSprout
+            Text(attributedTitle)
+                .font(.pretendard(size: .body1, weight: .bold))
+        } else {
+            // 일반 카테고리
+            Text(title)
+                .font(.pretendard(size: .body1, weight: .bold))
+                .foregroundStyle(.custom(.gray(.gray90)))
+        }
+    }
+
+    private var attributedTitle: AttributedString {
+        var attributedString = AttributedString(title)
+        attributedString.foregroundColor = .custom(.gray(.gray90))
+
+        // 검색어 부분 찾기
+        if let range = attributedString.range(of: searchText) {
+            attributedString[range].foregroundColor = .custom(.brand(.deepSprout))
+        }
+
+        return attributedString
     }
 }
