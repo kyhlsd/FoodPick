@@ -19,6 +19,7 @@ struct RestaurantDetailView: View {
             let isLoading = store.isLoading
             let restaurantInfo = store.restaurantInfo
             let currentImageIndex = store.currentImageIndex
+            let filteredMenuList = store.filteredMenuList
 
             ZStack {
                 if isLoading {
@@ -118,6 +119,20 @@ struct RestaurantDetailView: View {
                                             isSearching: store.isSearching
                                         )
                                         .padding(.horizontal, .xLarge)
+                                    }
+
+                                    // 메뉴 리스트
+                                    VStack(spacing: 0) {
+                                        ForEach(filteredMenuList, id: \.menuId) { menu in
+                                            MenuItemView(menu: menu)
+                                                .padding(.horizontal, .xLarge)
+                                                .padding(.vertical, .medium)
+
+                                            if menu.menuId != store.filteredMenuList.last?.menuId {
+                                                MyDivider()
+                                                    .padding(.horizontal, .xLarge)
+                                            }
+                                        }
                                     }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
