@@ -9,7 +9,17 @@ import SwiftUI
 
 struct HeartButton: View {
     var isLike: Bool
+    let nonLikeColor: Color
     let action: () -> Void
+    
+    init(isLike: Bool,
+         nonLikeColor: Color = .custom(.gray(.gray45)),
+         action: @escaping () -> Void
+    ) {
+        self.isLike = isLike
+        self.nonLikeColor = nonLikeColor
+        self.action = action
+    }
     
     var body: some View {
         Button {
@@ -24,9 +34,10 @@ struct HeartButton: View {
                 AppIcon.likeEmpty
                     .resizable()
                     .frame(width: 24, height: 24)
-                    .foregroundStyle(.custom(.gray(.gray45)))
+                    .foregroundStyle(nonLikeColor)
             }
         }
+        .buttonStyle(.plain)
     }
 }
 

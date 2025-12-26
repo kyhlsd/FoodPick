@@ -11,69 +11,77 @@ import Domain
 struct RestaurantDetailItemView: View {
     let restaurant: Restaurant
     let onLikeToggle: (String, Bool) -> Void
+    let onRestaurantTap: (String) -> Void
 
     var body: some View {
         VStack(spacing: AppPadding.large.value) {
-            // 이미지 영역
-            HStack(spacing: AppPadding.tiny.value) {
-                // 첫번째 사진
-                ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.custom(.gray(.gray30)))
-                        .overlay {
-                            AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
+            Button {
+                onRestaurantTap(restaurant.restaurantId)
+            } label: {
+                VStack(spacing: AppPadding.large.value) {
+                    // 이미지 영역
+                    HStack(spacing: AppPadding.tiny.value) {
+                        // 첫번째 사진
+                        ZStack(alignment: .topLeading) {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.custom(.gray(.gray30)))
+                                .overlay {
+                                    AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
 
-                    // 픽슐랭, 하트
-                    HStack(alignment: .top) {
-                        HeartButton(isLike: restaurant.isPick) {
-                            onLikeToggle(restaurant.restaurantId, !restaurant.isPick)
-                        }
+                            // 픽슐랭, 하트
+                            HStack(alignment: .top) {
+                                HeartButton(isLike: restaurant.isPick) {
+                                    onLikeToggle(restaurant.restaurantId, !restaurant.isPick)
+                                }
 
-                        Spacer()
+                                Spacer()
 
-                        if restaurant.isPicchelin {
-                            PicchelinView()
+                                if restaurant.isPicchelin {
+                                    PicchelinView()
+                                }
+                            }
+                            .padding(.horizontal, AppPadding.small.value)
+                            .padding(.top, AppPadding.small.value)
                         }
+                        .frame(maxWidth: .infinity)
+
+                        // 두번째, 세번째 사진
+                        VStack(spacing: AppPadding.tiny.value) {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(.custom(.gray(.gray30)))
+                                .overlay {
+                                    AuthenticatedImage(imagePath:
+                                                        restaurant.restaurantImageURLs.count > 1
+                                                       ? restaurant.restaurantImageURLs[1]
+                                                       : nil
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                }
+
+                            // 세번째 사진
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(.custom(.gray(.gray30)))
+                                .overlay {
+                                    AuthenticatedImage(imagePath:
+                                                        restaurant.restaurantImageURLs.count > 2
+                                                       ? restaurant.restaurantImageURLs[2]
+                                                       : nil
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                }
+                        }
+                        .frame(width: 78)
                     }
-                    .padding(.horizontal, AppPadding.small.value)
-                    .padding(.top, AppPadding.small.value)
-                }
-                .frame(maxWidth: .infinity)
+                    .frame(height: 127)
 
-                // 두번째, 세번째 사진
-                VStack(spacing: AppPadding.tiny.value) {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.custom(.gray(.gray30)))
-                        .overlay {
-                            AuthenticatedImage(imagePath:
-                                                restaurant.restaurantImageURLs.count > 1
-                                               ? restaurant.restaurantImageURLs[1]
-                                               : nil
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-
-                    // 세번째 사진
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.custom(.gray(.gray30)))
-                        .overlay {
-                            AuthenticatedImage(imagePath:
-                                                restaurant.restaurantImageURLs.count > 2
-                                               ? restaurant.restaurantImageURLs[2]
-                                               : nil
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
+                    // 가게 정보
+                    RestaurantInfoView(restaurant: restaurant)
                 }
-                .frame(width: 78)
             }
-            .frame(height: 127)
+            .buttonStyle(.plain)
 
-            // 가게 정보
-            RestaurantInfoView(restaurant: restaurant)
-            
             MyDivider()
         }
     }
@@ -201,6 +209,8 @@ private struct InfoItemView: View {
                 updatedAt: Date()
             )
         ) { _, _ in
+
+        } onRestaurantTap: { _ in
 
         }
         .padding()

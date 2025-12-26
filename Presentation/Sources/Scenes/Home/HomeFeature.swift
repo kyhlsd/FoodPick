@@ -43,6 +43,7 @@ struct HomeFeature: Sendable {
         case toggleRestaurantLike(String, Bool)
         case restaurantLikeToggled(String, LikeStatus)
         case restaurantLikeToggleFailed(Error)
+        case restaurantTapped(String)
         case popularRestaurant(PopularRestaurantFeature.Action)
         case nearbyRestaurant(NearbyRestaurantFeature.Action)
         case banner(BannerFeature.Action)
@@ -182,6 +183,10 @@ struct HomeFeature: Sendable {
                 }
                 return .none
 
+            case let .restaurantTapped(restaurantId):
+                state.destination = .detail(RestaurantDetailFeature.State(restaurantId: restaurantId))
+                return .none
+
             case .popularRestaurant(.restaurantsLoadFailed(let error)):
                 state.alert = AlertState {
                     TextState("인기 가게 로드 실패")
@@ -270,6 +275,7 @@ extension HomeFeature {
     @Reducer
     enum Destination {
         case search(SearchRestaurantFeature)
+        case detail(RestaurantDetailFeature)
     }
 }
 

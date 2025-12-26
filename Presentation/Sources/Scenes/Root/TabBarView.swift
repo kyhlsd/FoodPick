@@ -14,7 +14,9 @@ struct TabBarView: View {
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
-            
+
+            let isTabBarVisible = store.isTabBarVisible
+
             ZStack(alignment: .bottom) {
                 // TabView
                 TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
@@ -28,46 +30,49 @@ struct TabBarView: View {
                 }
 
                 // TabBar UI
-                GeometryReader { geometry in
-                    WithPerceptionTracking {
-                        let selectedTab = store.selectedTab
-                        let width = geometry.size.width - 2 * AppPadding.xLarge.value
-                        let tabWidth = width / 5
-                        let barHeight: CGFloat = 70
+                if isTabBarVisible {
+                    GeometryReader { geometry in
+                        WithPerceptionTracking {
+                            let selectedTab = store.selectedTab
+                            let width = geometry.size.width - 2 * AppPadding.xLarge.value
+                            let tabWidth = width / 5
+                            let barHeight: CGFloat = 70
 
-                        ZStack(alignment: .bottom) {
-                            // TabBar Background
-                            TabBarBackgroundView(height: barHeight)
+                            ZStack(alignment: .bottom) {
+                                // TabBar Background
+                                TabBarBackgroundView(height: barHeight)
 
-                            // TabBar Icon
-                            HStack(spacing: 0) {
-                                ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
-                                    if tab == .pick {
-                                        Spacer().frame(width: tabWidth)
-                                    } else {
-                                        TabBarButton(
-                                            tab: tab,
-                                            isSelected: selectedTab == tab,
-                                            width: tabWidth,
-                                            height: barHeight
-                                        ) {
-                                            store.send(.tabSelected(tab))
+                                // TabBar Icon
+                                HStack(spacing: 0) {
+                                    ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
+                                        if tab == .pick {
+                                            Spacer().frame(width: tabWidth)
+                                        } else {
+                                            TabBarButton(
+                                                tab: tab,
+                                                isSelected: selectedTab == tab,
+                                                width: tabWidth,
+                                                height: barHeight
+                                            ) {
+                                                store.send(.tabSelected(tab))
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            .frame(height: barHeight)
+                                .frame(height: barHeight)
 
-                            CenterButton {
-                                store.send(.centerButtonTapped)
+                                CenterButton {
+                                    store.send(.centerButtonTapped)
+                                }
+                                .offset(y: -barHeight + 28)
                             }
-                            .offset(y: -barHeight + 28)
+                            .padding(.horizontal, .xLarge)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
                         }
-                        .padding(.horizontal, .xLarge)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
                     }
+                    .frame(height: 110)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .frame(height: 110)
             }
             .ignoresSafeArea(.keyboard)
             .fullScreenCover(

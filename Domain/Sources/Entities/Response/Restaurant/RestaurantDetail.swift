@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RestaurantDetail {
+public struct RestaurantDetail: Sendable {
     public let restaurantId: String
     public let category: RestaurantCategory
     public let name: String
@@ -20,8 +20,8 @@ public struct RestaurantDetail {
     public let parkingGuide: String
     public let restaurantImageURLs: [String]
     public let isPicchelin: Bool
-    public let isPick: Bool
-    public let pickCount: Int
+    public var isPick: Bool
+    public var pickCount: Int
     public let totalReviewCount: Int
     public let totalOrderCount: Int
     public let totalRating: Float

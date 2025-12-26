@@ -17,6 +17,7 @@ struct FilteredRestaurantList: View {
     let onPicchelinFilterToggle: () -> Void
     let onMyPickFilterToggle: () -> Void
     let onLikeToggle: (String, Bool) -> Void
+    let onRestaurantTap: (String) -> Void
     let onLoadMore: () -> Void
     var emptyMessage: String = "주위 가게가 없습니다"
     
@@ -54,7 +55,8 @@ struct FilteredRestaurantList: View {
                     ForEach(restaurants, id: \.restaurantId) { restaurant in
                         RestaurantDetailItemView(
                             restaurant: restaurant,
-                            onLikeToggle: onLikeToggle
+                            onLikeToggle: onLikeToggle,
+                            onRestaurantTap: onRestaurantTap
                         )
                         .frame(height: 235)
                         .onAppear {

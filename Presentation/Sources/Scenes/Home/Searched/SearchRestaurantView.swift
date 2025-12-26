@@ -11,9 +11,11 @@ import ComposableArchitecture
 
 struct SearchRestaurantView: View {
     let store: StoreOf<SearchRestaurantFeature>
-    
+
     var body: some View {
         WithPerceptionTracking {
+            @Perception.Bindable var store = store
+
             let searchWord = store.searchWord
             let restaurants = store.filteredRestaurants
             let isLoading = store.isLoading
@@ -46,6 +48,9 @@ struct SearchRestaurantView: View {
                                 onLikeToggle: { id, like in
                                     store.send(.toggleRestaurantLike(id, like))
                                 },
+                                onRestaurantTap: { id in
+                                    store.send(.restaurantTapped(id))
+                                },
                                 onLoadMore: {},
                                 emptyMessage: "검색 결과가 없습니다."
                             )
@@ -60,6 +65,11 @@ struct SearchRestaurantView: View {
                 }
             }
             .navigationTitle("검색 결과")
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
+            ) { detailStore in
+                RestaurantDetailView(store: detailStore)
+            }
             .onAppear {
                 store.send(.onAppear)
             }

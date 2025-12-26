@@ -14,11 +14,13 @@ struct SearchRestaurantFeature: Sendable {
     // MARK: - State
     @ObservableState
     struct State: Sendable {
-        var searchWord: String
+        let searchWord: String
         var restaurants: [Restaurant] = []
         var isLoading = false
         var isPicchelinFilterEnabled = false
         var isMyPickFilterEnabled = false
+
+        @Presents var destination: Destination.State?
 
         var filteredRestaurants: [Restaurant] {
             var filtered = restaurants
@@ -47,6 +49,8 @@ struct SearchRestaurantFeature: Sendable {
         case restaurantLikeToggled(String, LikeStatus)
         case restaurantLikeToggleFailed(Error)
         case updateRestaurantLikeStatus(String, Bool, Int)
+        case restaurantTapped(String)
+        case destination(PresentationAction<Destination.Action>)
     }
 
     // MARK: - Body
@@ -116,11 +120,27 @@ struct SearchRestaurantFeature: Sendable {
                     state.restaurants[index].pickCount = pickCount
                 }
                 return .none
+
+            case let .restaurantTapped(restaurantId):
+                state.destination = .detail(RestaurantDetailFeature.State(restaurantId: restaurantId))
+                return .none
+
+            case .destination:
+                return .none
             }
         }
+        .ifLet(\.$destination, action: \.destination)
     }
 
     // MARK: - Dependencies
     @Dependency(\.searchRestaurants) var searchRestaurantsUseCase
     @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
+}
+
+// MARK: - Destination
+extension SearchRestaurantFeature {
+    @Reducer
+    enum Destination {
+        case detail(RestaurantDetailFeature)
+    }
 }

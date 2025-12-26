@@ -11,40 +11,46 @@ import Domain
 struct PopularRestaurantItemView: View {
     let restaurant: Restaurant
     let onLikeToggle: (String, Bool) -> Void
+    let onRestaurantTap: (String) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                // 배경 및 이미지
-                RoundedStepShape()
-                    .fill(.custom(.gray(.gray30)))
-                    .frame(height: 122)
-                    .overlay {
-                        AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
-                            .clipShape(RoundedStepShape())
-                    }
+        Button {
+            onRestaurantTap(restaurant.restaurantId)
+        } label: {
+            VStack(spacing: 0) {
+                ZStack(alignment: .topLeading) {
+                    // 배경 및 이미지
+                    RoundedStepShape()
+                        .fill(.custom(.gray(.gray30)))
+                        .frame(height: 122)
+                        .overlay {
+                            AuthenticatedImage(imagePath: restaurant.restaurantImageURLs.first)
+                                .clipShape(RoundedStepShape())
+                        }
 
-                // 상단 Overlay Items
-                HStack(alignment: .top) {
-                    HeartButton(isLike: restaurant.isPick) {
-                        onLikeToggle(restaurant.restaurantId, !restaurant.isPick)
-                    }
+                    // 상단 Overlay Items
+                    HStack(alignment: .top) {
+                        HeartButton(isLike: restaurant.isPick) {
+                            onLikeToggle(restaurant.restaurantId, !restaurant.isPick)
+                        }
 
-                    Spacer()
+                        Spacer()
 
-                    if restaurant.isPicchelin {
-                        PicchelinView()
+                        if restaurant.isPicchelin {
+                            PicchelinView()
+                        }
                     }
+                    .padding(.horizontal, AppPadding.small.value)
+                    .padding(.top, AppPadding.small.value)
                 }
-                .padding(.horizontal, AppPadding.small.value)
-                .padding(.top, AppPadding.small.value)
-            }
 
-            // 가게 정보
-            RestaurantInfoView(restaurant: restaurant)
-                .frame(height: 56)
-                .offset(y: -2)
+                // 가게 정보
+                RestaurantInfoView(restaurant: restaurant)
+                    .frame(height: 56)
+                    .offset(y: -2)
+            }
         }
+        .buttonStyle(.plain)
         .shadow(color: .custom(.gray(.gray60)).opacity(0.08),
                 radius: 8,
                 x: 0,
@@ -209,6 +215,8 @@ private struct InfoItemView: View {
                 updatedAt: Date()
             )
         ) { _, _ in
+
+        } onRestaurantTap: { _ in
 
         }
     }

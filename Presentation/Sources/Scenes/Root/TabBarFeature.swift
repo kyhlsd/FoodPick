@@ -17,6 +17,11 @@ struct TabBarFeature: Sendable {
         var home = HomeFeature.State()
 
         @Presents var destination: Destination.State?
+
+        var isTabBarVisible: Bool {
+            // HomeFeature의 detail이나 search destination이 있으면 탭바 숨김
+            return home.destination == nil
+        }
     }
 
     // MARK: - Action

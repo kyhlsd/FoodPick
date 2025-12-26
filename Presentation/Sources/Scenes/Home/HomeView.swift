@@ -78,10 +78,14 @@ struct HomeView: View {
                             PopularRestaurantView(
                                 restaurants: popularRestaurants,
                                 selectedCategory: selectedCategory,
-                                isLoading: isLoadingPopularRestaurants
-                            ) { id, like in
-                                store.send(.toggleRestaurantLike(id, like))
-                            }
+                                isLoading: isLoadingPopularRestaurants,
+                                onLikeToggle: { id, like in
+                                    store.send(.toggleRestaurantLike(id, like))
+                                },
+                                onRestaurantTap: { id in
+                                    store.send(.restaurantTapped(id))
+                                }
+                            )
                             .padding(.horizontal, .xLarge)
 
                             // 배너
@@ -113,6 +117,9 @@ struct HomeView: View {
                                 },
                                 onLikeToggle: { id, like in
                                     store.send(.toggleRestaurantLike(id, like))
+                                },
+                                onRestaurantTap: { id in
+                                    store.send(.restaurantTapped(id))
                                 },
                                 onLoadMore: {
                                     store.send(.nearbyRestaurant(.loadMore(category: selectedCategory)))
@@ -146,6 +153,11 @@ struct HomeView: View {
                 item: $store.scope(state: \.destination?.search, action: \.destination.search)
             ) { searchStore in
                 SearchRestaurantView(store: searchStore)
+            }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
+            ) { detailStore in
+                RestaurantDetailView(store: detailStore)
             }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
@@ -233,6 +245,7 @@ private struct NearbyRestaurantView: View {
     let onPicchelinFilterToggle: () -> Void
     let onMyPickFilterToggle: () -> Void
     let onLikeToggle: (String, Bool) -> Void
+    let onRestaurantTap: (String) -> Void
     let onLoadMore: () -> Void
     
     var body: some View {
@@ -274,6 +287,7 @@ private struct NearbyRestaurantView: View {
                 onPicchelinFilterToggle: onPicchelinFilterToggle,
                 onMyPickFilterToggle: onMyPickFilterToggle,
                 onLikeToggle: onLikeToggle,
+                onRestaurantTap: onRestaurantTap,
                 onLoadMore: onLoadMore
             )
         }

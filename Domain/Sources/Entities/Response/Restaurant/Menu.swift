@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Menu {
+public struct Menu: Sendable {
     public let menuId: String
     public let restaurantId: String
     public let category: String

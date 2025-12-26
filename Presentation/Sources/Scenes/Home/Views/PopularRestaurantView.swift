@@ -13,6 +13,7 @@ struct PopularRestaurantView: View {
     let selectedCategory: RestaurantCategory?
     let isLoading: Bool
     let onLikeToggle: (String, Bool) -> Void
+    let onRestaurantTap: (String) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -38,7 +39,8 @@ struct PopularRestaurantView: View {
                             ForEach(restaurants, id: \.restaurantId) { restaurant in
                                 PopularRestaurantItemView(
                                     restaurant: restaurant,
-                                    onLikeToggle: onLikeToggle
+                                    onLikeToggle: onLikeToggle,
+                                    onRestaurantTap: onRestaurantTap
                                 )
                                 .id(restaurant.restaurantId)
                             }
