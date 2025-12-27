@@ -17,7 +17,8 @@ struct MenuDetailView: View {
             let menu = store.menu
             let quantity = store.quantity
             let totalPrice = store.totalPrice
-            
+            let isInCart = store.isInCart
+
             ZStack(alignment: .bottom) {
                 Color.custom(.gray(.gray0))
                 
@@ -126,7 +127,15 @@ struct MenuDetailView: View {
                 
                 // 하단 고정 버튼
                 PrimaryButton(
-                    title: menu.isSoldOut ? "품절된 메뉴입니다" : "장바구니 담기",
+                    title: {
+                        if menu.isSoldOut {
+                            return "품절된 메뉴입니다"
+                        } else if isInCart {
+                            return quantity == 0 ? "장바구니에서 삭제" : "장바구니 수정하기"
+                        } else {
+                            return "장바구니 담기"
+                        }
+                    }(),
                     height: 44,
                     isEnabled: !menu.isSoldOut
                 ) {
@@ -189,6 +198,64 @@ struct MenuDetailView: View {
                         createdAt: Date(),
                         updatedAt: Date()
                     )
+                )
+            ) {
+                MenuDetailFeature()
+            }
+        )
+    }
+}
+
+#Preview("장바구니에 담긴 메뉴") {
+    NavigationStack {
+        MenuDetailView(
+            store: Store(
+                initialState: MenuDetailFeature.State(
+                    menu: Menu(
+                        menuId: "3",
+                        restaurantId: "1",
+                        category: "음료",
+                        name: "카페라떼",
+                        description: "부드러운 우유와 진한 에스프레소의 조화",
+                        originInfo: "원두: 에티오피아",
+                        price: 5000,
+                        isSoldOut: false,
+                        tags: ["인기"],
+                        menuImageURL: "menus/latte.jpg",
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    ),
+                    quantity: 3,
+                    isInCart: true
+                )
+            ) {
+                MenuDetailFeature()
+            }
+        )
+    }
+}
+
+#Preview("장바구니에서 삭제 (수량 0)") {
+    NavigationStack {
+        MenuDetailView(
+            store: Store(
+                initialState: MenuDetailFeature.State(
+                    menu: Menu(
+                        menuId: "4",
+                        restaurantId: "1",
+                        category: "음료",
+                        name: "아이스티",
+                        description: "시원하고 상쾌한 아이스티",
+                        originInfo: "홍차: 스리랑카",
+                        price: 4000,
+                        isSoldOut: false,
+                        tags: [],
+                        menuImageURL: "menus/icetea.jpg",
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    ),
+                    quantity: 0,
+                    isInCart: true
                 )
             ) {
                 MenuDetailFeature()

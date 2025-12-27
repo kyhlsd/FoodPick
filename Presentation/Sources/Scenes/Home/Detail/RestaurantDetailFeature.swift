@@ -131,7 +131,16 @@ struct RestaurantDetailFeature: Sendable {
                 return .none
 
             case let .menuSection(.menuTapped(menu)):
-                state.destination = .menuDetail(MenuDetailFeature.State(menu: menu))
+                // 장바구니에 이미 있는 메뉴인지 확인하고 수량 가져오기
+                let existingItem = state.cartSection.cartItems.first { $0.menu.menuId == menu.menuId }
+                let isInCart = existingItem != nil
+                let existingQuantity = existingItem?.quantity ?? 1
+
+                var menuDetailState = MenuDetailFeature.State(menu: menu)
+                menuDetailState.quantity = existingQuantity
+                menuDetailState.isInCart = isInCart
+
+                state.destination = .menuDetail(menuDetailState)
                 return .none
 
             case .menuSection:
@@ -147,14 +156,25 @@ struct RestaurantDetailFeature: Sendable {
             case .alert:
                 return .none
 
-            case let .destination(.presented(.menuDetail(.addToCartTapped))):
-                // 메뉴 상세에서 장바구니 담기 버튼 클릭 시
+            case .destination(.presented(.menuDetail(.addToCartTapped))):
+                // 메뉴 상세에서 장바구니 담기/수정하기 버튼 클릭 시
                 guard let menuDetailState = state.destination?.menuDetail else { return .none }
                 let menu = menuDetailState.menu
                 let quantity = menuDetailState.quantity
 
-                // 장바구니에 아이템 추가
-                return .send(.cartSection(.addToCart(menu: menu, quantity: quantity)))
+                // 수량이 0인 경우 장바구니에서 삭제
+                if quantity == 0 {
+                    return .send(.cartSection(.removeFromCart(menuId: menu.menuId)))
+                }
+
+                // 이미 장바구니에 있는 메뉴인지 확인
+                if state.cartSection.cartItems.contains(where: { $0.menu.menuId == menu.menuId }) {
+                    // 있으면 수량 업데이트
+                    return .send(.cartSection(.updateQuantity(menuId: menu.menuId, quantity: quantity)))
+                } else {
+                    // 없으면 새로 추가
+                    return .send(.cartSection(.addToCart(menu: menu, quantity: quantity)))
+                }
 
             case .destination:
                 return .none
