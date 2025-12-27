@@ -95,6 +95,7 @@ struct CartView: View {
             }
             .navigationTitle("장바구니")
             .navigationBarTitleDisplayMode(.inline)
+            .alert($store.scope(state: \.alert, action: \.alert))
             .navigationDestination(
                 item: $store.scope(state: \.destination?.payment, action: \.destination.payment)
             ) { store in

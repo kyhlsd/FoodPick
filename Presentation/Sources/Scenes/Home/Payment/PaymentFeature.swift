@@ -27,6 +27,7 @@ struct PaymentFeature: Sendable {
         case validatePayment(impUID: String)
         case paymentValidated(ValidatePaymentResponse)
         case paymentValidationFailed(Error)
+        case paymentSuccessConfirmed
         case alert(PresentationAction<PaymentFeature.Alert>)
     }
 
@@ -71,7 +72,7 @@ struct PaymentFeature: Sendable {
                 state.alert = AlertState {
                     TextState("결제 완료")
                 } actions: {
-                    ButtonState(role: .cancel) {
+                    ButtonState(action: .paymentSuccessConfirmed) {
                         TextState("확인")
                     }
                 } message: {
@@ -92,6 +93,14 @@ struct PaymentFeature: Sendable {
                 }
                 return .none
 
+            case .paymentSuccessConfirmed:
+                return .run { _ in
+                    await dismiss()
+                }
+
+            case .alert(.presented(.paymentSuccessConfirmed)):
+                return .send(.paymentSuccessConfirmed)
+
             case .alert:
                 return .none
             }
@@ -101,6 +110,9 @@ struct PaymentFeature: Sendable {
 
     // MARK: - Dependencies
     @Dependency(\.validatePayment) var validatePaymentUseCase
+    @Dependency(\.dismiss) var dismiss
 
-    enum Alert: Sendable {}
+    enum Alert: Sendable {
+        case paymentSuccessConfirmed
+    }
 }

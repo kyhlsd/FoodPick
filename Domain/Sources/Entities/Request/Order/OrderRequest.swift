@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/17/25.
 //
 
-public struct OrderRequest {
+public struct OrderRequest: Sendable {
     public let restaurantId: String
     public let orderMenuList: [MenuRequest]
     public let totalPrice: Int
@@ -17,7 +17,7 @@ public struct OrderRequest {
     }
 }
 
-public struct MenuRequest {
+public struct MenuRequest: Sendable {
     public let menuId: String
     public let quantity: Int
     
