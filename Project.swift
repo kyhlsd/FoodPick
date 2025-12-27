@@ -45,12 +45,53 @@ let project = Project(
                     "UIBackgroundModes": ["remote-notification"],
                     "LSApplicationQueriesSchemes": [
                         "kakaokompassauth",
-                        "kakaolink"
+                        "kakaolink",
+                        "kftc-bankpay",
+                        "ispmobile",
+                        "itms-apps",
+                        "hdcardappcardansimclick",
+                        "smhyundaiansimclick",
+                        "shinhan-sr-ansimclick",
+                        "smshinhanansimclick",
+                        "kb-acp",
+                        "kb-auth",
+                        "kb-screen",
+                        "kbbank",
+                        "liivbank",
+                        "newliiv",
+                        "mpocket.online.ansimclick",
+                        "ansimclickscard",
+                        "ansimclickipcollect",
+                        "vguardstart",
+                        "samsungpay",
+                        "scardcertiapp",
+                        "lottesmartpay",
+                        "lotteappcard",
+                        "cloudpay",
+                        "nhappcardansimclick",
+                        "nonghyupcardansimclick",
+                        "citispay",
+                        "citicardappkr",
+                        "citimobileapp",
+                        "kakaotalk",
+                        "payco",
+                        "chaipayment",
+                        "hyundaicardappcardid",
+                        "com.wooricard.wcard",
+                        "lmslpay",
+                        "lguthepay-xpay",
+                        "supertoss",
+                        "newsmartpib",
+                        "kakaobank"
                     ],
                     "CFBundleURLTypes": [
                         [
                             "CFBundleTypeRole": "Editor",
                             "CFBundleURLSchemes": ["kakao$(KAKAO_APP_KEY)"]
+                        ],
+                        [
+                            "CFBundleTypeRole": "Editor",
+                            "CFBundleURLSchemes": ["foodpick", "iamport"]
                         ]
                     ],
                     "KAKAO_APP_KEY": "$(KAKAO_APP_KEY)"
@@ -141,7 +182,8 @@ let project = Project(
                         .external(name: "Alamofire"),
                         .external(name: "KakaoSDKCommon"),
                         .external(name: "KakaoSDKUser"),
-                        .external(name: "KakaoSDKAuth")
+                        .external(name: "KakaoSDKAuth"),
+                        .external(name: "iamport-ios")
                     ],
                     settings: .settings(
                         base: [

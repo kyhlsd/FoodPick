@@ -14,6 +14,8 @@ struct CartView: View {
 
     var body: some View {
         WithPerceptionTracking {
+            @Perception.Bindable var store = store
+
             let cartItems = store.cartItems
             let cartTotalPrice = store.cartTotalPrice
             let cartTotalCount = store.cartTotalCount
@@ -93,6 +95,11 @@ struct CartView: View {
             }
             .navigationTitle("장바구니")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.payment, action: \.destination.payment)
+            ) { store in
+                PaymentView(store: store)
+            }
         }
     }
 }

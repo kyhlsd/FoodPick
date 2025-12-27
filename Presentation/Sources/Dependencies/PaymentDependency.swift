@@ -18,6 +18,11 @@ extension DependencyValues {
     }
 
     // MARK: - UseCases
+    var createPaymentRequest: CreatePaymentRequestUseCase {
+        get { self[CreatePaymentRequestKey.self] }
+        set { self[CreatePaymentRequestKey.self] = newValue }
+    }
+
     var validatePayment: ValidatePaymentUseCase {
         get { self[ValidatePaymentKey.self] }
         set { self[ValidatePaymentKey.self] = newValue }
@@ -32,6 +37,10 @@ extension DependencyValues {
 // MARK: - Keys
 private enum PaymentRepositoryKey: DependencyKey {
     static let liveValue: PaymentRepository = DefaultPaymentRepositoryImpl()
+}
+
+private enum CreatePaymentRequestKey: DependencyKey {
+    static let liveValue: CreatePaymentRequestUseCase = CreatePaymentRequestUseCaseImpl()
 }
 
 private enum ValidatePaymentKey: DependencyKey {

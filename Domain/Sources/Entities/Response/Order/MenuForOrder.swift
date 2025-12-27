@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct MenuForOrder {
+public struct MenuForOrder: Sendable {
     public let menu: [MenuDetailForOrder]
     public let quantity: Int
     
@@ -17,7 +17,7 @@ public struct MenuForOrder {
     }
 }
 
-public struct MenuDetailForOrder {
+public struct MenuDetailForOrder: Sendable {
     public let id: String
     public let category: String
     public let name: String

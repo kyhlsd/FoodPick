@@ -2,6 +2,7 @@ import SwiftUI
 import Presentation
 import Data
 import Core
+import iamport_ios
 
 @main
 struct FoodPickApp: App {
@@ -38,5 +39,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         Task {
             await DefaultDeviceTokenRepositoryImpl.shared.setDeviceTokenError(error)
         }
+    }
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        Iamport.shared.receivedURL(url)
+        return true
     }
 }

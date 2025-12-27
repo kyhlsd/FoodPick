@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ValidatePaymentResponse {
+public struct ValidatePaymentResponse: Sendable {
     public let paymentId: String
     public let orderItem: OrderItemForPayment
     public let createdAt: Date
@@ -21,7 +21,7 @@ public struct ValidatePaymentResponse {
     }
 }
 
-public struct OrderItemForPayment {
+public struct OrderItemForPayment: Sendable {
     public let orderId: String
     public let orderCode: String
     public let totalPrice: Int

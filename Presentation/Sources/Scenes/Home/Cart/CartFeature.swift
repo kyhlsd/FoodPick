@@ -23,6 +23,8 @@ struct CartFeature: Sendable {
         var cartTotalCount: Int {
             cartItems.reduce(0) { $0 + $1.quantity }
         }
+
+        @Presents var destination: Destination.State?
     }
 
     // MARK: - Action
@@ -31,9 +33,11 @@ struct CartFeature: Sendable {
         case quantityDecreased(menuId: String)
         case removeFromCart(menuId: String)
         case checkoutTapped
+        case destination(PresentationAction<Destination.Action>)
     }
 
     @Dependency(\.dismiss) var dismiss
+    @Dependency(\.createPaymentRequest) var createPaymentRequestUseCase
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -58,9 +62,34 @@ struct CartFeature: Sendable {
                 return .none
 
             case .checkoutTapped:
-                // TODO: 결제 화면으로 이동
+                guard let restaurantId = state.cartItems.first?.menu.restaurantId else {
+                    return .none
+                }
+
+                let menuNames = state.cartItems.map { $0.menu.name }
+                let paymentRequest = createPaymentRequestUseCase.execute(
+                    restaurantId: restaurantId,
+                    menuNames: menuNames,
+                    totalAmount: state.cartTotalPrice
+                )
+
+                state.destination = .payment(PaymentFeature.State(paymentRequest: paymentRequest))
+                return .none
+
+            case .destination:
                 return .none
             }
         }
+        .ifLet(\.$destination, action: \.destination)
     }
 }
+
+// MARK: - Destinations
+extension CartFeature {
+    @Reducer
+    enum Destination {
+        case payment(PaymentFeature)
+    }
+}
+
+extension CartFeature.Destination.State: Sendable {}
