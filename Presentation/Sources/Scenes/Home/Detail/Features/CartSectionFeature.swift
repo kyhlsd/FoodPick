@@ -31,6 +31,7 @@ struct CartSectionFeature: Sendable {
         case removeFromCart(menuId: String)
         case updateQuantity(menuId: String, quantity: Int)
         case clearCart
+        case viewCartTapped
         case checkoutTapped
     }
 
@@ -65,6 +66,10 @@ struct CartSectionFeature: Sendable {
 
             case .clearCart:
                 state.cartItems = []
+                return .none
+
+            case .viewCartTapped:
+                // 장바구니 화면으로 이동 (부모 리듀서에서 처리)
                 return .none
 
             case .checkoutTapped:

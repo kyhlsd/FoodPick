@@ -129,6 +129,11 @@ struct RestaurantDetailView: View {
             ) { store in
                 MenuDetailView(store: store)
             }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.cart, action: \.destination.cart)
+            ) { store in
+                CartView(store: store)
+            }
             .onAppear {
                 store.send(.onAppear)
             }

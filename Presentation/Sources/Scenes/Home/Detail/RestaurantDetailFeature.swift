@@ -72,12 +72,6 @@ struct RestaurantDetailFeature: Sendable {
                 state.isLoading = false
                 state.restaurantInfo = restaurantInfo
                 state.menuSection.restaurantInfo = restaurantInfo
-
-                // 첫 번째 카테고리 자동 선택
-                if let firstCategory = state.menuSection.menuCategories.first {
-                    state.menuSection.selectedMenuCategory = firstCategory
-                }
-
                 return .none
 
             case let .restaurantInfoLoadFailed(error):
@@ -146,11 +140,17 @@ struct RestaurantDetailFeature: Sendable {
             case .menuSection:
                 return .none
 
-            case .cartSection(.checkoutTapped):
-                // TODO: 결제 화면으로 이동
+            case .cartSection(.viewCartTapped):
+                // 장바구니 화면으로 이동
+                let cartState = CartFeature.State(cartItems: state.cartSection.cartItems)
+                state.destination = .cart(cartState)
                 return .none
 
             case .cartSection:
+                // cartSection이 업데이트되면 destination의 cart state도 업데이트
+                if case .cart = state.destination {
+                    state.destination = .cart(CartFeature.State(cartItems: state.cartSection.cartItems))
+                }
                 return .none
 
             case .alert:
@@ -176,6 +176,28 @@ struct RestaurantDetailFeature: Sendable {
                     return .send(.cartSection(.addToCart(menu: menu, quantity: quantity)))
                 }
 
+            case let .destination(.presented(.cart(.quantityIncreased(menuId)))):
+                // 장바구니 화면에서 수량 증가
+                return .send(.cartSection(.updateQuantity(menuId: menuId, quantity: {
+                    if let item = state.cartSection.cartItems.first(where: { $0.menu.menuId == menuId }) {
+                        return item.quantity + 1
+                    }
+                    return 1
+                }())))
+
+            case let .destination(.presented(.cart(.quantityDecreased(menuId)))):
+                // 장바구니 화면에서 수량 감소
+                return .send(.cartSection(.updateQuantity(menuId: menuId, quantity: {
+                    if let item = state.cartSection.cartItems.first(where: { $0.menu.menuId == menuId }) {
+                        return max(1, item.quantity - 1)
+                    }
+                    return 1
+                }())))
+
+            case let .destination(.presented(.cart(.removeFromCart(menuId)))):
+                // 장바구니 화면에서 삭제
+                return .send(.cartSection(.removeFromCart(menuId: menuId)))
+
             case .destination:
                 return .none
             }
@@ -196,6 +218,7 @@ extension RestaurantDetailFeature {
     @Reducer
     enum Destination {
         case menuDetail(MenuDetailFeature)
+        case cart(CartFeature)
     }
 }
 

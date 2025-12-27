@@ -35,9 +35,9 @@ struct CartSectionView: View {
 
                         Spacer()
 
-                        // 오른쪽: 결제하기 버튼
+                        // 오른쪽: 장바구니 보기 버튼
                         Button {
-                            store.send(.checkoutTapped)
+                            store.send(.viewCartTapped)
                         } label: {
                             HStack(spacing: AppPadding.small.value) {
                                 ZStack {
@@ -49,8 +49,8 @@ struct CartSectionView: View {
                                         .font(.pretendard(size: .caption1, weight: .semiBold))
                                         .foregroundStyle(.custom(.brand(.blackSprout)))
                                 }
-                                
-                                Text("결제하기")
+
+                                Text("장바구니 보기")
                                     .font(.pretendard(size: .body1, weight: .bold))
                             }
                             .foregroundStyle(.custom(.gray(.gray0)))

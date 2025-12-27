@@ -49,9 +49,9 @@ struct MenuSectionFeature: Sendable {
         var menuCategoryTitle: String? {
             if isSearching {
                 if menuSearchText.isEmpty {
-                    return "전체 메뉴"
+                    return nil
                 }
-                return "검색한 메뉴: \(menuSearchText)"
+                return "\(menuSearchText)(으)로 검색한 메뉴"
             } else {
                 return selectedMenuCategory
             }
@@ -72,7 +72,12 @@ struct MenuSectionFeature: Sendable {
         Reduce { state, action in
             switch action {
             case let .menuCategorySelected(category):
-                state.selectedMenuCategory = category
+                // 이미 선택된 카테고리를 다시 선택하면 선택 해제 (전체 메뉴)
+                if state.selectedMenuCategory == category {
+                    state.selectedMenuCategory = nil
+                } else {
+                    state.selectedMenuCategory = category
+                }
                 state.isSearching = false
                 state.menuSearchText = ""
                 return .none
@@ -83,10 +88,6 @@ struct MenuSectionFeature: Sendable {
                     state.selectedMenuCategory = nil
                 } else {
                     state.menuSearchText = ""
-                    // 검색 종료 시 첫 번째 카테고리 선택
-                    if let firstCategory = state.menuCategories.first {
-                        state.selectedMenuCategory = firstCategory
-                    }
                 }
                 return .none
 
