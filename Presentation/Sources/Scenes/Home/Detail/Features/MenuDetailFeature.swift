@@ -23,7 +23,7 @@ struct MenuDetailFeature: Sendable {
     }
 
     // MARK: - Action
-    enum Action {
+    enum Action: Sendable {
         case quantityIncreased
         case quantityDecreased
         case addToCartTapped

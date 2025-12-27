@@ -40,18 +40,18 @@ struct CartSectionView: View {
                             store.send(.checkoutTapped)
                         } label: {
                             HStack(spacing: AppPadding.small.value) {
-                                Text("결제하기")
-                                    .font(.pretendard(size: .body1, weight: .bold))
-
                                 ZStack {
                                     Circle()
                                         .fill(.custom(.gray(.gray0)))
-                                        .frame(width: 24, height: 24)
+                                        .frame(width: 16, height: 16)
 
                                     Text("\(cartTotalCount)")
-                                        .font(.pretendard(size: .caption2, weight: .bold))
+                                        .font(.pretendard(size: .caption1, weight: .semiBold))
                                         .foregroundStyle(.custom(.brand(.blackSprout)))
                                 }
+                                
+                                Text("결제하기")
+                                    .font(.pretendard(size: .body1, weight: .bold))
                             }
                             .foregroundStyle(.custom(.gray(.gray0)))
                             .padding(.horizontal, AppPadding.large.value)

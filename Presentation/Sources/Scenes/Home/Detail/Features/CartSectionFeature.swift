@@ -16,7 +16,6 @@ struct CartSectionFeature: Sendable {
     struct State: Sendable {
         var cartItems: [(menu: Menu, quantity: Int)] = []
 
-        // Computed properties
         var cartTotalPrice: Int {
             cartItems.reduce(0) { $0 + ($1.menu.price * $1.quantity) }
         }
@@ -27,7 +26,7 @@ struct CartSectionFeature: Sendable {
     }
 
     // MARK: - Action
-    enum Action {
+    enum Action: Sendable {
         case addToCart(menu: Menu, quantity: Int)
         case removeFromCart(menuId: String)
         case updateQuantity(menuId: String, quantity: Int)

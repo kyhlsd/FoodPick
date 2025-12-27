@@ -72,6 +72,12 @@ struct RestaurantDetailFeature: Sendable {
                 state.isLoading = false
                 state.restaurantInfo = restaurantInfo
                 state.menuSection.restaurantInfo = restaurantInfo
+
+                // 첫 번째 카테고리 자동 선택
+                if let firstCategory = state.menuSection.menuCategories.first {
+                    state.menuSection.selectedMenuCategory = firstCategory
+                }
+
                 return .none
 
             case let .restaurantInfoLoadFailed(error):
@@ -140,6 +146,15 @@ struct RestaurantDetailFeature: Sendable {
 
             case .alert:
                 return .none
+
+            case let .destination(.presented(.menuDetail(.addToCartTapped))):
+                // 메뉴 상세에서 장바구니 담기 버튼 클릭 시
+                guard let menuDetailState = state.destination?.menuDetail else { return .none }
+                let menu = menuDetailState.menu
+                let quantity = menuDetailState.quantity
+
+                // 장바구니에 아이템 추가
+                return .send(.cartSection(.addToCart(menu: menu, quantity: quantity)))
 
             case .destination:
                 return .none

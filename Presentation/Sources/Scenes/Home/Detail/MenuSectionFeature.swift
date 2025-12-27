@@ -59,7 +59,7 @@ struct MenuSectionFeature: Sendable {
     }
 
     // MARK: - Action
-    enum Action {
+    enum Action: Sendable {
         case menuCategorySelected(String)
         case toggleMenuSearch
         case menuSearchTextChanged(String)

@@ -11,38 +11,35 @@ import ComposableArchitecture
 
 struct RestaurantDetailView: View {
     let store: StoreOf<RestaurantDetailFeature>
-
+    
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
-
+            
             let isLoading = store.isLoading
             let restaurantInfo = store.restaurantInfo
             let currentImageIndex = store.currentImageIndex
-
+            
             ZStack(alignment: .bottom) {
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
                 } else if let restaurant = restaurantInfo {
                     ScrollView {
-                        WithPerceptionTracking {
-                            VStack(spacing: 0) {
+                        VStack(spacing: 0) {
                             // 이미지 영역
                             ZStack(alignment: .bottom) {
                                 TabView(selection: $store.currentImageIndex.sending(\.imageIndexChanged)) {
                                     ForEach(Array(restaurant.restaurantImageURLs.enumerated()),
                                             id: \.offset) { index, imagePath in
-                                        WithPerceptionTracking {
-                                            AuthenticatedImage(imagePath: imagePath)
-                                                .frame(height: 240)
-                                                .tag(index)
-                                        }
+                                        AuthenticatedImage(imagePath: imagePath)
+                                            .frame(height: 240)
+                                            .tag(index)
                                     }
                                 }
                                 .tabViewStyle(.page(indexDisplayMode: .never))
                                 .frame(height: 240)
-
+                                
                                 // Page Control
                                 if restaurant.restaurantImageURLs.count > 1 {
                                     HStack(spacing: AppPadding.small.value) {
@@ -56,38 +53,38 @@ struct RestaurantDetailView: View {
                                                     .fill(.custom(.gray(.gray45)))
                                                     .frame(width: 4, height: 4)
                                             }
-
+                                            
                                         }
                                     }
                                     .padding(.bottom, AppPadding.medium.value + 20)
                                 }
                             }
-
+                            
                             // 컨텐츠 영역
                             VStack(spacing: 0) {
                                 // 가게 영역
                                 VStack(spacing: AppPadding.xLarge.value) {
                                     RestaurantInfoSection(restaurant: restaurant)
                                         .padding([.top, .horizontal], .xLarge)
-
+                                    
                                     VStack(spacing: AppPadding.medium.value) {
                                         RestaurantDetailsCard(restaurant: restaurant)
-
+                                        
                                         EstimatedPickupTimeView(minutes: restaurant.estimatedPickupTime)
-
+                                        
                                         PrimaryButton(title: "길찾기",
                                                       height: 44
                                         ) {
-
+                                            
                                         }
                                     }
                                     .padding(.horizontal, .xLarge)
-
+                                    
                                     MyDivider()
                                 }
                                 .frame(maxWidth: .infinity)
                                 .background(.custom(.gray(.gray15)))
-
+                                
                                 // 메뉴 영역
                                 MenuSectionView(
                                     store: store.scope(
@@ -103,22 +100,19 @@ struct RestaurantDetailView: View {
                                 )
                             )
                             .offset(y: -20)
-                            }
                         }
                     }
                     .ignoresSafeArea(edges: .top)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
-                            WithPerceptionTracking {
-                                HeartButton(isLike: restaurant.isPick,
-                                            nonLikeColor: .custom(.gray(.gray100))
-                                ) {
-                                    store.send(.toggleRestaurantLike)
-                                }
+                            HeartButton(isLike: restaurant.isPick,
+                                        nonLikeColor: .custom(.gray(.gray100))
+                            ) {
+                                store.send(.toggleRestaurantLike)
                             }
                         }
                     }
-
+                    
                     // 하단 결제 영역
                     CartSectionView(
                         store: store.scope(
@@ -133,9 +127,7 @@ struct RestaurantDetailView: View {
             .navigationDestination(
                 item: $store.scope(state: \.destination?.menuDetail, action: \.destination.menuDetail)
             ) { store in
-                WithPerceptionTracking {
-                    MenuDetailView(store: store)
-                }
+                MenuDetailView(store: store)
             }
             .onAppear {
                 store.send(.onAppear)
