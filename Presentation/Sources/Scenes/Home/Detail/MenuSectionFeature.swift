@@ -18,6 +18,7 @@ struct MenuSectionFeature: Sendable {
         var selectedMenuCategory: String?
         var isSearching = false
         var menuSearchText = ""
+        var isSearchBarFocused = false
 
         // Computed properties
         var menuCategories: [String] {
@@ -64,6 +65,7 @@ struct MenuSectionFeature: Sendable {
         case toggleMenuSearch
         case menuSearchTextChanged(String)
         case menuSearchSubmitted
+        case searchBarFocusChanged(Bool)
         case menuTapped(Menu)
     }
 
@@ -88,6 +90,7 @@ struct MenuSectionFeature: Sendable {
                     state.selectedMenuCategory = nil
                 } else {
                     state.menuSearchText = ""
+                    state.isSearchBarFocused = false
                 }
                 return .none
 
@@ -96,6 +99,10 @@ struct MenuSectionFeature: Sendable {
                 return .none
 
             case .menuSearchSubmitted:
+                return .none
+
+            case let .searchBarFocusChanged(isFocused):
+                state.isSearchBarFocused = isFocused
                 return .none
 
             case .menuTapped:

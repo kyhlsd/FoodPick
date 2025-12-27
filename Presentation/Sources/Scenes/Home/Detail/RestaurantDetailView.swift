@@ -15,11 +15,11 @@ struct RestaurantDetailView: View {
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
-            
+
             let isLoading = store.isLoading
             let restaurantInfo = store.restaurantInfo
             let currentImageIndex = store.currentImageIndex
-            
+
             ZStack(alignment: .bottom) {
                 if isLoading {
                     ProgressView()
@@ -112,14 +112,16 @@ struct RestaurantDetailView: View {
                             }
                         }
                     }
-                    
-                    // 하단 결제 영역
-                    CartSectionView(
-                        store: store.scope(
-                            state: \.cartSection,
-                            action: \.cartSection
+
+                    // 하단 결제 영역 (검색바 포커스 시 숨김)
+                    if !store.menuSection.isSearchBarFocused {
+                        CartSectionView(
+                            store: store.scope(
+                                state: \.cartSection,
+                                action: \.cartSection
+                            )
                         )
-                    )
+                    }
                 }
             }
             .hideKeyboardOnTap()

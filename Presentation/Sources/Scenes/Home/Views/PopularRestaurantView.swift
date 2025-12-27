@@ -20,22 +20,28 @@ struct PopularRestaurantView: View {
             Text("실시간 인기 가게")
                 .font(.pretendard(size: .body2, weight: .bold))
                 .foregroundStyle(.custom(.gray(.gray90)))
+                .padding(.horizontal, .xLarge)
             
             if isLoading {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+                    .padding(.horizontal, .xLarge)
                     .frame(maxWidth: .infinity)
                     .frame(height: 176)
             } else if restaurants.isEmpty {
                 Text("인기 가게가 없습니다")
                     .font(.pretendard(size: .body2, weight: .medium))
                     .foregroundStyle(.custom(.gray(.gray60)))
+                    .padding(.horizontal, .xLarge)
                     .frame(maxWidth: .infinity)
                     .frame(height: 176)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: AppPadding.large.value) {
+                            Spacer()
+                                .frame(width: AppPadding.xLarge.value - AppPadding.large.value)
+                            
                             ForEach(restaurants, id: \.restaurantId) { restaurant in
                                 PopularRestaurantItemView(
                                     restaurant: restaurant,
@@ -44,6 +50,9 @@ struct PopularRestaurantView: View {
                                 )
                                 .id(restaurant.restaurantId)
                             }
+                            
+                            Spacer()
+                                .frame(width: AppPadding.xLarge.value - AppPadding.large.value)
                         }
                     }
                     .frame(height: 176)

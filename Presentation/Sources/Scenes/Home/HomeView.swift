@@ -86,7 +86,6 @@ struct HomeView: View {
                                     store.send(.restaurantTapped(id))
                                 }
                             )
-                            .padding(.horizontal, .xLarge)
 
                             // 배너
                             BannerListView(

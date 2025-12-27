@@ -13,6 +13,8 @@ import ComposableArchitecture
 struct MenuSectionView: View {
     let store: StoreOf<MenuSectionFeature>
 
+    @FocusState private var isSearchBarFocused: Bool
+
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
@@ -46,6 +48,7 @@ struct MenuSectionView: View {
                     ) {
                         store.send(.menuSearchSubmitted)
                     }
+                    .focused($isSearchBarFocused)
                     .padding(2)
                     .padding(.horizontal, .xLarge)
                 }
@@ -83,6 +86,9 @@ struct MenuSectionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.custom(.gray(.gray0)))
             .animation(.easeInOut(duration: 0.3), value: isSearching)
+            .onChange(of: isSearchBarFocused) {
+                store.send(.searchBarFocusChanged($0))
+            }
         }
     }
 }
