@@ -26,7 +26,10 @@ struct MenuDetailFeature: Sendable {
     enum Action {
         case quantityIncreased
         case quantityDecreased
+        case addToCartTapped
     }
+
+    @Dependency(\.dismiss) var dismiss
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -41,6 +44,11 @@ struct MenuDetailFeature: Sendable {
                     state.quantity -= 1
                 }
                 return .none
+
+            case .addToCartTapped:
+                return .run { _ in
+                    await dismiss()
+                }
             }
         }
     }

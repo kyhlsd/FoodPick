@@ -11,109 +11,139 @@ import ComposableArchitecture
 
 struct MenuDetailView: View {
     let store: StoreOf<MenuDetailFeature>
-
+    
     var body: some View {
         WithPerceptionTracking {
             let menu = store.menu
             let quantity = store.quantity
             let totalPrice = store.totalPrice
+            
+            ZStack(alignment: .bottom) {
+                Color.custom(.gray(.gray0))
+                
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // 메뉴 이미지
+                        AuthenticatedImage(imagePath: menu.menuImageURL)
+                            .frame(height: 240)
+                            .frame(maxWidth: .infinity)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // 메뉴 이미지
-                    AuthenticatedImage(imagePath: menu.menuImageURL)
-                        .frame(height: 240)
-                        .frame(maxWidth: .infinity)
-
-                    VStack(alignment: .leading, spacing: AppPadding.large.value) {
-                        // 메뉴 이름
-                        Text(menu.name)
-                            .font(.pretendard(size: .title1, weight: .bold))
-                            .foregroundStyle(.custom(.gray(.gray90)))
-
-                        // 설명
-                        Text(menu.description)
-                            .font(.pretendard(size: .body2, weight: .regular))
-                            .foregroundStyle(.custom(.gray(.gray60)))
-                            .lineSpacing(4)
-
-                        // 원산지 정보
-                        Text(menu.originInfo)
-                            .font(.pretendard(size: .body3, weight: .regular))
-                            .foregroundStyle(.custom(.gray(.gray45)))
-                            .lineSpacing(4)
-
-                        MyDivider()
-
-                        // 가격
-                        Text("\(menu.price.formatted())원")
-                            .font(.pretendard(size: .title1, weight: .bold))
-                            .foregroundStyle(.custom(.gray(.gray90)))
-
-                        MyDivider()
-
-                        // 수량 조절
-                        HStack {
-                            Text("수량")
-                                .font(.pretendard(size: .body1, weight: .bold))
+                        // 컨텐츠 영역
+                        VStack(alignment: .leading, spacing: AppPadding.large.value) {
+                            // 메뉴 이름
+                            Text(menu.name)
+                                .font(.pretendard(size: .title1, weight: .bold))
                                 .foregroundStyle(.custom(.gray(.gray90)))
 
-                            Spacer()
+                            // 설명
+                            Text(menu.description)
+                                .font(.pretendard(size: .body2, weight: .regular))
+                                .foregroundStyle(.custom(.gray(.gray60)))
+                                .lineSpacing(4)
 
-                            HStack(spacing: AppPadding.small.value) {
-                                Button {
-                                    store.send(.quantityDecreased)
-                                } label: {
-                                    AppIcon.minusSquare
-                                        .resizable()
-                                        .frame(width: 24, height: 24)
-                                        .foregroundStyle(.custom(.gray(.gray60)))
-                                }
-                                .buttonStyle(.plain)
+                            // 원산지 정보
+                            Text(menu.originInfo)
+                                .font(.pretendard(size: .body3, weight: .regular))
+                                .foregroundStyle(.custom(.gray(.gray45)))
+                                .lineSpacing(4)
 
-                                Text("\(quantity)")
+                            MyDivider()
+
+                            // 가격
+                            Text("\(menu.price.formatted())원")
+                                .font(.pretendard(size: .title1, weight: .bold))
+                                .foregroundStyle(.custom(.gray(.gray90)))
+
+                            MyDivider()
+
+                            // 수량 조절
+                            HStack {
+                                Text("수량")
                                     .font(.pretendard(size: .body1, weight: .bold))
                                     .foregroundStyle(.custom(.gray(.gray90)))
-                                    .frame(minWidth: 24)
 
-                                Button {
-                                    store.send(.quantityIncreased)
-                                } label: {
-                                    AppIcon.plusSquare
-                                        .resizable()
-                                        .frame(width: 24, height: 24)
-                                        .foregroundStyle(.custom(.gray(.gray60)))
+                                Spacer()
+
+                                HStack(spacing: AppPadding.small.value) {
+                                    Button {
+                                        store.send(.quantityDecreased)
+                                    } label: {
+                                        AppIcon.minusSquare
+                                            .resizable()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundStyle(.custom(.gray(.gray60)))
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Text("\(quantity)")
+                                        .font(.pretendard(size: .body1, weight: .bold))
+                                        .foregroundStyle(.custom(.gray(.gray90)))
+                                        .frame(minWidth: 24)
+
+                                    Button {
+                                        store.send(.quantityIncreased)
+                                    } label: {
+                                        AppIcon.plusSquare
+                                            .resizable()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundStyle(.custom(.gray(.gray60)))
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
+                            }
+
+                            MyDivider()
+
+                            // 총 금액
+                            HStack {
+                                Text("총 금액")
+                                    .font(.pretendard(size: .body1, weight: .bold))
+                                    .foregroundStyle(.custom(.gray(.gray90)))
+
+                                Spacer()
+
+                                Text("\(totalPrice.formatted())원")
+                                    .font(.pretendard(size: .title1, weight: .bold))
+                                    .foregroundStyle(.custom(.brand(.blackSprout)))
                             }
                         }
-                        
-                        MyDivider()
-
-                        // 총 금액
-                        HStack {
-                            Text("총 금액")
-                                .font(.pretendard(size: .body1, weight: .bold))
-                                .foregroundStyle(.custom(.gray(.gray90)))
-
-                            Spacer()
-
-                            Text("\(totalPrice.formatted())원")
-                                .font(.pretendard(size: .title1, weight: .bold))
-                                .foregroundStyle(.custom(.brand(.blackSprout)))
-                        }
+                        .padding([.horizontal, .top], .xLarge)
+                        .padding(.top, .xLarge)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            Color.custom(.gray(.gray0))
+                                .clipShape(
+                                    UnevenRoundedRectangle(
+                                        topLeadingRadius: 20,
+                                        topTrailingRadius: 20
+                                    )
+                                )
+                        )
+                        .offset(y: -20)
                     }
-                    .padding(.horizontal, .xLarge)
-                    .padding(.top, .xLarge)
                 }
+                .ignoresSafeArea(edges: .top)
+                
+                // 하단 고정 버튼
+                PrimaryButton(
+                    title: menu.isSoldOut ? "품절된 메뉴입니다" : "장바구니 담기",
+                    height: 44,
+                    isEnabled: !menu.isSoldOut
+                ) {
+                    store.send(.addToCartTapped)
+                }
+                .padding(.horizontal, .xLarge)
+                .padding(.top, .medium)
+                .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 12)
             }
-            .ignoresSafeArea()
+            .padding(.bottom, .medium)
+            .background(.custom(.gray(.gray0)))
         }
     }
 }
 
 // MARK: - Preview
-#Preview {
+#Preview("일반 메뉴") {
     NavigationStack {
         MenuDetailView(
             store: Store(
@@ -129,6 +159,33 @@ struct MenuDetailView: View {
                         isSoldOut: false,
                         tags: ["인기", "시그니처"],
                         menuImageURL: "menus/americano.jpg",
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    )
+                )
+            ) {
+                MenuDetailFeature()
+            }
+        )
+    }
+}
+
+#Preview("품절 메뉴") {
+    NavigationStack {
+        MenuDetailView(
+            store: Store(
+                initialState: MenuDetailFeature.State(
+                    menu: Menu(
+                        menuId: "2",
+                        restaurantId: "1",
+                        category: "디저트",
+                        name: "치즈케이크",
+                        description: "부드럽고 진한 크림치즈와 바삭한 쿠키 베이스가 조화를 이루는 달콤한 디저트",
+                        originInfo: "크림치즈: 뉴질랜드",
+                        price: 6500,
+                        isSoldOut: true,
+                        tags: ["베스트"],
+                        menuImageURL: "menus/cheesecake.jpg",
                         createdAt: Date(),
                         updatedAt: Date()
                     )
