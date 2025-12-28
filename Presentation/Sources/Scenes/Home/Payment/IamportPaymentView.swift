@@ -31,16 +31,13 @@ struct IamportPaymentView: UIViewControllerRepresentable {
         return viewController
     }
 
-    func updateUIViewController(_ uiViewController: IamportPaymentViewController, context: Context) {
-        // No update needed
-    }
+    func updateUIViewController(_ uiViewController: IamportPaymentViewController, context: Context) {}
 }
 
 // MARK: - Iamport Payment ViewController
 class IamportPaymentViewController: UIViewController {
     private let paymentRequest: PaymentRequest
     private let onComplete: (PaymentResponse) -> Void
-    private var hasStartedPayment = false
 
     init(
         paymentRequest: PaymentRequest,
@@ -58,12 +55,11 @@ class IamportPaymentViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self, !self.hasStartedPayment else { return }
-            self.hasStartedPayment = true
-            self.startPayment()
-        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        startPayment()
     }
 
     private func startPayment() {
