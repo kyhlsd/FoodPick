@@ -8,10 +8,10 @@
 import Foundation
 
 public struct MenuForOrder: Sendable {
-    public let menu: [MenuDetailForOrder]
+    public let menu: MenuDetailForOrder
     public let quantity: Int
-    
-    public init(menu: [MenuDetailForOrder], quantity: Int) {
+
+    public init(menu: MenuDetailForOrder, quantity: Int) {
         self.menu = menu
         self.quantity = quantity
     }

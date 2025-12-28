@@ -40,6 +40,7 @@ struct IamportPaymentView: UIViewControllerRepresentable {
 class IamportPaymentViewController: UIViewController {
     private let paymentRequest: PaymentRequest
     private let onComplete: (PaymentResponse) -> Void
+    private var hasStartedPayment = false
 
     init(
         paymentRequest: PaymentRequest,
@@ -57,7 +58,12 @@ class IamportPaymentViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        startPayment()
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !self.hasStartedPayment else { return }
+            self.hasStartedPayment = true
+            self.startPayment()
+        }
     }
 
     private func startPayment() {
@@ -72,10 +78,16 @@ class IamportPaymentViewController: UIViewController {
         payment.buyer_name = paymentRequest.buyerName
         payment.app_scheme = "foodpick"
 
+        // navigationController 확보
+        guard let navController = self.navigationController else {
+            handlePaymentResponse(nil)
+            return
+        }
+
         // 결제 시작
         Iamport.shared.payment(
-            navController: self.navigationController ?? UINavigationController(rootViewController: self),
-            userCode: "imp10391932",  // TODO: 실제 가맹점 식별코드로 변경 필요
+            navController: navController,
+            userCode: "imp14511373",
             payment: payment
         ) { [weak self] response in
             self?.handlePaymentResponse(response)

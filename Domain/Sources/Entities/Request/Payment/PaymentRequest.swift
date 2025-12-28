@@ -20,7 +20,7 @@ public struct PaymentRequest: Sendable {
         amount: Int,
         name: String,
         buyerName: String? = nil,
-        pg: String = "html5_inicis",
+        pg: String = "html5_inicis.INIpayTest",
         payMethod: String = "card"
     ) {
         self.merchantUID = merchantUID

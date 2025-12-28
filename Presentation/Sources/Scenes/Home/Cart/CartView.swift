@@ -17,90 +17,121 @@ struct CartView: View {
             @Perception.Bindable var store = store
 
             let cartItems = store.cartItems
-            let cartTotalPrice = store.cartTotalPrice
-            let cartTotalCount = store.cartTotalCount
+            let paymentRequest = store.paymentRequest
+
+            let paymentRequestBinding = Binding<PaymentRequest?>(
+                get: { paymentRequest },
+                set: { _ in }
+            )
 
             ZStack(alignment: .bottom) {
                 Color.custom(.gray(.gray0))
                     .ignoresSafeArea()
 
                 if cartItems.isEmpty {
-                    // 빈 장바구니
                     EmptyCartView()
                 } else {
-                    VStack(spacing: 0) {
-                        ScrollView {
-                            VStack(spacing: 0) {
-                                ForEach(Array(cartItems.enumerated()), id: \.element.menu.menuId) { index, item in
-                                    CartItemRow(
-                                        menu: item.menu,
-                                        quantity: item.quantity,
-                                        onIncrease: {
-                                            store.send(.quantityIncreased(menuId: item.menu.menuId))
-                                        },
-                                        onDecrease: {
-                                            store.send(.quantityDecreased(menuId: item.menu.menuId))
-                                        },
-                                        onDelete: {
-                                            store.send(.removeFromCart(menuId: item.menu.menuId))
-                                        }
-                                    )
-                                    .padding(.horizontal, .xLarge)
-                                    .padding(.vertical, .medium)
-
-                                    if index < cartItems.count - 1 {
-                                        MyDivider()
-                                            .padding(.horizontal, .xLarge)
-                                    }
-                                }
-                            }
-                            .padding(.bottom, 120)
-                        }
-
-                        Spacer()
-                    }
-
-                    // 하단 결제 영역
-                    VStack(spacing: 0) {
-                        MyDivider()
-
-                        VStack(spacing: AppPadding.medium.value) {
-                            // 총 금액 표시
-                            HStack {
-                                Text("총 \(cartTotalCount)개")
-                                    .font(.pretendard(size: .body1, weight: .medium))
-                                    .foregroundStyle(.custom(.gray(.gray60)))
-
-                                Spacer()
-
-                                Text("\(cartTotalPrice.formatted())원")
-                                    .font(.pretendard(size: .title1, weight: .bold))
-                                    .foregroundStyle(.custom(.gray(.gray90)))
-                            }
-
-                            // 결제하기 버튼
-                            PrimaryButton(
-                                title: "결제하기",
-                                height: 48
-                            ) {
-                                store.send(.checkoutTapped)
-                            }
-                        }
-                        .padding(.horizontal, .xLarge)
-                        .padding(.vertical, .medium)
-                        .background(.custom(.gray(.gray0)))
-                    }
-                    .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 12)
+                    CartItemsList(store: store)
+                    CheckoutBottomBar(store: store)
                 }
             }
             .navigationTitle("장바구니")
             .navigationBarTitleDisplayMode(.inline)
             .alert($store.scope(state: \.alert, action: \.alert))
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.payment, action: \.destination.payment)
-            ) { store in
-                PaymentView(store: store)
+            .navigationDestination(item: paymentRequestBinding) { request in
+                IamportPaymentView(
+                    paymentRequest: request
+                ) { response in
+                    store.send(.paymentCompleted(response))
+                }
+                .navigationBarHidden(true)
             }
+        }
+    }
+}
+
+// MARK: - Cart Items List
+private struct CartItemsList: View {
+    let store: StoreOf<CartFeature>
+
+    var body: some View {
+        WithPerceptionTracking {
+            let cartItems = store.cartItems
+
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(cartItems.enumerated()), id: \.element.menu.menuId) { index, item in
+                            CartItemRow(
+                                menu: item.menu,
+                                quantity: item.quantity,
+                                onIncrease: {
+                                    store.send(.quantityIncreased(menuId: item.menu.menuId))
+                                },
+                                onDecrease: {
+                                    store.send(.quantityDecreased(menuId: item.menu.menuId))
+                                },
+                                onDelete: {
+                                    store.send(.removeFromCart(menuId: item.menu.menuId))
+                                }
+                            )
+                            .padding(.horizontal, .xLarge)
+                            .padding(.vertical, .medium)
+
+                            if index < cartItems.count - 1 {
+                                MyDivider()
+                                    .padding(.horizontal, .xLarge)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 120)
+                }
+
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Checkout Bottom Bar
+private struct CheckoutBottomBar: View {
+    let store: StoreOf<CartFeature>
+
+    var body: some View {
+        WithPerceptionTracking {
+            let cartTotalCount = store.cartTotalCount
+            let cartTotalPrice = store.cartTotalPrice
+
+            VStack(spacing: 0) {
+                MyDivider()
+
+                VStack(spacing: AppPadding.medium.value) {
+                    // 총 금액 표시
+                    HStack {
+                        Text("총 \(cartTotalCount)개")
+                            .font(.pretendard(size: .body1, weight: .medium))
+                            .foregroundStyle(.custom(.gray(.gray60)))
+
+                        Spacer()
+
+                        Text("\(cartTotalPrice.formatted())원")
+                            .font(.pretendard(size: .title1, weight: .bold))
+                            .foregroundStyle(.custom(.gray(.gray90)))
+                    }
+
+                    // 결제하기 버튼
+                    PrimaryButton(
+                        title: "결제하기",
+                        height: 48
+                    ) {
+                        store.send(.checkoutTapped)
+                    }
+                }
+                .padding(.horizontal, .xLarge)
+                .padding(.vertical, .medium)
+                .background(.custom(.gray(.gray0)))
+            }
+            .shadow(color: .custom(.gray(.gray75)).opacity(0.1), radius: 12)
         }
     }
 }

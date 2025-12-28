@@ -198,7 +198,7 @@ struct RestaurantDetailFeature: Sendable {
                 // 장바구니 화면에서 삭제
                 return .send(.cartSection(.removeFromCart(menuId: menuId)))
 
-            case .destination(.presented(.cart(.destination(.presented(.payment(.paymentSuccessConfirmed)))))):
+            case .destination(.presented(.cart(.paymentSuccessConfirmed))):
                 // 결제 성공 - cartSection도 초기화
                 return .send(.cartSection(.clearCart))
 

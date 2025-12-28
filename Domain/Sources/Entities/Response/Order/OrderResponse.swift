@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct OrderResponse {
+public struct OrderResponse: Sendable {
     public let orderId: String
     public let orderCode: String
     public let totalPrice: Int

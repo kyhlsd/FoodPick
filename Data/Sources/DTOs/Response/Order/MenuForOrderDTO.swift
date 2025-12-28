@@ -10,24 +10,24 @@ import Domain
 import Core
 
 struct MenuForOrderDTO: ResponseDTO {
-    private let menu: [MenuDetailForOrderDTO]
+    private let menu: MenuDetailForOrderDTO
     private let quantity: Int
-    
+
     enum CodingKeys: CodingKey {
         case menu
         case quantity
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.menu = try container.decode([MenuDetailForOrderDTO].self, forKey: .menu)
+        self.menu = try container.decode(MenuDetailForOrderDTO.self, forKey: .menu)
         self.quantity = try container.decode(Int.self, forKey: .quantity)
     }
 }
 
 extension MenuForOrderDTO {
     var toDomain: MenuForOrder {
-        return .init(menu: menu.map { $0.toDomain }, quantity: quantity)
+        return .init(menu: menu.toDomain, quantity: quantity)
     }
 }
 

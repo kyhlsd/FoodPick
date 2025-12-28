@@ -6,7 +6,7 @@ import PackageDescription
 
     let packageSettings = PackageSettings(
         productTypes: [
-            "Alamofire": .staticFramework,
+            "Alamofire": .framework,
             "ComposableArchitecture": .staticFramework,
             "KakaoSDKUser": .staticFramework,
             "KakaoSDKAuth": .staticFramework,

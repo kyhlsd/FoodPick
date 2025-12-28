@@ -25,13 +25,13 @@ public struct OrderItemForPayment: Sendable {
     public let orderId: String
     public let orderCode: String
     public let totalPrice: Int
-    public let restaurant: Restaurant
+    public let restaurant: RestaurantForValidation
     public let orderMenuList: [MenuForOrder]
     public let paidAt: Date
     public let createdAt: Date
     public let updatedAt: Date
-    
-    public init(orderId: String, orderCode: String, totalPrice: Int, restaurant: Restaurant, orderMenuList: [MenuForOrder], paidAt: Date, createdAt: Date, updatedAt: Date) {
+
+    public init(orderId: String, orderCode: String, totalPrice: Int, restaurant: RestaurantForValidation, orderMenuList: [MenuForOrder], paidAt: Date, createdAt: Date, updatedAt: Date) {
         self.orderId = orderId
         self.orderCode = orderCode
         self.totalPrice = totalPrice

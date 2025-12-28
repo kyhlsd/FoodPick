@@ -46,12 +46,12 @@ struct OrderItemForPaymentDTO: ResponseDTO {
     private let orderId: String
     private let orderCode: String
     private let totalPrice: Int
-    private let restaurant: RestaurantDTO
+    private let restaurant: RestaurantForValidationDTO
     private let orderMenuList: [MenuForOrderDTO]
     private let paidAt: String
     private let createdAt: String
     private let updatedAt: String
-    
+
     enum CodingKeys: String, CodingKey {
         case orderId = "order_id"
         case orderCode = "order_code"
@@ -62,13 +62,13 @@ struct OrderItemForPaymentDTO: ResponseDTO {
         case createdAt
         case updatedAt
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.orderId = try container.decode(String.self, forKey: .orderId)
         self.orderCode = try container.decode(String.self, forKey: .orderCode)
         self.totalPrice = try container.decode(Int.self, forKey: .totalPrice)
-        self.restaurant = try container.decode(RestaurantDTO.self, forKey: .restaurant)
+        self.restaurant = try container.decode(RestaurantForValidationDTO.self, forKey: .restaurant)
         self.orderMenuList = try container.decode([MenuForOrderDTO].self, forKey: .orderMenuList)
         self.paidAt = try container.decode(String.self, forKey: .paidAt)
         self.createdAt = try container.decode(String.self, forKey: .createdAt)

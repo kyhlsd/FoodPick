@@ -182,8 +182,7 @@ let project = Project(
                         .external(name: "Alamofire"),
                         .external(name: "KakaoSDKCommon"),
                         .external(name: "KakaoSDKUser"),
-                        .external(name: "KakaoSDKAuth"),
-                        .external(name: "iamport-ios")
+                        .external(name: "KakaoSDKAuth")
                     ],
                     settings: .settings(
                         base: [
@@ -192,7 +191,7 @@ let project = Project(
                         ]
                     )
                    ),
-        
+
             .target(name: "Presentation",
                     destinations: [.iPhone],
                     product: .framework,
@@ -206,7 +205,8 @@ let project = Project(
                         .target(name: "Data"),
                         .target(name: "Core"),
                         .external(name: "ComposableArchitecture"),
-                        .external(name: "Kingfisher")
+                        .external(name: "Kingfisher"),
+                        .external(name: "iamport-ios")
                     ],
                     settings: .settings(
                         base: [
