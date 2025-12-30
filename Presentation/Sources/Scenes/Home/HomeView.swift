@@ -16,26 +16,26 @@ struct HomeView: View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
 
+            let trendingSearches = store.trendingSearches
+            let currentTrendingIndex = store.currentTrendingIndex
+            let isShowingAllCategories = store.isShowingAllCategories
+            let selectedCategory = store.selectedCategory
+            let popularRestaurants = store.popularRestaurant.restaurants
+            let isLoadingPopularRestaurants = store.popularRestaurant.isLoading
+            let filteredNearbyRestaurants = store.nearbyRestaurant.filteredRestaurants
+            let isLoadingNearbyRestaurants = store.nearbyRestaurant.isLoading
+            let isLoadingMoreNearbyRestaurants = store.nearbyRestaurant.isLoadingMore
+            let canLoadMoreNearbyRestaurants = store.nearbyRestaurant.canLoadMore
+            let orderBy = store.nearbyRestaurant.orderBy
+            let isShowingOrderByMenu = store.nearbyRestaurant.isShowingOrderByMenu
+            let isPicchelinFilterEnabled = store.nearbyRestaurant.isPicchelinFilterEnabled
+            let isMyPickFilterEnabled = store.nearbyRestaurant.isMyPickFilterEnabled
+            
             ZStack {
                 Color.custom(.brand(.brightSprout))
                     .ignoresSafeArea()
 
                 ScrollView {
-                    let trendingSearches = store.trendingSearches
-                    let currentTrendingIndex = store.currentTrendingIndex
-                    let isShowingAllCategories = store.isShowingAllCategories
-                    let selectedCategory = store.selectedCategory
-                    let popularRestaurants = store.popularRestaurant.restaurants
-                    let isLoadingPopularRestaurants = store.popularRestaurant.isLoading
-                    let filteredNearbyRestaurants = store.nearbyRestaurant.filteredRestaurants
-                    let isLoadingNearbyRestaurants = store.nearbyRestaurant.isLoading
-                    let isLoadingMoreNearbyRestaurants = store.nearbyRestaurant.isLoadingMore
-                    let canLoadMoreNearbyRestaurants = store.nearbyRestaurant.canLoadMore
-                    let orderBy = store.nearbyRestaurant.orderBy
-                    let isShowingOrderByMenu = store.nearbyRestaurant.isShowingOrderByMenu
-                    let isPicchelinFilterEnabled = store.nearbyRestaurant.isPicchelinFilterEnabled
-                    let isMyPickFilterEnabled = store.nearbyRestaurant.isMyPickFilterEnabled
-
                     VStack(spacing: AppPadding.large.value) {
                         // 위치
                         LocationView()
@@ -146,6 +146,9 @@ struct HomeView: View {
                 .onAppear {
                     store.send(.onAppear)
                 }
+            }
+            .dropdownBackdrop(isOpen: isShowingOrderByMenu) {
+                store.send(.nearbyRestaurant(.toggleOrderByMenu))
             }
             .hideKeyboardOnTap()
             .navigationDestination(
@@ -275,8 +278,8 @@ private struct NearbyRestaurantView: View {
                     }
                 }
             }
-            .dropdown(isOpen: isShowingOrderByMenu, onDismiss: onToggleOrderByMenu)
-            
+            .dropdownHost(isOpen: isShowingOrderByMenu, onDismiss: onToggleOrderByMenu)
+
             FilteredRestaurantList(
                 restaurants: restaurants,
                 isLoading: isLoading,

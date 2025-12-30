@@ -10,7 +10,7 @@ import Domain
 
 struct ReviewPageRequestDTO {
     private let next: String?
-    private let limit: String?
+    private let limit: Int?
     private let orderBy: ReviewOrderByDTO?
 }
 
@@ -24,14 +24,14 @@ extension ReviewPageRequestDTO {
         }
         self.init(next: domain.next, limit: domain.limit, orderBy: orderBy)
     }
-    
+
     var toQueryItems: [URLQueryItem] {
         var items = [URLQueryItem]()
         if let next {
             items.append(.init(name: "next", value: next))
         }
         if let limit {
-            items.append(.init(name: "limit", value: limit))
+            items.append(.init(name: "limit", value: String(limit)))
         }
         if let orderBy {
             items.append(.init(name: "order_by", value: orderBy.rawValue))

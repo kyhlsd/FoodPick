@@ -39,4 +39,36 @@ enum TimeFormatter {
         let displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour)
         return "\(displayHour):\(minute) \(isPM ? "PM" : "AM")"
     }
+
+    /// 상대적 시간 문자열로 변환합니다.
+    /// - 1시간 전까지: "30분 전"
+    /// - 하루 전까지: "5시간 전"
+    /// - 이틀 전까지: "하루 전"
+    /// - 그 이후: "2025년 9월 3일"
+    /// - Parameter date: 변환할 날짜
+    /// - Returns: 상대적 시간 문자열
+    static func toRelativeTimeString(from date: Date) -> String {
+        let now = Date()
+        let timeInterval = now.timeIntervalSince(date)
+
+        // 음수인 경우 (미래 날짜) 절대값 형식으로 표시
+        let absoluteInterval = abs(timeInterval)
+
+        let minutes = Int(absoluteInterval / 60)
+        let hours = Int(absoluteInterval / 3600)
+
+        switch absoluteInterval {
+        case 0..<3600: // 1시간 전까지
+            return "\(minutes)분 전"
+        case 3600..<86400: // 하루 전까지
+            return "\(hours)시간 전"
+        case 86400..<172800: // 이틀 전까지
+            return "하루 전"
+        default: // 그 이후
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.dateFormat = "yyyy년 M월 d일"
+            return formatter.string(from: date)
+        }
+    }
 }

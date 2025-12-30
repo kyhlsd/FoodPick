@@ -20,6 +20,8 @@ struct ReviewFeature: Sendable {
         var isLoadingStatistics = false
         var isLoadingReviews = false
         var nextCursor: String?
+        var orderBy: ReviewOrderBy = .latest
+        var isShowingOrderByMenu = false
 
         var canLoadMore: Bool {
             !isLoadingReviews && nextCursor != "0" && nextCursor != nil
@@ -38,6 +40,8 @@ struct ReviewFeature: Sendable {
         case reviewsLoaded(ResponseListWithCursor<ReviewForListResponse>, isLoadingMore: Bool)
         case reviewsFailed(Error)
         case loadMoreReviews
+        case orderByChanged(ReviewOrderBy)
+        case toggleOrderByMenu
         case alert(PresentationAction<ReviewFeature.Alert>)
     }
 
@@ -92,8 +96,9 @@ struct ReviewFeature: Sendable {
                 state.nextCursor = nil
 
                 let request = ReviewPageRequest(
+                    next: nil,
                     limit: 20,
-                    cursor: nil
+                    orderBy: state.orderBy
                 )
 
                 return .run { [restaurantId = state.restaurantId] send in
@@ -139,8 +144,9 @@ struct ReviewFeature: Sendable {
                 state.isLoadingReviews = true
 
                 let request = ReviewPageRequest(
+                    next: cursor,
                     limit: 20,
-                    cursor: cursor
+                    orderBy: state.orderBy
                 )
 
                 return .run { [restaurantId = state.restaurantId] send in
@@ -154,6 +160,15 @@ struct ReviewFeature: Sendable {
                         await send(.reviewsFailed(error))
                     }
                 }
+
+            case let .orderByChanged(orderBy):
+                state.orderBy = orderBy
+                state.isShowingOrderByMenu = false
+                return .send(.fetchReviews)
+
+            case .toggleOrderByMenu:
+                state.isShowingOrderByMenu.toggle()
+                return .none
 
             case .alert:
                 return .none

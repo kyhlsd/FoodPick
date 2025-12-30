@@ -24,7 +24,7 @@ struct DropdownMenu<T: Hashable>: View {
         }
         .overlay(alignment: .topTrailing) {
             if isOpen {
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(options, id: \.self) { option in
                         Button {
                             onSelect(option)
@@ -91,10 +91,26 @@ extension DropdownMenu where T: RawRepresentable, T.RawValue == String {
 
 // MARK: - View Extension for Dropdown
 extension View {
-    func dropdown(isOpen: Bool, onDismiss: @escaping () -> Void) -> some View {
+    func dropdownHost(isOpen: Bool, onDismiss: @escaping () -> Void) -> some View {
         self
             .zIndex(isOpen ? 1000 : 0)
             .background(
+                Group {
+                    if isOpen {
+                        Color.clear
+                            .ignoresSafeArea()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                onDismiss()
+                            }
+                    }
+                }
+            )
+    }
+
+    func dropdownBackdrop(isOpen: Bool, onDismiss: @escaping () -> Void) -> some View {
+        self
+            .overlay(
                 Group {
                     if isOpen {
                         Color.clear
