@@ -36,6 +36,7 @@ struct RestaurantDetailFeature: Sendable {
         case toggleRestaurantLike
         case restaurantLikeToggled(LikeStatus)
         case restaurantLikeToggleFailed(Error)
+        case reviewTapped
         case menuSection(MenuSectionFeature.Action)
         case cartSection(CartSectionFeature.Action)
         case alert(PresentationAction<RestaurantDetailFeature.Alert>)
@@ -122,6 +123,10 @@ struct RestaurantDetailFeature: Sendable {
                 } message: {
                     TextState(error.localizedDescription)
                 }
+                return .none
+
+            case .reviewTapped:
+                state.destination = .review(ReviewFeature.State(restaurantId: state.restaurantId))
                 return .none
 
             case let .menuSection(.menuTapped(menu)):
@@ -233,6 +238,7 @@ extension RestaurantDetailFeature {
     enum Destination {
         case menuDetail(MenuDetailFeature)
         case cart(CartFeature)
+        case review(ReviewFeature)
     }
 }
 

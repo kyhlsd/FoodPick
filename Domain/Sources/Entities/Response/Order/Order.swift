@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Order {
+public struct Order: Sendable {
     public let orderId: String
     public let orderCode: String
     public let totalPrice: Int
@@ -35,7 +35,7 @@ public struct Order {
     }
 }
 
-public struct ReviewForOrder {
+public struct ReviewForOrder: Sendable {
     public let id: String
     public let rating: Int
     

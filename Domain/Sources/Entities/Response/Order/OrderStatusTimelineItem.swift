@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct OrderStatusTimelineItem {
+public struct OrderStatusTimelineItem: Sendable {
     public let status: OrderStatus
     public let completed: Bool
     public let changedAt: Date

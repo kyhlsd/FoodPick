@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ChatRoom {
+public struct ChatRoom: Sendable {
     public let roomId: String
     public let createdAt: Date
     public let updatedAt: Date

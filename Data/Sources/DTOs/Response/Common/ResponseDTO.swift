@@ -6,6 +6,6 @@
 //
 
 protocol ResponseDTO: Decodable, Sendable {
-    associatedtype Entity
+    associatedtype Entity: Sendable
     var toDomain: Entity { get }
 }

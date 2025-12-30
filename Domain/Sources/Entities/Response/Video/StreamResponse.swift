@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/17/25.
 //
 
-public struct StreamResponse {
+public struct StreamResponse: Sendable {
     public let videoId: String
     public let streamURL: String
     public let qualities: QualityURLResponse
@@ -19,7 +19,7 @@ public struct StreamResponse {
     }
 }
 
-public struct QualityURLResponse {
+public struct QualityURLResponse: Sendable {
     public let quality: String
     public let url: String
     
@@ -29,7 +29,7 @@ public struct QualityURLResponse {
     }
 }
 
-public struct Subtitle {
+public struct Subtitle: Sendable {
     public let language: String
     public let name: String
     public let isDefault: Bool

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Comment {
+public struct Comment: Sendable {
     public let commentId: String
     public let content: String
     public let createdAt: Date

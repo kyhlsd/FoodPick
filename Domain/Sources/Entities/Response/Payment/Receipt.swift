@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Receipt {
+public struct Receipt: Sendable {
     public let impUid: String
     public let merchantUid: String
     public let payMethod: String

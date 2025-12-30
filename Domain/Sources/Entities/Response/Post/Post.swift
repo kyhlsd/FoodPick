@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Post {
+public struct Post: Sendable {
     public let postId: String
     public let category: String
     public let title: String

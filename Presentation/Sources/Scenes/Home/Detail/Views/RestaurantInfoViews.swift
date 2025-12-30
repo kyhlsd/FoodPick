@@ -11,6 +11,7 @@ import Domain
 // MARK: - Restaurant Info Section
 struct RestaurantInfoSection: View {
     let restaurant: RestaurantDetail
+    let onReviewTap: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -57,7 +58,7 @@ struct RestaurantInfoSection: View {
                         .foregroundStyle(.custom(.gray(.gray60)))
 
                     Button {
-
+                        onReviewTap()
                     } label: {
                         AppIcon.chevron
                             .resizable()

@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/17/25.
 //
 
-public struct ReviewStatisticsItem {
+public struct ReviewStatisticsItem: Sendable {
     public let rating: Int
     public let count: Int
     

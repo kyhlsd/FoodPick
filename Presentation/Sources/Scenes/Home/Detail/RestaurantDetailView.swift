@@ -64,8 +64,12 @@ struct RestaurantDetailView: View {
                             VStack(spacing: 0) {
                                 // 가게 영역
                                 VStack(spacing: AppPadding.xLarge.value) {
-                                    RestaurantInfoSection(restaurant: restaurant)
-                                        .padding([.top, .horizontal], .xLarge)
+                                    RestaurantInfoSection(
+                                        restaurant: restaurant
+                                    ) {
+                                        store.send(.reviewTapped)
+                                    }
+                                    .padding([.top, .horizontal], .xLarge)
                                     
                                     VStack(spacing: AppPadding.medium.value) {
                                         RestaurantDetailsCard(restaurant: restaurant)
@@ -135,6 +139,11 @@ struct RestaurantDetailView: View {
                 item: $store.scope(state: \.destination?.cart, action: \.destination.cart)
             ) { store in
                 CartView(store: store)
+            }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.review, action: \.destination.review)
+            ) { store in
+                ReviewView(store: store)
             }
             .onAppear {
                 store.send(.onAppear)

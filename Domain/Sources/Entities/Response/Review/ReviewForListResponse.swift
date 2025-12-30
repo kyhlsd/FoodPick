@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ReviewForListResponse {
+public struct ReviewForListResponse: Sendable {
     public let reviewId: String
     public let content: String
     public let rating: Int

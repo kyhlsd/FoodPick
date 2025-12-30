@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct VideoResponse {
+public struct VideoResponse: Sendable {
     public let id: String
     public let fileName: String
     public let title: String
@@ -35,7 +35,7 @@ public struct VideoResponse {
     }
 }
 
-public struct VideoListResponse {
+public struct VideoListResponse: Sendable {
     public let data: [VideoResponse]
     public let nextCursor: String?
     

@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/16/25.
 //
 
-public struct MyProfile {
+public struct MyProfile: Sendable {
     public let userId: String
     public let email: String
     public let nickname: String
