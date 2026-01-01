@@ -65,7 +65,14 @@ struct OrderView: View {
 
                                 VStack(spacing: AppPadding.medium.value) {
                                     ForEach(store.pastOrders, id: \.orderId) { order in
-                                        OrderHistoryItemView(order: order)
+                                        OrderHistoryItemView(
+                                            order: order
+                                        ) {
+                                            store.send(.writeReviewTapped(
+                                                restaurantId: order.restaurant.restaurantId,
+                                                orderCode: order.orderCode
+                                            ))
+                                        }
                                     }
                                 }
                                 
@@ -87,6 +94,11 @@ struct OrderView: View {
             }
             .ignoresSafeArea(edges: .bottom)
             .alert($store.scope(state: \.alert, action: \.alert))
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.reviewWrite, action: \.destination.reviewWrite)
+            ) { store in
+                ReviewWriteView(store: store)
+            }
             .onAppear {
                 store.send(.onAppear)
             }
@@ -336,6 +348,7 @@ private struct OrderMenuView: View {
 
 private struct OrderHistoryItemView: View {
     let order: Order
+    let onWriteReviewTapped: () -> Void
     
     private var menuSummary: String {
         guard !order.orderMenuList.isEmpty else { return "" }
@@ -432,9 +445,9 @@ private struct OrderHistoryItemView: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                // TODO: 리뷰 작성 버튼
+                // 리뷰 작성 버튼
                 Button {
-                    // TODO: 리뷰 작성 화면으로 이동
+                    onWriteReviewTapped()
                 } label: {
                     Text("리뷰 작성하기")
                         .font(.pretendard(size: .body2, weight: .semiBold))

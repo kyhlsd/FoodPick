@@ -26,6 +26,7 @@ struct OrderFeature: Sendable {
         }
 
         @Presents var alert: AlertState<OrderFeature.Alert>?
+        @Presents var destination: Destination.State?
     }
 
     // MARK: - Action
@@ -35,6 +36,8 @@ struct OrderFeature: Sendable {
         case ordersLoaded([Order])
         case ordersFailed(Error)
         case alert(PresentationAction<OrderFeature.Alert>)
+        case writeReviewTapped(restaurantId: String, orderCode: String)
+        case destination(PresentationAction<Destination.Action>)
     }
 
     // MARK: - Dependencies
@@ -78,12 +81,29 @@ struct OrderFeature: Sendable {
                 }
                 return .none
 
-            case .alert:
+            case let .writeReviewTapped(restaurantId, orderCode):
+                state.destination = .reviewWrite(
+                    ReviewWriteFeature.State(
+                        mode: .create(restaurantId: restaurantId, orderCode: orderCode)
+                    )
+                )
+                return .none
+
+            case .alert, .destination:
                 return .none
             }
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$destination, action: \.destination) {
+            Destination.body
+        }
     }
 
     enum Alert: Sendable {}
+
+    // MARK: - Destination
+    @Reducer
+    enum Destination: Sendable {
+        case reviewWrite(ReviewWriteFeature)
+    }
 }
