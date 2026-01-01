@@ -31,7 +31,7 @@ struct OrderView: View {
                     }
                     .padding(.top, .xLarge)
                     
-                    OrderRestaurantView()
+                    OrderRestaurantView(order: sampleOrder)
                 }
                 .padding(.horizontal, .xLarge)
                 .background(.custom(.gray(.gray15)))
@@ -81,6 +81,17 @@ private struct MessageText: View {
 }
 
 private struct OrderRestaurantView: View {
+    let order: Order
+
+    private var formattedPaidAt: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy년 M월 d일 "
+        let dateString = formatter.string(from: order.paidAt)
+        let timeString = TimeFormatter.toKoreanAMPMFormat(from: order.paidAt)
+        return dateString + timeString
+    }
+
     var body: some View {
         VStack(spacing: AppPadding.small.value) {
             HStack(spacing: AppPadding.large.value) {
@@ -91,22 +102,22 @@ private struct OrderRestaurantView: View {
                             .font(.jalnan(.caption1))
                             .foregroundStyle(.custom(.gray(.gray45)))
 
-                        Text("A4922")
+                        Text(order.orderCode)
                             .font(.jalnan(.caption1))
                             .foregroundStyle(.custom(.gray(.gray60)))
                     }
 
-                    Text("새싹 도넛 가게")
+                    Text(order.restaurant.name)
                         .font(.jalnan(.body1))
                         .foregroundStyle(.custom(.brand(.blackSprout)))
                         .padding(.top, .small)
 
-                    Text("2025년 4월 22일 오후 6:20")
+                    Text(formattedPaidAt)
                         .font(.pretendard(size: .caption2, weight: .semiBold))
                         .foregroundStyle(.custom(.brand(.brightSprout)))
                         .padding(.top, .tiny)
 
-                    AuthenticatedImage(imagePath: nil)
+                    AuthenticatedImage(imagePath: order.restaurant.restaurantImageURLs.first)
                         .frame(height: 100)
                         .frame(maxWidth: .infinity)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -120,35 +131,49 @@ private struct OrderRestaurantView: View {
 
                 // 주문 상태
                 VStack(spacing: 0) {
-                    ForEach(Array(OrderStatus.allCases.enumerated()), id: \.element) { index, status in
+                    ForEach(Array(order.orderStatusTimeline.enumerated()), id: \.element.status) { index, timelineItem in
 
                         HStack(alignment: .top, spacing: AppPadding.small.value) {
                             VStack(spacing: 0) {
                                 Circle()
-                                    .fill(.custom(.brand(.blackSprout)))
+                                    .fill(timelineItem.completed
+                                        ? .custom(.brand(.blackSprout))
+                                        : .custom(.gray(.gray30)))
                                     .frame(width: 16, height: 16)
-                                    .overlay(
-                                        AppIcon.check
-                                            .resizable()
-                                            .frame(width: 10, height: 10)
-                                            .foregroundStyle(.custom(.gray(.gray0)))
-                                    )
+                                    .overlay {
+                                        if timelineItem.completed {
+                                            AppIcon.check
+                                                .resizable()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundStyle(.custom(.gray(.gray0)))
+                                        } else {
+                                            Circle()
+                                                .fill(.custom(.gray(.gray0)))
+                                                .frame(width: 8, height: 8)
+                                        }
+                                    }
 
                                 // 마지막이 아니면 연결선
-                                if index != OrderStatus.allCases.count - 1 {
+                                if index != order.orderStatusTimeline.count - 1 {
                                     Rectangle()
-                                        .fill(.custom(.brand(.blackSprout)))
+                                        .fill(
+                                            timelineItem.status == order.currentOrderStatus
+                                                ? .custom(.gray(.gray30))
+                                                : (timelineItem.completed
+                                                    ? .custom(.brand(.blackSprout))
+                                                    : .custom(.gray(.gray30)))
+                                        )
                                         .frame(width: 4)
                                 }
                             }
 
-                            Text(status.rawValue)
+                            Text(timelineItem.status.rawValue)
                                 .font(.pretendard(size: .caption2, weight: .semiBold))
                                 .foregroundStyle(.custom(.gray(.gray90)))
                                 .frame(width: 40, alignment: .leading)
                                 .offset(y: 2)
 
-                            Text("오후 6:20")
+                            Text(TimeFormatter.toKoreanAMPMFormat(from: timelineItem.changedAt))
                                 .font(.pretendard(size: .caption2, weight: .medium))
                                 .foregroundStyle(.custom(.gray(.gray60)))
                                 .offset(y: 2)
@@ -183,3 +208,61 @@ private struct OrderRestaurantView: View {
 #Preview {
     OrderView()
 }
+
+// MARK: - Sample Data
+private let sampleOrder = Order(
+    orderId: "1",
+    orderCode: "A4922",
+    totalPrice: 15000,
+    review: nil,
+    restaurant: Restaurant(
+        restaurantId: "1",
+        category: .korean,
+        name: "새싹 도넛 가게",
+        close: "22:00",
+        restaurantImageURLs: [],
+        isPicchelin: false,
+        isPick: false,
+        pickCount: 0,
+        hashTags: [],
+        totalRating: 4.5,
+        totalOrderCount: 100,
+        totalReviewCount: 50,
+        geolocation: Geolocation(longitude: 0, latitude: 0),
+        distance: nil,
+        createdAt: Date(),
+        updatedAt: Date()
+    ),
+    orderMenuList: [],
+    currentOrderStatus: .inProgress,
+    orderStatusTimeline: [
+        OrderStatusTimelineItem(
+            status: .pending,
+            completed: true,
+            changedAt: Date().addingTimeInterval(-3600)
+        ),
+        OrderStatusTimelineItem(
+            status: .approved,
+            completed: true,
+            changedAt: Date().addingTimeInterval(-2400)
+        ),
+        OrderStatusTimelineItem(
+            status: .inProgress,
+            completed: true,
+            changedAt: Date().addingTimeInterval(-1800)
+        ),
+        OrderStatusTimelineItem(
+            status: .ready,
+            completed: false,
+            changedAt: Date()
+        ),
+        OrderStatusTimelineItem(
+            status: .pickedUp,
+            completed: false,
+            changedAt: Date()
+        )
+    ],
+    paidAt: Date().addingTimeInterval(-7200),
+    createdAt: Date(),
+    updatedAt: Date()
+)
