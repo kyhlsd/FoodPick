@@ -12,15 +12,16 @@ import Core
 struct OrderStatusTimelineItemDTO: ResponseDTO {
     private let status: OrderStatusDTO
     private let completed: Bool
-    private let changedAt: String
+    private let changedAt: String?
 }
 
 extension OrderStatusTimelineItemDTO {
     var toDomain: OrderStatusTimelineItem {
         let formatter = Core.DateFormatterProvider.iso8601
+        let date: Date? = changedAt.flatMap { formatter.date(from: $0) }
         return .init(status: status.toDomain,
                      completed: completed,
-                     changedAt: formatter.date(from: changedAt) ?? Date()
+                     changedAt: date
         )
     }
 }

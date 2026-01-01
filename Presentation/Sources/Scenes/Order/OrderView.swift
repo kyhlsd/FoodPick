@@ -10,44 +10,85 @@ import Domain
 import ComposableArchitecture
 
 struct OrderView: View {
+    let store: StoreOf<OrderFeature>
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                VStack {
-                    MessageText()
-                        .padding(.bottom, .xLarge)
-                }
-                .background(.custom(.gray(.gray0)))
-                
-                MyDivider()
-                
-                VStack(spacing: AppPadding.medium.value) {
-                    HStack {
-                        Text("주문 현황")
-                            .font(.pretendard(size: .body2, weight: .bold))
-                            .foregroundStyle(.custom(.gray(.gray60)))
-                        
-                        Spacer()
+        WithPerceptionTracking {
+            @Perception.Bindable var store = store
+            ScrollView {
+                VStack(spacing: 0) {
+                    if store.isLoading {
+                        // 로딩 중
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 60)
+                    } else {
+                        VStack(spacing: AppPadding.large.value) {
+                            MessageText()
+                                .padding(.bottom, .xLarge)
+                        }
+                        .background(.custom(.gray(.gray0)))
+
+                        MyDivider()
+
+                        // 주문 현황 섹션 (pickedUp이 아닌 주문들)
+                        if !store.currentOrders.isEmpty {
+                            VStack(spacing: AppPadding.large.value) {
+                                HStack {
+                                    Text("주문 현황")
+                                        .font(.pretendard(size: .body2, weight: .bold))
+                                        .foregroundStyle(.custom(.gray(.gray60)))
+
+                                    Spacer()
+                                }
+                                
+                                ForEach(store.currentOrders, id: \.orderId) { order in
+                                    VStack(spacing: AppPadding.medium.value) {
+                                        OrderRestaurantView(order: order)
+                                        
+                                        OrderMenuView(order: order)
+                                    }
+                                }
+                            }
+                            .padding(.all, .xLarge)
+                            .background(.custom(.gray(.gray15)))
+
+                            MyDivider()
+                        }
+
+                        // 이전 주문 내역 섹션 (pickedUp인 주문들)
+                        if !store.pastOrders.isEmpty {
+                            VStack(alignment: .leading, spacing: AppPadding.large.value) {
+                                Text("이전 주문 내역")
+                                    .font(.pretendard(size: .body2, weight: .bold))
+                                    .foregroundStyle(.custom(.gray(.gray60)))
+
+                                VStack(spacing: AppPadding.medium.value) {
+                                    ForEach(store.pastOrders, id: \.orderId) { order in
+                                        OrderHistoryItemView(order: order)
+                                    }
+                                }
+                                
+                                // 탭바가 가리지 않도록 추가
+                                Rectangle()
+                                    .fill(.clear)
+                                    .frame(height: 110)
+                            }
+                            .padding(.all, .xLarge)
+                            .background(.custom(.gray(.gray0)))
+                        }
+
+                        // 주문이 없는 경우
+                        if store.orders.isEmpty {
+                            OrderEmptyView()
+                        }
                     }
-                    
-                    OrderRestaurantView(order: sampleOrder)
-                    
-                    OrderMenuView(order: sampleOrder)
                 }
-                .padding(.all, .xLarge)
-                .background(.custom(.gray(.gray15)))
-                
-                MyDivider()
-                
-                VStack(alignment: .leading, spacing: AppPadding.medium.value) {
-                    Text("이전 주문 내역")
-                        .font(.pretendard(size: .body2, weight: .bold))
-                        .foregroundStyle(.custom(.gray(.gray60)))
-                    
-                    OrderHistoryItemView(order: sampleOrder)
-                }
-                .padding(.all, .xLarge)
-                .background(.custom(.gray(.gray0)))
+            }
+            .ignoresSafeArea(edges: .bottom)
+            .alert($store.scope(state: \.alert, action: \.alert))
+            .onAppear {
+                store.send(.onAppear)
             }
         }
     }
@@ -66,7 +107,7 @@ private struct MessageText: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(.custom(.brand(.deepSprout)), lineWidth: 1)
             )
-            .shadow(color: .init(hex: "#525156").opacity(0.2),
+            .shadow(color: .init(hex: "#525156").opacity(0.1),
                     radius: 12,
                     x: 0,
                     y: 4
@@ -103,25 +144,27 @@ private struct OrderRestaurantView: View {
                         Text("주문번호")
                             .font(.jalnan(.caption1))
                             .foregroundStyle(.custom(.gray(.gray45)))
-                        
+
                         Text(order.orderCode)
                             .font(.jalnan(.caption1))
                             .foregroundStyle(.custom(.gray(.gray60)))
                     }
-                    
+                    .fixedSize(horizontal: true, vertical: false)
+
                     Text(order.restaurant.name)
                         .font(.jalnan(.body1))
                         .foregroundStyle(.custom(.brand(.blackSprout)))
+                        .layoutPriority(-1)
                         .padding(.top, .small)
-                    
+
                     Text(TimeFormatter.toKoreanDateTimeFormat(from: order.paidAt))
                         .font(.pretendard(size: .caption2, weight: .semiBold))
                         .foregroundStyle(.custom(.brand(.brightSprout)))
+                        .fixedSize(horizontal: true, vertical: false)
                         .padding(.top, .tiny)
-                    
+
                     AuthenticatedImage(imagePath: order.restaurant.restaurantImageURLs.first)
                         .frame(height: 100)
-                        .frame(maxWidth: .infinity)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
@@ -129,22 +172,25 @@ private struct OrderRestaurantView: View {
                         )
                         .padding(.top, .medium)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
+
                 // 주문 상태
-                VStack(spacing: 0) {
-                    ForEach(Array(order.orderStatusTimeline.enumerated()),
-                            id: \.element.status) { index, timelineItem in
-                        
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(OrderStatus.allCases.enumerated()),
+                            id: \.element) { index, status in
+
+                        let timelineItem = order.orderStatusTimeline.first { $0.status == status }
+                        let isCompleted = timelineItem?.completed ?? false
+                        let changedAt = timelineItem?.changedAt
+
                         HStack(alignment: .top, spacing: AppPadding.small.value) {
                             VStack(spacing: 0) {
                                 Circle()
-                                    .fill(timelineItem.completed
+                                    .fill(isCompleted
                                           ? .custom(.brand(.blackSprout))
                                           : .custom(.gray(.gray30)))
                                     .frame(width: 16, height: 16)
                                     .overlay {
-                                        if timelineItem.completed {
+                                        if isCompleted {
                                             AppIcon.check
                                                 .resizable()
                                                 .frame(width: 10, height: 10)
@@ -155,35 +201,37 @@ private struct OrderRestaurantView: View {
                                                 .frame(width: 8, height: 8)
                                         }
                                     }
-                                
+
                                 // 마지막이 아니면 연결선
-                                if index != order.orderStatusTimeline.count - 1 {
+                                if index != OrderStatus.allCases.count - 1 {
                                     Rectangle()
                                         .fill(
-                                            timelineItem.status == order.currentOrderStatus
+                                            status == order.currentOrderStatus
                                             ? .custom(.gray(.gray30))
-                                            : (timelineItem.completed
+                                            : (isCompleted
                                                ? .custom(.brand(.blackSprout))
                                                : .custom(.gray(.gray30)))
                                         )
                                         .frame(width: 4)
                                 }
                             }
-                            
-                            Text(timelineItem.status.rawValue)
+
+                            Text(status.rawValue)
                                 .font(.pretendard(size: .caption2, weight: .semiBold))
                                 .foregroundStyle(.custom(.gray(.gray90)))
                                 .frame(width: 40, alignment: .leading)
+                                .fixedSize(horizontal: true, vertical: false)
                                 .offset(y: 2)
-                            
-                            Text(TimeFormatter.toKoreanAMPMFormat(from: timelineItem.changedAt))
+
+                            Text(changedAt.map { TimeFormatter.toKoreanAMPMFormat(from: $0) } ?? "")
                                 .font(.pretendard(size: .caption2, weight: .medium))
                                 .foregroundStyle(.custom(.gray(.gray60)))
+                                .lineLimit(2)
                                 .offset(y: 2)
+                                .layoutPriority(0)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.all, .large)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
@@ -418,8 +466,36 @@ private struct OrderHistoryItemView: View {
     }
 }
 
+private struct OrderEmptyView: View {
+    var body: some View {
+        VStack(spacing: AppPadding.tiny.value) {
+            AppIcon.leaf
+                .resizable()
+                .frame(width: 62, height: 62)
+                .foregroundStyle(.custom(.brand(.brightSprout)))
+
+            Text("픽미를 시작해보세요")
+                .font(.jalnan(.title1))
+                .foregroundStyle(.custom(.brand(.brightSprout)))
+
+            Text("건강한 픽업 생활의 시작, 픽미")
+                .font(.jalnan(.caption1))
+                .foregroundStyle(.custom(.brand(.brightSprout)))
+        }
+        .padding(.vertical, 200)
+    }
+}
+
 #Preview {
-    OrderView()
+    OrderView(
+        store: Store(
+            initialState: OrderFeature.State(
+                orders: [sampleOrder]
+            )
+        ) {
+            OrderFeature()
+        }
+    )
 }
 
 // MARK: - Sample Data
@@ -428,21 +504,13 @@ private let sampleOrder = Order(
     orderCode: "A4922",
     totalPrice: 16900,
     review: .init(id: "", rating: 5),
-    restaurant: Restaurant(
+    restaurant: RestaurantBasic(
         restaurantId: "1",
         category: .korean,
         name: "새싹 도넛 가게",
         close: "22:00",
         restaurantImageURLs: [],
-        isPicchelin: false,
-        isPick: false,
-        pickCount: 0,
-        hashTags: [],
-        totalRating: 4.5,
-        totalOrderCount: 100,
-        totalReviewCount: 50,
         geolocation: Geolocation(longitude: 0, latitude: 0),
-        distance: nil,
         createdAt: Date(),
         updatedAt: Date()
     ),
@@ -494,16 +562,6 @@ private let sampleOrder = Order(
             status: .inProgress,
             completed: true,
             changedAt: Date().addingTimeInterval(-1800)
-        ),
-        OrderStatusTimelineItem(
-            status: .ready,
-            completed: false,
-            changedAt: Date()
-        ),
-        OrderStatusTimelineItem(
-            status: .pickedUp,
-            completed: false,
-            changedAt: Date()
         )
     ],
     paidAt: Date().addingTimeInterval(-7200),

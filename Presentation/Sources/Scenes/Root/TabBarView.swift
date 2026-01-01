@@ -228,7 +228,7 @@ extension TabBarFeature.Tab {
         case .home:
             HomeView(store: store.scope(state: \.home, action: \.home))
         case .order:
-            Text("Order")
+            OrderView(store: store.scope(state: \.order, action: \.order))
         case .pick:
             Color.clear
         case .community:

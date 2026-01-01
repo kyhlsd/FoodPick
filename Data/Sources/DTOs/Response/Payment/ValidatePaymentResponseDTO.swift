@@ -46,7 +46,7 @@ struct OrderItemForPaymentDTO: ResponseDTO {
     private let orderId: String
     private let orderCode: String
     private let totalPrice: Int
-    private let restaurant: RestaurantForValidationDTO
+    private let restaurant: RestaurantBasicDTO
     private let orderMenuList: [MenuForOrderDTO]
     private let paidAt: String
     private let createdAt: String
@@ -68,7 +68,7 @@ struct OrderItemForPaymentDTO: ResponseDTO {
         self.orderId = try container.decode(String.self, forKey: .orderId)
         self.orderCode = try container.decode(String.self, forKey: .orderCode)
         self.totalPrice = try container.decode(Int.self, forKey: .totalPrice)
-        self.restaurant = try container.decode(RestaurantForValidationDTO.self, forKey: .restaurant)
+        self.restaurant = try container.decode(RestaurantBasicDTO.self, forKey: .restaurant)
         self.orderMenuList = try container.decode([MenuForOrderDTO].self, forKey: .orderMenuList)
         self.paidAt = try container.decode(String.self, forKey: .paidAt)
         self.createdAt = try container.decode(String.self, forKey: .createdAt)

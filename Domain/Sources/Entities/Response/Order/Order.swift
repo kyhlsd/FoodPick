@@ -12,7 +12,7 @@ public struct Order: Sendable {
     public let orderCode: String
     public let totalPrice: Int
     public let review: ReviewForOrder?
-    public let restaurant: Restaurant
+    public let restaurant: RestaurantBasic
     public let orderMenuList: [MenuForOrder]
     public let currentOrderStatus: OrderStatus
     public let orderStatusTimeline: [OrderStatusTimelineItem]
@@ -20,7 +20,7 @@ public struct Order: Sendable {
     public let createdAt: Date
     public let updatedAt: Date
     
-    public init(orderId: String, orderCode: String, totalPrice: Int, review: ReviewForOrder?, restaurant: Restaurant, orderMenuList: [MenuForOrder], currentOrderStatus: OrderStatus, orderStatusTimeline: [OrderStatusTimelineItem], paidAt: Date, createdAt: Date, updatedAt: Date) {
+    public init(orderId: String, orderCode: String, totalPrice: Int, review: ReviewForOrder?, restaurant: RestaurantBasic, orderMenuList: [MenuForOrder], currentOrderStatus: OrderStatus, orderStatusTimeline: [OrderStatusTimelineItem], paidAt: Date, createdAt: Date, updatedAt: Date) {
         self.orderId = orderId
         self.orderCode = orderCode
         self.totalPrice = totalPrice

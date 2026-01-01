@@ -14,7 +14,7 @@ struct OrderDTO: ResponseDTO {
     private let orderCode: String
     private let totalPrice: Int
     private let review: ReviewForOrderDTO?
-    private let restaurant: RestaurantDTO
+    private let restaurant: RestaurantBasicDTO
     private let orderMenuList: [MenuForOrderDTO]
     private let currentOrderStatus: OrderStatusDTO
     private let orderStatusTimeline: [OrderStatusTimelineItemDTO]
@@ -42,7 +42,7 @@ struct OrderDTO: ResponseDTO {
         self.orderCode = try container.decode(String.self, forKey: .orderCode)
         self.totalPrice = try container.decode(Int.self, forKey: .totalPrice)
         self.review = try container.decodeIfPresent(ReviewForOrderDTO.self, forKey: .review)
-        self.restaurant = try container.decode(RestaurantDTO.self, forKey: .restaurant)
+        self.restaurant = try container.decode(RestaurantBasicDTO.self, forKey: .restaurant)
         self.orderMenuList = try container.decode([MenuForOrderDTO].self, forKey: .orderMenuList)
         self.currentOrderStatus = try container.decode(OrderStatusDTO.self, forKey: .currentOrderStatus)
         self.orderStatusTimeline = try container.decode([OrderStatusTimelineItemDTO].self, forKey: .orderStatusTimeline)

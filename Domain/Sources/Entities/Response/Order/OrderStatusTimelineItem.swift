@@ -10,9 +10,9 @@ import Foundation
 public struct OrderStatusTimelineItem: Sendable {
     public let status: OrderStatus
     public let completed: Bool
-    public let changedAt: Date
-    
-    public init(status: OrderStatus, completed: Bool, changedAt: Date) {
+    public let changedAt: Date?
+
+    public init(status: OrderStatus, completed: Bool, changedAt: Date?) {
         self.status = status
         self.completed = completed
         self.changedAt = changedAt
