@@ -358,7 +358,7 @@ private struct OrderHistoryItemView: View {
                         .font(.pretendard(size: .title1, weight: .bold))
                         .foregroundStyle(.custom(.gray(.gray90)))
                     
-                    HStack(spacing: AppPadding.medium.value) {
+                    VStack(alignment: .leading, spacing: 2) {
                         // 주문 번호
                         Text(order.orderCode)
                             .font(.pretendard(size: .caption1, weight: .semiBold))
