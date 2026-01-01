@@ -39,7 +39,7 @@ struct MenuDetailForOrderDTO: ResponseDTO {
     private let originInformation: String
     private let price: Int
     private let tags: [String]
-    private let menuImageURL: String
+    private let menuImageURL: String?
     private let createdAt: String
     private let updatedAt: String
     
@@ -65,7 +65,7 @@ struct MenuDetailForOrderDTO: ResponseDTO {
         self.originInformation = try container.decode(String.self, forKey: .originInformation)
         self.price = try container.decode(Int.self, forKey: .price)
         self.tags = try container.decode([String].self, forKey: .tags)
-        self.menuImageURL = try container.decode(String.self, forKey: .menuImageURL)
+        self.menuImageURL = try container.decodeIfPresent(String.self, forKey: .menuImageURL)
         self.createdAt = try container.decode(String.self, forKey: .createdAt)
         self.updatedAt = try container.decode(String.self, forKey: .updatedAt)
     }

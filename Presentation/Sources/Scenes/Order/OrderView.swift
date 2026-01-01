@@ -21,7 +21,7 @@ struct OrderView: View {
                 
                 MyDivider()
                 
-                VStack(spacing: AppPadding.large.value) {
+                VStack(spacing: AppPadding.medium.value) {
                     HStack {
                         Text("주문 현황")
                             .font(.pretendard(size: .body2, weight: .bold))
@@ -29,11 +29,12 @@ struct OrderView: View {
                         
                         Spacer()
                     }
-                    .padding(.top, .xLarge)
                     
                     OrderRestaurantView(order: sampleOrder)
+
+                    OrderMenuView(order: sampleOrder)
                 }
-                .padding(.horizontal, .xLarge)
+                .padding(.all, .xLarge)
                 .background(.custom(.gray(.gray15)))
                 
                 Spacer()
@@ -131,7 +132,8 @@ private struct OrderRestaurantView: View {
 
                 // 주문 상태
                 VStack(spacing: 0) {
-                    ForEach(Array(order.orderStatusTimeline.enumerated()), id: \.element.status) { index, timelineItem in
+                    ForEach(Array(order.orderStatusTimeline.enumerated()),
+                            id: \.element.status) { index, timelineItem in
 
                         HStack(alignment: .top, spacing: AppPadding.small.value) {
                             VStack(spacing: 0) {
@@ -205,6 +207,84 @@ private struct OrderRestaurantView: View {
     }
 }
 
+private struct OrderMenuView: View {
+    let order: Order
+
+    private var totalQuantity: Int {
+        order.orderMenuList.reduce(0) { $0 + $1.quantity }
+    }
+
+    var body: some View {
+        VStack(spacing: AppPadding.medium.value) {
+            ForEach(Array(order.orderMenuList.enumerated()),
+                    id: \.element.menu.id) { index, menuItem in
+                HStack(spacing: AppPadding.medium.value) {
+                    // 메뉴 이미지
+                    AuthenticatedImage(imagePath: menuItem.menu.menuImageURL)
+                        .frame(width: 84, height: 52)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(.custom(.gray(.gray45)), lineWidth: 1)
+                        )
+
+                    // 메뉴 정보
+                    VStack(alignment: .leading, spacing: AppPadding.tiny.value) {
+                        Text(menuItem.menu.name)
+                            .font(.pretendard(size: .body2, weight: .bold))
+                            .foregroundStyle(.custom(.gray(.gray90)))
+
+                        HStack(spacing: AppPadding.small.value) {
+                            Text("\(menuItem.menu.price.formatted())원")
+                                .font(.pretendard(size: .body2, weight: .medium))
+                                .foregroundStyle(.custom(.gray(.gray75)))
+                            
+                            Text("\(menuItem.quantity.formatted())EA")
+                                .font(.pretendard(size: .body2, weight: .medium))
+                                .foregroundStyle(.custom(.gray(.gray60)))
+                        }
+                    }
+
+                    Spacer()
+                }
+                
+                MyDivider()
+            }
+
+            // 결제 금액
+            HStack(spacing: AppPadding.small.value) {
+                Text("결제 금액")
+                    .font(.pretendard(size: .body2, weight: .bold))
+                    .foregroundStyle(.custom(.gray(.gray60)))
+
+                Spacer()
+
+                Text("\(totalQuantity)EA")
+                    .font(.pretendard(size: .body2, weight: .medium))
+                    .foregroundStyle(.custom(.gray(.gray60)))
+                
+                Text("\(order.totalPrice.formatted())원")
+                    .font(.pretendard(size: .body2, weight: .bold))
+                    .foregroundStyle(.custom(.gray(.gray90)))
+            }
+        }
+        .padding(.all, .large)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.custom(.gray(.gray0)))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(.custom(.brand(.brightSprout)), lineWidth: 1)
+        )
+        .shadow(color: .init(hex: "#7B7886").opacity(0.08),
+                radius: 12,
+                x: 0,
+                y: 4
+        )
+    }
+}
+
 #Preview {
     OrderView()
 }
@@ -213,7 +293,7 @@ private struct OrderRestaurantView: View {
 private let sampleOrder = Order(
     orderId: "1",
     orderCode: "A4922",
-    totalPrice: 15000,
+    totalPrice: 16900,
     review: nil,
     restaurant: Restaurant(
         restaurantId: "1",
@@ -233,7 +313,38 @@ private let sampleOrder = Order(
         createdAt: Date(),
         updatedAt: Date()
     ),
-    orderMenuList: [],
+    orderMenuList: [
+        MenuForOrder(
+            menu: MenuDetailForOrder(
+                id: "1",
+                category: "메인",
+                name: "새싹 도넛",
+                description: "",
+                originInformation: "",
+                price: 3200,
+                tags: [],
+                menuImageURL: nil,
+                createdAt: Date(),
+                updatedAt: Date()
+            ),
+            quantity: 2
+        ),
+        MenuForOrder(
+            menu: MenuDetailForOrder(
+                id: "2",
+                category: "메인",
+                name: "초코 도넛",
+                description: "",
+                originInformation: "",
+                price: 3500,
+                tags: [],
+                menuImageURL: nil,
+                createdAt: Date(),
+                updatedAt: Date()
+            ),
+            quantity: 3
+        )
+    ],
     currentOrderStatus: .inProgress,
     orderStatusTimeline: [
         OrderStatusTimelineItem(

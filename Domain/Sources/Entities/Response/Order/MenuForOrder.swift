@@ -25,11 +25,11 @@ public struct MenuDetailForOrder: Sendable {
     public let originInformation: String
     public let price: Int
     public let tags: [String]
-    public let menuImageURL: String
+    public let menuImageURL: String?
     public let createdAt: Date
     public let updatedAt: Date
     
-    public init(id: String, category: String, name: String, description: String, originInformation: String, price: Int, tags: [String], menuImageURL: String, createdAt: Date, updatedAt: Date) {
+    public init(id: String, category: String, name: String, description: String, originInformation: String, price: Int, tags: [String], menuImageURL: String?, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.category = category
         self.name = name
