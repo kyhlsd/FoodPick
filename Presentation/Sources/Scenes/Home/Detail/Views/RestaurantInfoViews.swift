@@ -35,7 +35,7 @@ struct RestaurantInfoSection: View {
                     AppIcon.likeFill
                         .resizable()
                         .frame(width: 20, height: 20)
-                        .foregroundStyle(Color(hex: "#FDC020"))
+                        .foregroundStyle(.custom(.brand(.brightForsythia)))
 
                     Text("\(restaurant.pickCount)개")
                         .font(.pretendard(size: .body1, weight: .bold))
@@ -47,7 +47,7 @@ struct RestaurantInfoSection: View {
                     AppIcon.starFill
                         .resizable()
                         .frame(width: 20, height: 20)
-                        .foregroundStyle(Color(hex: "#FDC020"))
+                        .foregroundStyle(.custom(.brand(.brightForsythia)))
 
                     Text(String(format: "%.1f", restaurant.totalRating))
                         .font(.pretendard(size: .body1, weight: .bold))

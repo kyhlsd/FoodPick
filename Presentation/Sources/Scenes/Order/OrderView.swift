@@ -31,13 +31,23 @@ struct OrderView: View {
                     }
                     
                     OrderRestaurantView(order: sampleOrder)
-
+                    
                     OrderMenuView(order: sampleOrder)
                 }
                 .padding(.all, .xLarge)
                 .background(.custom(.gray(.gray15)))
                 
-                Spacer()
+                MyDivider()
+                
+                VStack(alignment: .leading, spacing: AppPadding.medium.value) {
+                    Text("이전 주문 내역")
+                        .font(.pretendard(size: .body2, weight: .bold))
+                        .foregroundStyle(.custom(.gray(.gray60)))
+                    
+                    OrderHistoryItemView(order: sampleOrder)
+                }
+                .padding(.all, .xLarge)
+                .background(.custom(.gray(.gray0)))
             }
         }
     }
@@ -83,16 +93,7 @@ private struct MessageText: View {
 
 private struct OrderRestaurantView: View {
     let order: Order
-
-    private var formattedPaidAt: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년 M월 d일 "
-        let dateString = formatter.string(from: order.paidAt)
-        let timeString = TimeFormatter.toKoreanAMPMFormat(from: order.paidAt)
-        return dateString + timeString
-    }
-
+    
     var body: some View {
         VStack(spacing: AppPadding.small.value) {
             HStack(spacing: AppPadding.large.value) {
@@ -102,22 +103,22 @@ private struct OrderRestaurantView: View {
                         Text("주문번호")
                             .font(.jalnan(.caption1))
                             .foregroundStyle(.custom(.gray(.gray45)))
-
+                        
                         Text(order.orderCode)
                             .font(.jalnan(.caption1))
                             .foregroundStyle(.custom(.gray(.gray60)))
                     }
-
+                    
                     Text(order.restaurant.name)
                         .font(.jalnan(.body1))
                         .foregroundStyle(.custom(.brand(.blackSprout)))
                         .padding(.top, .small)
-
-                    Text(formattedPaidAt)
+                    
+                    Text(TimeFormatter.toKoreanDateTimeFormat(from: order.paidAt))
                         .font(.pretendard(size: .caption2, weight: .semiBold))
                         .foregroundStyle(.custom(.brand(.brightSprout)))
                         .padding(.top, .tiny)
-
+                    
                     AuthenticatedImage(imagePath: order.restaurant.restaurantImageURLs.first)
                         .frame(height: 100)
                         .frame(maxWidth: .infinity)
@@ -129,18 +130,18 @@ private struct OrderRestaurantView: View {
                         .padding(.top, .medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-
+                
                 // 주문 상태
                 VStack(spacing: 0) {
                     ForEach(Array(order.orderStatusTimeline.enumerated()),
                             id: \.element.status) { index, timelineItem in
-
+                        
                         HStack(alignment: .top, spacing: AppPadding.small.value) {
                             VStack(spacing: 0) {
                                 Circle()
                                     .fill(timelineItem.completed
-                                        ? .custom(.brand(.blackSprout))
-                                        : .custom(.gray(.gray30)))
+                                          ? .custom(.brand(.blackSprout))
+                                          : .custom(.gray(.gray30)))
                                     .frame(width: 16, height: 16)
                                     .overlay {
                                         if timelineItem.completed {
@@ -154,27 +155,27 @@ private struct OrderRestaurantView: View {
                                                 .frame(width: 8, height: 8)
                                         }
                                     }
-
+                                
                                 // 마지막이 아니면 연결선
                                 if index != order.orderStatusTimeline.count - 1 {
                                     Rectangle()
                                         .fill(
                                             timelineItem.status == order.currentOrderStatus
-                                                ? .custom(.gray(.gray30))
-                                                : (timelineItem.completed
-                                                    ? .custom(.brand(.blackSprout))
-                                                    : .custom(.gray(.gray30)))
+                                            ? .custom(.gray(.gray30))
+                                            : (timelineItem.completed
+                                               ? .custom(.brand(.blackSprout))
+                                               : .custom(.gray(.gray30)))
                                         )
                                         .frame(width: 4)
                                 }
                             }
-
+                            
                             Text(timelineItem.status.rawValue)
                                 .font(.pretendard(size: .caption2, weight: .semiBold))
                                 .foregroundStyle(.custom(.gray(.gray90)))
                                 .frame(width: 40, alignment: .leading)
                                 .offset(y: 2)
-
+                            
                             Text(TimeFormatter.toKoreanAMPMFormat(from: timelineItem.changedAt))
                                 .font(.pretendard(size: .caption2, weight: .medium))
                                 .foregroundStyle(.custom(.gray(.gray60)))
@@ -209,15 +210,15 @@ private struct OrderRestaurantView: View {
 
 private struct OrderMenuView: View {
     let order: Order
-
+    
     private var totalQuantity: Int {
         order.orderMenuList.reduce(0) { $0 + $1.quantity }
     }
-
+    
     var body: some View {
         VStack(spacing: AppPadding.medium.value) {
-            ForEach(Array(order.orderMenuList.enumerated()),
-                    id: \.element.menu.id) { index, menuItem in
+            ForEach(order.orderMenuList,
+                    id: \.menu.id) { menuItem in
                 HStack(spacing: AppPadding.medium.value) {
                     // 메뉴 이미지
                     AuthenticatedImage(imagePath: menuItem.menu.menuImageURL)
@@ -227,13 +228,13 @@ private struct OrderMenuView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(.custom(.gray(.gray45)), lineWidth: 1)
                         )
-
+                    
                     // 메뉴 정보
                     VStack(alignment: .leading, spacing: AppPadding.tiny.value) {
                         Text(menuItem.menu.name)
                             .font(.pretendard(size: .body2, weight: .bold))
                             .foregroundStyle(.custom(.gray(.gray90)))
-
+                        
                         HStack(spacing: AppPadding.small.value) {
                             Text("\(menuItem.menu.price.formatted())원")
                                 .font(.pretendard(size: .body2, weight: .medium))
@@ -244,21 +245,21 @@ private struct OrderMenuView: View {
                                 .foregroundStyle(.custom(.gray(.gray60)))
                         }
                     }
-
+                    
                     Spacer()
                 }
                 
                 MyDivider()
             }
-
+            
             // 결제 금액
             HStack(spacing: AppPadding.small.value) {
                 Text("결제 금액")
                     .font(.pretendard(size: .body2, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray60)))
-
+                
                 Spacer()
-
+                
                 Text("\(totalQuantity)EA")
                     .font(.pretendard(size: .body2, weight: .medium))
                     .foregroundStyle(.custom(.gray(.gray60)))
@@ -266,6 +267,138 @@ private struct OrderMenuView: View {
                 Text("\(order.totalPrice.formatted())원")
                     .font(.pretendard(size: .body2, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray90)))
+            }
+        }
+        .padding(.all, .large)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.custom(.gray(.gray0)))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(.custom(.brand(.brightSprout)), lineWidth: 1)
+        )
+        .shadow(color: .init(hex: "#7B7886").opacity(0.08),
+                radius: 12,
+                x: 0,
+                y: 4
+        )
+    }
+}
+
+private struct OrderHistoryItemView: View {
+    let order: Order
+    
+    private var menuSummary: String {
+        guard !order.orderMenuList.isEmpty else { return "" }
+        let firstMenu = order.orderMenuList[0].menu.name
+        let additionalCount = order.orderMenuList.count - 1
+        
+        if additionalCount > 0 {
+            return "\(firstMenu) 외 \(additionalCount)건"
+        } else {
+            return firstMenu
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: AppPadding.medium.value) {
+            HStack(spacing: AppPadding.medium.value) {
+                VStack(alignment: .leading, spacing: AppPadding.small.value) {
+                    // 가게 이름
+                    Text(order.restaurant.name)
+                        .font(.pretendard(size: .title1, weight: .bold))
+                        .foregroundStyle(.custom(.gray(.gray90)))
+                    
+                    HStack(spacing: AppPadding.medium.value) {
+                        // 주문 번호
+                        Text(order.orderCode)
+                            .font(.pretendard(size: .caption1, weight: .semiBold))
+                            .foregroundStyle(.custom(.gray(.gray60)))
+                        
+                        // 주문 시간
+                        Text(TimeFormatter.toKoreanDateTimeFormat(from: order.paidAt))
+                            .font(.pretendard(size: .caption1, weight: .semiBold))
+                            .foregroundStyle(.custom(.gray(.gray45)))
+                    }
+                    
+                    HStack(spacing: 0) {
+                        // 주문 메뉴
+                        Text(menuSummary)
+                            .font(.pretendard(size: .body3, weight: .bold))
+                            .foregroundStyle(.custom(.gray(.gray60)))
+                        
+                        // 결제 금액
+                        Text("\(order.totalPrice.formatted())원")
+                            .font(.pretendard(size: .body3, weight: .bold))
+                            .foregroundStyle(.custom(.brand(.blackSprout)))
+                            .padding(.leading, .medium)
+                        
+                        // 상세 보기
+                        Button {
+                            // TODO: 메뉴 상세 보기
+                        } label: {
+                            AppIcon.chevron
+                                .resizable()
+                                .frame(width: 16, height: 16)
+                                .rotationEffect(.degrees(180))
+                                .foregroundStyle(.custom(.brand(.blackSprout)))
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // 가게 이미지
+                AuthenticatedImage(imagePath: order.restaurant.restaurantImageURLs.first)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.custom(.gray(.gray30)), lineWidth: 1)
+                    )
+            }
+            
+            // 리뷰 버튼
+            if let review = order.review {
+                // TODO: 후기로 넘어가는 버튼
+                Button {
+                    // TODO: 후기 화면으로 이동
+                } label: {
+                    HStack(spacing: AppPadding.medium.value) {
+                        AppIcon.starFill
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(.custom(.brand(.brightForsythia)))
+
+                        Text("\(review.rating).0")
+                            .font(.pretendard(size: .body1, weight: .bold))
+                            .foregroundStyle(.custom(.gray(.gray75)))
+                    }
+                    .frame(height: 40)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.custom(.gray(.gray30)))
+                    )
+                }
+                .buttonStyle(.plain)
+            } else {
+                // TODO: 리뷰 작성 버튼
+                Button {
+                    // TODO: 리뷰 작성 화면으로 이동
+                } label: {
+                    Text("리뷰 작성하기")
+                        .font(.pretendard(size: .body2, weight: .semiBold))
+                        .foregroundStyle(.custom(.gray(.gray90)))
+                        .frame(height: 40)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(.custom(.gray(.gray30)))
+                        )
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.all, .large)
@@ -294,7 +427,7 @@ private let sampleOrder = Order(
     orderId: "1",
     orderCode: "A4922",
     totalPrice: 16900,
-    review: nil,
+    review: .init(id: "", rating: 5),
     restaurant: Restaurant(
         restaurantId: "1",
         category: .korean,

@@ -67,6 +67,18 @@ enum TimeFormatter {
         return toKoreanAMPMFormat(from: time24)
     }
 
+    /// Date 객체를 날짜와 시간을 포함한 한국어 형식으로 변환합니다.
+    /// - Parameter date: 변환할 날짜
+    /// - Returns: 날짜+시간 형식 문자열 (예: "2025년 4월 21일 오후 6:30")
+    static func toKoreanDateTimeFormat(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy년 M월 d일 "
+        let dateString = formatter.string(from: date)
+        let timeString = toKoreanAMPMFormat(from: date)
+        return dateString + timeString
+    }
+
     /// 상대적 시간 문자열로 변환합니다.
     /// - 1시간 전까지: "30분 전"
     /// - 하루 전까지: "5시간 전"

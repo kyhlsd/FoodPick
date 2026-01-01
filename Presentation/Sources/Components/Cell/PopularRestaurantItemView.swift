@@ -133,7 +133,7 @@ private struct RestaurantInfoView: View {
                     AppIcon.likeFill
                         .resizable()
                         .frame(width: 16, height: 16)
-                        .foregroundStyle(Color(hex: "#FDC020"))
+                        .foregroundStyle(.custom(.brand(.brightForsythia)))
 
                     Text("\(restaurant.pickCount)개")
                         .font(.pretendard(size: .body3, weight: .medium))

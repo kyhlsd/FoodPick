@@ -138,7 +138,7 @@ private struct ReviewStatisticsRow: View {
                 AppIcon.starFill
                     .resizable()
                     .frame(width: 16, height: 16)
-                    .foregroundStyle(Color(hex: "#FDC020"))
+                    .foregroundStyle(.custom(.brand(.brightForsythia)))
 
                 Text("\(item.rating)")
                     .font(.pretendard(size: .body2, weight: .medium))
@@ -156,7 +156,7 @@ private struct ReviewStatisticsRow: View {
 
                     // 진행률
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(hex: "#FDC020"))
+                        .fill(.custom(.brand(.brightForsythia)))
                         .frame(width: geometry.size.width * CGFloat(percentage) / 100, height: 8)
                 }
             }
@@ -255,11 +255,11 @@ private struct ReviewItemRow: View {
                             AppIcon.starFill
                                 .resizable()
                                 .frame(width: 14, height: 14)
-                                .foregroundStyle(
+                                .foregroundStyle(.custom(
                                     index < review.rating
-                                        ? Color(hex: "#FDC020")
-                                        : .custom(.gray(.gray30))
-                                )
+                                        ? .brand(.brightForsythia)
+                                        : .gray(.gray30)
+                                ))
                         }
                     }
                 }
