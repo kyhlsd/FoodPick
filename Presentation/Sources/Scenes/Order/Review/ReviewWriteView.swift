@@ -42,16 +42,23 @@ struct ReviewWriteView: View {
                         uploadedURLs: store.uploadedImageURLs,
                         canAddMore: store.canAddMorePhotos,
                         onAddPhotoTapped: { store.send(.addPhotoTapped) },
-                        onRemovePhoto: { store.send(.removePhoto($0)) }
+                        onRemovePhoto: { store.send(.removePhoto($0)) },
+                        onRemoveUploadedImage: { store.send(.removeUploadedImage($0)) }
                     )
 
                     MyDivider()
 
                     // 리뷰 내용
                     ContentSection(content: $store.content)
+                    
+                    // 탭바가 가리지 않도록 추가
+                    Rectangle()
+                        .fill(.clear)
+                        .frame(height: 110)
                 }
                 .padding(.all, .xLarge)
             }
+            .hideKeyboardOnTap()
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -65,17 +72,14 @@ struct ReviewWriteView: View {
                     }
                 }
             }
-            .sheet(isPresented: $store.isShowingPhotoPicker) {
-                PhotosPicker(
-                    selection: $selectedPhotos,
-                    maxSelectionCount: store.maxPhotos - store.selectedImageData.count - store.uploadedImageURLs.count,
-                    matching: .images
-                ) {
-                    Text("사진 선택")
-                }
-                .onChange(of: selectedPhotos) {
-                    handlePhotoSelection($0)
-                }
+            .photosPicker(
+                isPresented: $store.isShowingPhotoPicker,
+                selection: $selectedPhotos,
+                maxSelectionCount: store.maxPhotos - store.selectedImageData.count - store.uploadedImageURLs.count,
+                matching: .images
+            )
+            .onChange(of: selectedPhotos) {
+                handlePhotoSelection($0)
             }
             .alert($store.scope(state: \.alert, action: \.alert))
             .onAppear {
@@ -88,8 +92,10 @@ struct ReviewWriteView: View {
         Task {
             var dataArray: [Data] = []
             for item in items {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    dataArray.append(data)
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data),
+                   let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+                    dataArray.append(jpegData)
                 }
             }
             if !dataArray.isEmpty {
@@ -138,6 +144,7 @@ private struct PhotoSection: View {
     let canAddMore: Bool
     let onAddPhotoTapped: () -> Void
     let onRemovePhoto: (Int) -> Void
+    let onRemoveUploadedImage: (Int) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -183,14 +190,14 @@ private struct PhotoSection: View {
                     }
 
                     // 업로드된 이미지 (편집 모드일 때)
-                    ForEach(uploadedURLs, id: \.self) { url in
+                    ForEach(Array(uploadedURLs.enumerated()), id: \.offset) { index, url in
                         ZStack(alignment: .topTrailing) {
                             AuthenticatedImage(imagePath: url)
                                 .frame(width: 100, height: 100)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
                             Button {
-                                // uploadedURLs 제거는 별도 로직 필요
+                                onRemoveUploadedImage(index)
                             } label: {
                                 AppIcon.xmarkCircle
                                     .resizable()

@@ -16,10 +16,12 @@ struct ReviewView: View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
 
+            let selectedReviewId = store.selectedReviewId
+
             ZStack {
                 Color.custom(.gray(.gray0))
                     .ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 0) {
                         // 평점 통계
@@ -27,11 +29,11 @@ struct ReviewView: View {
                             ReviewStatisticsSection(statistics: store.statistics)
                                 .padding(.horizontal, .xLarge)
                                 .padding(.vertical, .large)
-                            
+
                             MyDivider()
                                 .padding(.horizontal, .xLarge)
                         }
-                        
+
                         // 정렬 드롭다운
                         ReviewSortSection(
                             orderBy: store.orderBy,
@@ -39,7 +41,7 @@ struct ReviewView: View {
                             onToggleOrderByMenu: { store.send(.toggleOrderByMenu) },
                             onOrderByChanged: { orderBy in store.send(.orderByChanged(orderBy)) }
                         )
-                        
+
                         // 리뷰 리스트
                         ReviewListSection(store: store)
                     }
@@ -49,6 +51,31 @@ struct ReviewView: View {
             }
             .navigationTitle("리뷰")
             .navigationBarTitleDisplayMode(.inline)
+            .confirmationDialog(
+                "",
+                isPresented: Binding(
+                    get: { selectedReviewId != nil },
+                    set: { if !$0 { store.send(.actionSheetDismissed) } }
+                ),
+                titleVisibility: .hidden
+            ) {
+                if let reviewId = selectedReviewId {
+                    Button("리뷰 수정") {
+                        store.send(.editReviewTapped(reviewId: reviewId))
+                    }
+                    Button("리뷰 삭제", role: .destructive) {
+                        store.send(.deleteReviewTapped(reviewId: reviewId))
+                    }
+                    Button("취소", role: .cancel) {
+                        store.send(.actionSheetDismissed)
+                    }
+                }
+            }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.reviewWrite, action: \.destination.reviewWrite)
+            ) { store in
+                ReviewWriteView(store: store)
+            }
             .alert($store.scope(state: \.alert, action: \.alert))
             .onAppear {
                 store.send(.onAppear)
@@ -177,9 +204,12 @@ private struct ReviewListSection: View {
 
     var body: some View {
         WithPerceptionTracking {
+            @Perception.Bindable var store = store
+
             let reviews = store.reviews
             let isLoadingReviews = store.isLoadingReviews
             let canLoadMore = store.canLoadMore
+            let myUserId = store.myUserId
 
             if reviews.isEmpty && !isLoadingReviews {
                 VStack(spacing: AppPadding.medium.value) {
@@ -192,15 +222,22 @@ private struct ReviewListSection: View {
             } else {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(reviews.enumerated()), id: \.element.reviewId) { index, review in
-                        ReviewItemRow(review: review)
-                            .padding(.horizontal, .xLarge)
-                            .padding(.vertical, .large)
-                            .onAppear {
-                                // 마지막 아이템에 도달하면 더 로드
-                                if index == reviews.count - 1 && canLoadMore {
-                                    store.send(.loadMoreReviews)
-                                }
+                        let isMyReview = myUserId != nil && review.creator.userId == myUserId
+
+                        ReviewItemRow(
+                            review: review,
+                            isMyReview: isMyReview
+                        ) {
+                            store.send(.moreButtonTapped(reviewId: review.reviewId))
+                        }
+                        .padding(.horizontal, .xLarge)
+                        .padding(.vertical, .large)
+                        .onAppear {
+                            // 마지막 아이템에 도달하면 더 로드
+                            if index == reviews.count - 1 && canLoadMore {
+                                store.send(.loadMoreReviews)
                             }
+                        }
 
                         if index < reviews.count - 1 {
                             MyDivider()
@@ -221,6 +258,8 @@ private struct ReviewListSection: View {
 // MARK: - Review Item Row
 private struct ReviewItemRow: View {
     let review: ReviewForListResponse
+    let isMyReview: Bool
+    let onMoreTapped: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -266,9 +305,21 @@ private struct ReviewItemRow: View {
 
                 Spacer()
 
-                Text(TimeFormatter.toRelativeTimeString(from: review.createdAt))
-                    .font(.pretendard(size: .body3, weight: .regular))
-                    .foregroundStyle(.custom(.gray(.gray45)))
+                VStack(alignment: .trailing, spacing: AppPadding.tiny.value) {
+                    if isMyReview {
+                        Button {
+                            onMoreTapped()
+                        } label: {
+                            AppIcon.more
+                                .foregroundStyle(.custom(.gray(.gray60)))
+                                .font(.system(size: 20))
+                        }
+                    }
+
+                    Text(TimeFormatter.toRelativeTimeString(from: review.createdAt))
+                        .font(.pretendard(size: .body3, weight: .regular))
+                        .foregroundStyle(.custom(.gray(.gray45)))
+                }
             }
 
             // 주문 메뉴

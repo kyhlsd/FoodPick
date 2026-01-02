@@ -10,9 +10,9 @@ public struct MyProfile: Sendable {
     public let email: String
     public let nickname: String
     public let profileImage: String?
-    public let phoneNumber: String
+    public let phoneNumber: String?
     
-    public init(userId: String, email: String, nickname: String, profileImage: String?, phoneNumber: String) {
+    public init(userId: String, email: String, nickname: String, profileImage: String?, phoneNumber: String?) {
         self.userId = userId
         self.email = email
         self.nickname = nickname

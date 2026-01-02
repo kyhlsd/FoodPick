@@ -12,7 +12,7 @@ struct MyProfileDTO: ResponseDTO {
     private let email: String
     private let nickname: String
     private let profileImage: String?
-    private let phoneNumber: String
+    private let phoneNumber: String?
     
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -28,7 +28,7 @@ struct MyProfileDTO: ResponseDTO {
         self.email = try container.decode(String.self, forKey: .email)
         self.nickname = try container.decode(String.self, forKey: .nickname)
         self.profileImage = try container.decodeIfPresent(String.self, forKey: .profileImage)
-        self.phoneNumber = try container.decode(String.self, forKey: .phoneNumber)
+        self.phoneNumber = try container.decodeIfPresent(String.self, forKey: .phoneNumber)
     }
 }
 

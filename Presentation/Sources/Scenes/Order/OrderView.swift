@@ -66,13 +66,22 @@ struct OrderView: View {
                                 VStack(spacing: AppPadding.medium.value) {
                                     ForEach(store.pastOrders, id: \.orderId) { order in
                                         OrderHistoryItemView(
-                                            order: order
-                                        ) {
-                                            store.send(.writeReviewTapped(
-                                                restaurantId: order.restaurant.restaurantId,
-                                                orderCode: order.orderCode
-                                            ))
-                                        }
+                                            order: order,
+                                            onWriteReviewTapped: {
+                                                store.send(.writeReviewTapped(
+                                                    restaurantId: order.restaurant.restaurantId,
+                                                    orderCode: order.orderCode
+                                                ))
+                                            },
+                                            onViewReviewDetailTapped: {
+                                                if let review = order.review {
+                                                    store.send(.viewReviewDetailTapped(
+                                                        restaurantId: order.restaurant.restaurantId,
+                                                        reviewId: review.id
+                                                    ))
+                                                }
+                                            }
+                                        )
                                     }
                                 }
                                 
@@ -98,6 +107,11 @@ struct OrderView: View {
                 item: $store.scope(state: \.destination?.reviewWrite, action: \.destination.reviewWrite)
             ) { store in
                 ReviewWriteView(store: store)
+            }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.reviewDetail, action: \.destination.reviewDetail)
+            ) { store in
+                ReviewDetailView(store: store)
             }
             .onAppear {
                 store.send(.onAppear)
@@ -349,6 +363,7 @@ private struct OrderMenuView: View {
 private struct OrderHistoryItemView: View {
     let order: Order
     let onWriteReviewTapped: () -> Void
+    let onViewReviewDetailTapped: () -> Void
     
     private var menuSummary: String {
         guard !order.orderMenuList.isEmpty else { return "" }
@@ -422,9 +437,9 @@ private struct OrderHistoryItemView: View {
             
             // 리뷰 버튼
             if let review = order.review {
-                // TODO: 후기로 넘어가는 버튼
+                // 후기 상세로 넘어가는 버튼
                 Button {
-                    // TODO: 후기 화면으로 이동
+                    onViewReviewDetailTapped()
                 } label: {
                     HStack(spacing: AppPadding.medium.value) {
                         AppIcon.starFill
@@ -442,6 +457,7 @@ private struct OrderHistoryItemView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(.custom(.gray(.gray30)))
                     )
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             } else {
@@ -458,6 +474,7 @@ private struct OrderHistoryItemView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(.custom(.gray(.gray30)))
                         )
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }

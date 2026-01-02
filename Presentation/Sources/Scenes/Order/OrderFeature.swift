@@ -37,6 +37,7 @@ struct OrderFeature: Sendable {
         case ordersFailed(Error)
         case alert(PresentationAction<OrderFeature.Alert>)
         case writeReviewTapped(restaurantId: String, orderCode: String)
+        case viewReviewDetailTapped(restaurantId: String, reviewId: String)
         case destination(PresentationAction<Destination.Action>)
     }
 
@@ -89,6 +90,15 @@ struct OrderFeature: Sendable {
                 )
                 return .none
 
+            case let .viewReviewDetailTapped(restaurantId, reviewId):
+                state.destination = .reviewDetail(
+                    ReviewDetailFeature.State(
+                        restaurantId: restaurantId,
+                        reviewId: reviewId
+                    )
+                )
+                return .none
+
             case .alert, .destination:
                 return .none
             }
@@ -105,5 +115,6 @@ struct OrderFeature: Sendable {
     @Reducer
     enum Destination: Sendable {
         case reviewWrite(ReviewWriteFeature)
+        case reviewDetail(ReviewDetailFeature)
     }
 }

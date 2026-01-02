@@ -50,6 +50,7 @@ struct ReviewWriteFeature: Sendable {
         case addPhotoTapped
         case photosSelected([Data])
         case removePhoto(Int)
+        case removeUploadedImage(Int)
         case ratingTapped(Int)
         case saveTapped
         case uploadPhotos
@@ -101,6 +102,11 @@ struct ReviewWriteFeature: Sendable {
                 state.selectedImageData.remove(at: index)
                 return .none
 
+            case let .removeUploadedImage(index):
+                guard index < state.uploadedImageURLs.count else { return .none }
+                state.uploadedImageURLs.remove(at: index)
+                return .none
+
             case let .ratingTapped(rating):
                 state.rating = rating
                 return .none
@@ -146,7 +152,7 @@ struct ReviewWriteFeature: Sendable {
 
             case let .photosUploaded(urls):
                 state.isUploading = false
-                state.uploadedImageURLs = urls
+                state.uploadedImageURLs.append(contentsOf: urls)
 
                 switch state.mode {
                 case .create:
