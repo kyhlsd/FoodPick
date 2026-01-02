@@ -80,6 +80,9 @@ struct OrderView: View {
                                                         reviewId: review.id
                                                     ))
                                                 }
+                                            },
+                                            onViewOrderDetailTapped: {
+                                                store.send(.viewOrderDetailTapped(order))
                                             }
                                         )
                                     }
@@ -112,6 +115,11 @@ struct OrderView: View {
                 item: $store.scope(state: \.destination?.reviewDetail, action: \.destination.reviewDetail)
             ) { store in
                 ReviewDetailView(store: store)
+            }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.orderDetail, action: \.destination.orderDetail)
+            ) { store in
+                OrderDetailView(store: store)
             }
             .onAppear {
                 store.send(.onAppear)
@@ -364,6 +372,7 @@ private struct OrderHistoryItemView: View {
     let order: Order
     let onWriteReviewTapped: () -> Void
     let onViewReviewDetailTapped: () -> Void
+    let onViewOrderDetailTapped: () -> Void
     
     private var menuSummary: String {
         guard !order.orderMenuList.isEmpty else { return "" }
@@ -412,7 +421,7 @@ private struct OrderHistoryItemView: View {
                         
                         // 상세 보기
                         Button {
-                            // TODO: 메뉴 상세 보기
+                            onViewOrderDetailTapped()
                         } label: {
                             AppIcon.chevron
                                 .resizable()

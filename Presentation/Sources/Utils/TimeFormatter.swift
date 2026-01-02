@@ -110,4 +110,14 @@ enum TimeFormatter {
             return formatter.string(from: date)
         }
     }
+    
+    /// Date 객체를 날짜와 시간을 포함해 .으로 연결합니다.
+    /// - Parameter date: 변환할 날짜
+    /// - Returns: 날짜+시간 형식 문자열 (예: "2025.04. 21 18:30")
+    static func toFullWithDotTimeFormat(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy.MM.dd HH:mm"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter.string(from: date)
+    }
 }
