@@ -26,7 +26,7 @@ struct OrderDetailFeature: Sendable {
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
-        Reduce { state, action in
+        Reduce { _, action in
             switch action {
             case .alert:
                 return .none
