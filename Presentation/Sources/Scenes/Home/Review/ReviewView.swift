@@ -266,14 +266,9 @@ private struct ReviewItemRow: View {
             // 사용자 정보 + 평점
             HStack {
                 // 프로필 이미지
-                Circle()
-                    .fill(.custom(.gray(.gray30)))
+                AuthenticatedImage(imagePath: review.creator.profileImage)
                     .frame(width: 40, height: 40)
-                    .overlay {
-                        Text(review.creator.nickname.prefix(1))
-                            .font(.pretendard(size: .body1, weight: .bold))
-                            .foregroundStyle(.custom(.gray(.gray60)))
-                    }
+                    .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {

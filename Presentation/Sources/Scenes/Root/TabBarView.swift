@@ -232,7 +232,7 @@ extension TabBarFeature.Tab {
         case .pick:
             Color.clear
         case .community:
-            Text("Community")
+            CommunityView(store: store.scope(state: \.community, action: \.community))
         case .profile:
             Text("Profile")
         }

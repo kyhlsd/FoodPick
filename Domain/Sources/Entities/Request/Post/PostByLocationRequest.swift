@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/17/25.
 //
 
-public struct PostByLocationRequest {
+public struct PostByLocationRequest: Sendable {
     public let category: RestaurantCategory?
     public let longitude: Float?
     public let latitude: Float?

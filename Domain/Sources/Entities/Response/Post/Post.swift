@@ -16,8 +16,8 @@ public struct Post: Sendable {
     public let geolocation: Geolocation
     public let creator: Profile
     public let files: [String]
-    public let isLike: Bool
-    public let likeCount: Int
+    public var isLike: Bool
+    public var likeCount: Int
     public let createdAt: Date
     public let updatedAt: Date
     

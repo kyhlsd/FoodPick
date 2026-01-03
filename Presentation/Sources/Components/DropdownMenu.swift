@@ -110,7 +110,7 @@ extension View {
 
     func dropdownBackdrop(isOpen: Bool, onDismiss: @escaping () -> Void) -> some View {
         self
-            .overlay(
+            .background(
                 Group {
                     if isOpen {
                         Color.clear
