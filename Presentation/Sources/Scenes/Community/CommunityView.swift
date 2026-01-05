@@ -107,6 +107,9 @@ struct CommunityView: View {
                             onLoadMore: {
                                 store.send(.loadMore)
                             },
+                            onPostTapped: { postId in
+                                store.send(.postTapped(postId: postId))
+                            },
                             onLikePostTapped: { postId in
                                 store.send(.likePostTapped(postId: postId))
                             },
@@ -150,6 +153,11 @@ struct CommunityView: View {
                 }
             }
             .alert($store.scope(state: \.alert, action: \.alert))
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
+            ) { store in
+                PostDetailView(store: store)
+            }
             .navigationDestination(
                 item: $store.scope(state: \.destination?.postWrite, action: \.destination.postWrite)
             ) { store in
@@ -265,6 +273,7 @@ private struct PostListView: View {
     let isLoadingMore: Bool
     let canLoadMore: Bool
     let onLoadMore: () -> Void
+    let onPostTapped: (String) -> Void
     let onLikePostTapped: (String) -> Void
     let onMoreTapped: (String) -> Void
 
@@ -287,12 +296,17 @@ private struct PostListView: View {
                     ForEach(Array(posts.enumerated()), id: \.element.postId) { index, post in
                         let isMyPost = myUserId != nil && post.creator.userId == myUserId
 
-                        PostItemView(
-                            post: post,
-                            isMyPost: isMyPost,
-                            onLikePostTapped: onLikePostTapped,
-                            onMoreTapped: isMyPost ? { onMoreTapped(post.postId) } : nil
-                        )
+                        Button {
+                            onPostTapped(post.postId)
+                        } label: {
+                            PostItemView(
+                                post: post,
+                                isMyPost: isMyPost,
+                                onLikePostTapped: onLikePostTapped,
+                                onMoreTapped: isMyPost ? { onMoreTapped(post.postId) } : nil
+                            )
+                        }
+                        .buttonStyle(.plain)
                         .onAppear {
                             if index == posts.count - 1 && canLoadMore {
                                 onLoadMore()

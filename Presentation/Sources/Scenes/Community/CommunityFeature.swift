@@ -60,6 +60,7 @@ struct CommunityFeature: Sendable {
         case distanceChanged(Int)
         case searchTextChanged(String)
         case searchSubmitted
+        case postTapped(postId: String)
         case writePostTapped
         case moreButtonTapped(postId: String)
         case actionSheetDismissed
@@ -208,6 +209,12 @@ struct CommunityFeature: Sendable {
             case .searchSubmitted:
                 return .none
 
+            case let .postTapped(postId):
+                state.destination = .postDetail(
+                    PostDetailFeature.State(postId: postId, myUserId: state.myUserId)
+                )
+                return .none
+
             case .writePostTapped:
                 state.destination = .postWrite(PostWriteFeature.State(mode: .create))
                 return .none
@@ -290,6 +297,7 @@ struct CommunityFeature: Sendable {
 extension CommunityFeature {
     @Reducer
     enum Destination {
+        case postDetail(PostDetailFeature)
         case postWrite(PostWriteFeature)
     }
 }
