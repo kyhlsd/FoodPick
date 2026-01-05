@@ -2,7 +2,7 @@
 //  TabBarView.swift
 //  Presentation
 //
-//  Created by Claude on 12/20/25.
+//  Created by 김영훈 on 12/20/25.
 //
 
 import SwiftUI

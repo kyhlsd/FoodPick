@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/16/25.
 //
 
-public struct CreatePostRequest {
+public struct CreatePostRequest: Sendable {
     public let category: RestaurantCategory
     public let title: String
     public let content: String

@@ -114,7 +114,7 @@ private struct RatingSection: View {
     var body: some View {
         VStack(spacing: AppPadding.medium.value) {
             Text("이 가게에 대한 평가는 어떠신가요?")
-                .font(.pretendard(size: .body1, weight: .bold))
+                .font(.pretendard(size: .body2, weight: .bold))
                 .foregroundStyle(.custom(.gray(.gray90)))
 
             HStack(spacing: AppPadding.small.value) {
@@ -150,7 +150,7 @@ private struct PhotoSection: View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
             HStack {
                 Text("사진")
-                    .font(.pretendard(size: .body1, weight: .bold))
+                    .font(.pretendard(size: .body2, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray90)))
 
                 Text("(\(imageDataArray.count + uploadedURLs.count)/5)")
@@ -243,13 +243,14 @@ private struct ContentSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
             Text("리뷰 내용")
-                .font(.pretendard(size: .body1, weight: .bold))
+                .font(.pretendard(size: .body2, weight: .bold))
                 .foregroundStyle(.custom(.gray(.gray90)))
 
             TextField("리뷰를 작성해주세요", text: $content, axis: .vertical)
                 .font(.pretendard(size: .body2, weight: .regular))
                 .foregroundStyle(.custom(.gray(.gray90)))
                 .lineLimit(10...20)
+                .lineSpacing(4)
                 .padding(.all, AppPadding.medium.value)
                 .background(
                     RoundedRectangle(cornerRadius: 8)

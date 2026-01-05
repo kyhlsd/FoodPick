@@ -40,7 +40,7 @@ struct CommunityView: View {
                             .frame(height: 40)
                             
                             Button {
-                                
+                                store.send(.writePostTapped)
                             } label: {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(.custom(.brand(.deepSprout)))
@@ -129,6 +129,11 @@ struct CommunityView: View {
             }
             .hideKeyboardOnTap()
             .alert($store.scope(state: \.alert, action: \.alert))
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.postWrite, action: \.destination.postWrite)
+            ) { store in
+                PostWriteView(store: store)
+            }
             .onAppear {
                 store.send(.onAppear)
             }

@@ -34,6 +34,7 @@ struct CommunityFeature: Sendable {
             !isLoadingMore && nextCursor != "0" && nextCursor != nil
         }
 
+        @Presents var destination: Destination.State?
         @Presents var alert: AlertState<CommunityFeature.Alert>?
     }
 
@@ -49,10 +50,12 @@ struct CommunityFeature: Sendable {
         case distanceChanged(Int)
         case searchTextChanged(String)
         case searchSubmitted
+        case writePostTapped
         case likePostTapped(postId: String)
         case likePostToggled(postId: String, likeStatus: Bool)
         case likePostFailed(Error)
         case banner(BannerFeature.Action)
+        case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<CommunityFeature.Alert>)
     }
 
@@ -170,6 +173,10 @@ struct CommunityFeature: Sendable {
             case .searchSubmitted:
                 return .none
 
+            case .writePostTapped:
+                state.destination = .postWrite(PostWriteFeature.State())
+                return .none
+
             case let .likePostTapped(postId):
                 guard let post = state.posts.first(where: { $0.postId == postId }) else {
                     return .none
@@ -205,12 +212,23 @@ struct CommunityFeature: Sendable {
                 }
                 return .none
 
-            case .banner, .alert:
+            case .banner, .destination, .alert:
                 return .none
             }
         }
+        .ifLet(\.$destination, action: \.destination)
         .ifLet(\.$alert, action: \.alert)
     }
 
     enum Alert: Sendable {}
 }
+
+// MARK: - Destinations
+extension CommunityFeature {
+    @Reducer
+    enum Destination {
+        case postWrite(PostWriteFeature)
+    }
+}
+
+extension CommunityFeature.Destination.State: Sendable {}
