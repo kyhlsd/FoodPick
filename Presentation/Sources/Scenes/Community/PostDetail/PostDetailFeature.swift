@@ -22,6 +22,9 @@ struct PostDetailFeature: Sendable {
         var selectedPostId: String?
         var commentText = ""
         var isSubmittingComment = false
+        var editingCommentId: String?
+        var editingCommentText = ""
+        var selectedCommentId: String?
 
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<PostDetailFeature.Alert>?
@@ -35,6 +38,15 @@ struct PostDetailFeature: Sendable {
 
         var canSubmitComment: Bool {
             !commentText.isEmpty && !isSubmittingComment
+        }
+
+        var canSubmitEditComment: Bool {
+            !editingCommentText.isEmpty
+        }
+
+        func isMyComment(_ comment: Comment) -> Bool {
+            guard let myUserId else { return false }
+            return comment.creator.userId == myUserId
         }
     }
 
@@ -57,6 +69,17 @@ struct PostDetailFeature: Sendable {
         case actionSheetDismissed
         case editPostTapped
         case deletePostTapped
+        case commentMoreButtonTapped(commentId: String)
+        case commentActionSheetDismissed
+        case editCommentTapped(commentId: String, content: String)
+        case cancelEditCommentTapped
+        case editingCommentTextChanged(String)
+        case submitEditCommentTapped(commentId: String)
+        case commentEdited(Comment)
+        case commentEditFailed(Error)
+        case deleteCommentTapped(commentId: String)
+        case commentDeleted(commentId: String)
+        case commentDeleteFailed(Error)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<PostDetailFeature.Alert>)
     }
@@ -66,6 +89,8 @@ struct PostDetailFeature: Sendable {
     @Dependency(\.likePost) var likePostUseCase
     @Dependency(\.deletePost) var deletePostUseCase
     @Dependency(\.createComment) var createCommentUseCase
+    @Dependency(\.editComment) var editCommentUseCase
+    @Dependency(\.deleteComment) var deleteCommentUseCase
     @Dependency(\.dismiss) var dismiss
 
     // MARK: - Body
@@ -217,6 +242,102 @@ struct PostDetailFeature: Sendable {
                         // 에러 처리
                     }
                 }
+
+            case let .commentMoreButtonTapped(commentId):
+                state.selectedCommentId = commentId
+                return .none
+
+            case .commentActionSheetDismissed:
+                state.selectedCommentId = nil
+                return .none
+
+            case let .editCommentTapped(commentId, content):
+                state.selectedCommentId = nil
+                state.editingCommentId = commentId
+                state.editingCommentText = content
+                return .none
+
+            case .cancelEditCommentTapped:
+                state.editingCommentId = nil
+                state.editingCommentText = ""
+                return .none
+
+            case let .editingCommentTextChanged(text):
+                state.editingCommentText = text
+                return .none
+
+            case let .submitEditCommentTapped(commentId):
+                guard !state.editingCommentText.isEmpty else {
+                    return .none
+                }
+
+                let content = state.editingCommentText
+                let postId = state.postId
+
+                return .run { send in
+                    do {
+                        let updatedComment = try await editCommentUseCase.execute(
+                            postId: postId,
+                            commentId: commentId,
+                            content: content
+                        )
+                        await send(.commentEdited(updatedComment))
+                    } catch {
+                        await send(.commentEditFailed(error))
+                    }
+                }
+
+            case let .commentEdited(updatedComment):
+                state.editingCommentId = nil
+                state.editingCommentText = ""
+                if let index = state.postDetail?.comments.firstIndex(where: {
+                    $0.commentId == updatedComment.commentId
+                }) {
+                    state.postDetail?.comments[index] = updatedComment
+                }
+                return .none
+
+            case let .commentEditFailed(error):
+                state.alert = AlertState {
+                    TextState("댓글 수정 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case let .deleteCommentTapped(commentId):
+                state.selectedCommentId = nil
+
+                let postId = state.postId
+
+                return .run { send in
+                    do {
+                        try await deleteCommentUseCase.execute(postId: postId, commentId: commentId)
+                        await send(.commentDeleted(commentId: commentId))
+                    } catch {
+                        await send(.commentDeleteFailed(error))
+                    }
+                }
+
+            case let .commentDeleted(commentId):
+                state.postDetail?.comments.removeAll { $0.commentId == commentId }
+                return .none
+
+            case let .commentDeleteFailed(error):
+                state.alert = AlertState {
+                    TextState("댓글 삭제 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
 
             case .destination, .alert:
                 return .none

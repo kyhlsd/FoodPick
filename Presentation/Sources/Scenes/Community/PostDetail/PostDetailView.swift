@@ -66,12 +66,33 @@ struct PostDetailView: View {
                             // 댓글 섹션
                             PostCommentsSection(
                                 comments: post.comments,
+                                myUserId: store.myUserId,
                                 commentText: $store.commentText.sending(\.commentTextChanged),
                                 isSubmitting: store.isSubmittingComment,
-                                canSubmit: store.canSubmitComment
-                            ) {
-                                store.send(.submitCommentTapped)
-                            }
+                                canSubmit: store.canSubmitComment,
+                                editingCommentId: store.editingCommentId,
+                                editingCommentText: $store.editingCommentText.sending(\.editingCommentTextChanged),
+                                canSubmitEdit: store.canSubmitEditComment,
+                                selectedCommentId: store.selectedCommentId,
+                                onSubmitComment: {
+                                    store.send(.submitCommentTapped)
+                                },
+                                onCommentMoreTapped: { commentId in
+                                    store.send(.commentMoreButtonTapped(commentId: commentId))
+                                },
+                                onEditCommentTapped: { commentId, content in
+                                    store.send(.editCommentTapped(commentId: commentId, content: content))
+                                },
+                                onCancelEditTapped: {
+                                    store.send(.cancelEditCommentTapped)
+                                },
+                                onSubmitEditTapped: { commentId in
+                                    store.send(.submitEditCommentTapped(commentId: commentId))
+                                },
+                                onDeleteCommentTapped: { commentId in
+                                    store.send(.deleteCommentTapped(commentId: commentId))
+                                }
+                            )
 
                             Spacer(minLength: 110)
                         }
@@ -313,10 +334,20 @@ private struct PostRestaurantSection: View {
 // MARK: - Post Comments Section
 private struct PostCommentsSection: View {
     let comments: [Comment]
+    let myUserId: String?
     @Binding var commentText: String
     let isSubmitting: Bool
     let canSubmit: Bool
-    let onSubmit: () -> Void
+    let editingCommentId: String?
+    @Binding var editingCommentText: String
+    let canSubmitEdit: Bool
+    let selectedCommentId: String?
+    let onSubmitComment: () -> Void
+    let onCommentMoreTapped: (String) -> Void
+    let onEditCommentTapped: (String, String) -> Void
+    let onCancelEditTapped: () -> Void
+    let onSubmitEditTapped: (String) -> Void
+    let onDeleteCommentTapped: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -348,7 +379,7 @@ private struct PostCommentsSection: View {
                     isEnabled: canSubmit,
                     isLoading: isSubmitting
                 ) {
-                    onSubmit()
+                    onSubmitComment()
                 }
                 .frame(width: 60)
             }
@@ -366,8 +397,20 @@ private struct PostCommentsSection: View {
                 VStack(alignment: .leading, spacing: AppPadding.small.value) {
                     ForEach(Array(comments.enumerated()), id: \.element.commentId) { index, comment in
                         VStack(spacing: AppPadding.small.value) {
-                            CommentItemView(comment: comment)
-                            
+                            CommentItemView(
+                                comment: comment,
+                                isMyComment: myUserId == comment.creator.userId,
+                                isEditing: editingCommentId == comment.commentId,
+                                editingText: $editingCommentText,
+                                canSubmitEdit: canSubmitEdit,
+                                onMoreTapped: {
+                                    onCommentMoreTapped(comment.commentId)
+                                },
+                                onCancelEditTapped: onCancelEditTapped
+                            ) {
+                                onSubmitEditTapped(comment.commentId)
+                            }
+
                             if index < comments.count - 1 {
                                 MyDivider()
                             }
@@ -381,12 +424,38 @@ private struct PostCommentsSection: View {
                 )
             }
         }
+        .confirmationDialog(
+            "",
+            isPresented: Binding(
+                get: { selectedCommentId != nil },
+                set: { _ in }
+            ),
+            titleVisibility: .hidden
+        ) {
+            if let commentId = selectedCommentId,
+               let comment = comments.first(where: { $0.commentId == commentId }) {
+                Button("댓글 수정") {
+                    onEditCommentTapped(commentId, comment.content)
+                }
+                Button("댓글 삭제", role: .destructive) {
+                    onDeleteCommentTapped(commentId)
+                }
+                Button("취소", role: .cancel) {}
+            }
+        }
     }
 }
 
 // MARK: - Comment Item View
 private struct CommentItemView: View {
     let comment: Comment
+    let isMyComment: Bool
+    let isEditing: Bool
+    @Binding var editingText: String
+    let canSubmitEdit: Bool
+    let onMoreTapped: () -> Void
+    let onCancelEditTapped: () -> Void
+    let onSubmitEditTapped: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.small.value) {
@@ -406,12 +475,62 @@ private struct CommentItemView: View {
                 }
 
                 Spacer()
+
+                if isMyComment {
+                    if isEditing {
+                        HStack(spacing: AppPadding.small.value) {
+                            Button {
+                                onCancelEditTapped()
+                            } label: {
+                                Text("취소")
+                                    .font(.pretendard(size: .caption1, weight: .medium))
+                                    .foregroundStyle(.custom(.gray(.gray60)))
+                            }
+
+                            Button {
+                                onSubmitEditTapped()
+                            } label: {
+                                Text("완료")
+                                    .font(.pretendard(size: .caption1, weight: .semiBold))
+                                    .foregroundStyle(
+                                        canSubmitEdit
+                                            ? .custom(.brand(.blackSprout))
+                                            : .custom(.gray(.gray45))
+                                    )
+                            }
+                            .disabled(!canSubmitEdit)
+                        }
+                    } else {
+                        Button {
+                            onMoreTapped()
+                        } label: {
+                            AppIcon.more
+                                .foregroundStyle(.custom(.gray(.gray60)))
+                        }
+                    }
+                }
             }
 
-            Text(comment.content)
-                .font(.pretendard(size: .body2, weight: .regular))
-                .foregroundStyle(.custom(.gray(.gray90)))
-                .lineSpacing(4)
+            if isEditing {
+                TextField("댓글을 입력하세요", text: $editingText, axis: .vertical)
+                    .font(.pretendard(size: .body2, weight: .regular))
+                    .foregroundStyle(.custom(.gray(.gray90)))
+                    .lineLimit(1...5)
+                    .padding(.all, AppPadding.medium.value)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.custom(.gray(.gray15)))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.custom(.gray(.gray30)), lineWidth: 1)
+                    )
+            } else {
+                Text(comment.content)
+                    .font(.pretendard(size: .body2, weight: .regular))
+                    .foregroundStyle(.custom(.gray(.gray90)))
+                    .lineSpacing(4)
+            }
         }
     }
 }
