@@ -24,7 +24,7 @@ struct CommunityFeature: Sendable {
         var selectedDistanceIndex: Int = 8
         var banner = BannerFeature.State()
 
-        private let distances = [100, 200, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+        let distances = [100, 200, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
         var maxDistance: Int {
             distances[selectedDistanceIndex]

@@ -23,6 +23,7 @@ struct CommunityView: View {
             let orderBy = store.orderBy
             let isShowingOrderByMenu = store.isShowingOrderByMenu
             let selectedDistanceIndex = store.selectedDistanceIndex
+            let distances = store.distances
 
             ZStack {
                 Color.custom(.gray(.gray15))
@@ -36,6 +37,7 @@ struct CommunityView: View {
                             ) {
                                 store.send(.searchSubmitted)
                             }
+                            .frame(height: 40)
                             
                             Button {
                                 
@@ -54,7 +56,8 @@ struct CommunityView: View {
                         .padding(.horizontal, .xLarge)
 
                         DistanceSelector(
-                            selectedIndex: selectedDistanceIndex
+                            selectedIndex: selectedDistanceIndex,
+                            distances: distances
                         ) {
                             store.send(.distanceChanged($0))
                         }
@@ -135,12 +138,14 @@ struct CommunityView: View {
 
 private struct DistanceSelector: View {
     let selectedIndex: Int
+    let distances: [Int]
     let onIndexChanged: (Int) -> Void
     @State private var tempIndex: Int?
-    private let totalCount = 15
 
     var body: some View {
         let displayIndex = tempIndex ?? selectedIndex
+        let displayDistance = distances[displayIndex]
+        let totalCount = distances.count
 
         HStack(spacing: 0) {
             Text("Distance")
@@ -173,7 +178,7 @@ private struct DistanceSelector: View {
                         }
                     }
                     
-                    Text("\(displayIndex + 1)")
+                    Text("\(displayDistance)m")
                         .font(.pretendard(size: .caption2, weight: .semiBold))
                         .foregroundStyle(.custom(.gray(.gray0)))
                         .padding(.vertical, .tiny)
@@ -188,7 +193,11 @@ private struct DistanceSelector: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            calculateIndex(location: value.location, width: width)
+                            calculateIndex(
+                                location: value.location,
+                                width: width,
+                                totalCount: distances.count
+                            )
                         }
                         .onEnded { _ in
                             if let finalIndex = tempIndex {
@@ -211,7 +220,7 @@ private struct DistanceSelector: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func calculateIndex(location: CGPoint, width: CGFloat) {
+    private func calculateIndex(location: CGPoint, width: CGFloat, totalCount: Int) {
         let stepWidth = width / CGFloat(totalCount)
         let clampedIndex = min(max(0, Int(location.x / stepWidth)), totalCount - 1)
         if tempIndex != clampedIndex {
