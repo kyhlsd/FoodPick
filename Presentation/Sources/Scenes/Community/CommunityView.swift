@@ -16,14 +16,11 @@ struct CommunityView: View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
 
-            let posts = store.posts
-            let isLoading = store.isLoading
-            let isLoadingMore = store.isLoadingMore
-            let canLoadMore = store.canLoadMore
             let orderBy = store.orderBy
             let isShowingOrderByMenu = store.isShowingOrderByMenu
             let selectedDistanceIndex = store.selectedDistanceIndex
             let distances = store.distances
+            let selectedPostId = store.selectedPostId
 
             ZStack {
                 Color.custom(.gray(.gray15))
@@ -102,15 +99,19 @@ struct CommunityView: View {
 
                         // 포스트 리스트
                         PostListView(
-                            posts: posts,
-                            isLoading: isLoading,
-                            isLoadingMore: isLoadingMore,
-                            canLoadMore: canLoadMore,
+                            posts: store.posts,
+                            myUserId: store.myUserId,
+                            isLoading: store.isLoading,
+                            isLoadingMore: store.isLoadingMore,
+                            canLoadMore: store.canLoadMore,
                             onLoadMore: {
                                 store.send(.loadMore)
                             },
                             onLikePostTapped: { postId in
                                 store.send(.likePostTapped(postId: postId))
+                            },
+                            onMoreTapped: { postId in
+                                store.send(.moreButtonTapped(postId: postId))
                             }
                         )
                         .padding(.horizontal, .xLarge)
@@ -128,6 +129,26 @@ struct CommunityView: View {
                 store.send(.toggleOrderByMenu)
             }
             .hideKeyboardOnTap()
+            .confirmationDialog(
+                "",
+                isPresented: Binding(
+                    get: { selectedPostId != nil },
+                    set: { if !$0 { store.send(.actionSheetDismissed) } }
+                ),
+                titleVisibility: .hidden
+            ) {
+                if let postId = store.selectedPostId {
+                    Button("포스트 수정") {
+                        store.send(.editPostTapped(postId: postId))
+                    }
+                    Button("포스트 삭제", role: .destructive) {
+                        store.send(.deletePostTapped(postId: postId))
+                    }
+                    Button("취소", role: .cancel) {
+                        store.send(.actionSheetDismissed)
+                    }
+                }
+            }
             .alert($store.scope(state: \.alert, action: \.alert))
             .navigationDestination(
                 item: $store.scope(state: \.destination?.postWrite, action: \.destination.postWrite)
@@ -239,11 +260,13 @@ private struct DistanceSelector: View {
 // MARK: - Post List View
 private struct PostListView: View {
     let posts: [Post]
+    let myUserId: String?
     let isLoading: Bool
     let isLoadingMore: Bool
     let canLoadMore: Bool
     let onLoadMore: () -> Void
     let onLikePostTapped: (String) -> Void
+    let onMoreTapped: (String) -> Void
 
     var body: some View {
         VStack(spacing: AppPadding.medium.value) {
@@ -262,9 +285,13 @@ private struct PostListView: View {
             } else {
                 LazyVStack(spacing: AppPadding.medium.value) {
                     ForEach(Array(posts.enumerated()), id: \.element.postId) { index, post in
+                        let isMyPost = myUserId != nil && post.creator.userId == myUserId
+
                         PostItemView(
                             post: post,
-                            onLikePostTapped: onLikePostTapped
+                            isMyPost: isMyPost,
+                            onLikePostTapped: onLikePostTapped,
+                            onMoreTapped: isMyPost ? { onMoreTapped(post.postId) } : nil
                         )
                         .onAppear {
                             if index == posts.count - 1 && canLoadMore {

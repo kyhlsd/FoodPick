@@ -15,6 +15,7 @@ struct CommunityFeature: Sendable {
     @ObservableState
     struct State: Sendable {
         var posts: [Post] = []
+        var myUserId: String?
         var isLoading = false
         var isLoadingMore = false
         var nextCursor: String?
@@ -22,6 +23,7 @@ struct CommunityFeature: Sendable {
         var isShowingOrderByMenu = false
         var searchText = ""
         var selectedDistanceIndex: Int = 8
+        var selectedPostId: String?
         var banner = BannerFeature.State()
 
         let distances = [100, 200, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
@@ -34,6 +36,11 @@ struct CommunityFeature: Sendable {
             !isLoadingMore && nextCursor != "0" && nextCursor != nil
         }
 
+        func isMyPost(_ post: Post) -> Bool {
+            guard let myUserId = myUserId else { return false }
+            return post.creator.userId == myUserId
+        }
+
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<CommunityFeature.Alert>?
     }
@@ -41,6 +48,9 @@ struct CommunityFeature: Sendable {
     // MARK: - Action
     enum Action {
         case onAppear
+        case fetchMyProfile
+        case myProfileLoaded(MyProfile)
+        case myProfileFailed(Error)
         case fetchPosts
         case postsLoaded(ResponseListWithCursor<Post>, isLoadingMore: Bool)
         case postsFailed(Error)
@@ -51,6 +61,10 @@ struct CommunityFeature: Sendable {
         case searchTextChanged(String)
         case searchSubmitted
         case writePostTapped
+        case moreButtonTapped(postId: String)
+        case actionSheetDismissed
+        case editPostTapped(postId: String)
+        case deletePostTapped(postId: String)
         case likePostTapped(postId: String)
         case likePostToggled(postId: String, likeStatus: Bool)
         case likePostFailed(Error)
@@ -60,9 +74,11 @@ struct CommunityFeature: Sendable {
     }
 
     // MARK: - Dependencies
+    @Dependency(\.fetchMyProfile) var fetchMyProfileUseCase
     @Dependency(\.fetchPosts) var fetchPostsUseCase
     @Dependency(\.searchPosts) var searchPostsUseCase
     @Dependency(\.likePost) var likePostUseCase
+    @Dependency(\.deletePost) var deletePostUseCase
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -74,9 +90,28 @@ struct CommunityFeature: Sendable {
             switch action {
             case .onAppear:
                 return .merge(
+                    .send(.fetchMyProfile),
                     .send(.fetchPosts),
                     .send(.banner(.onAppear))
                 )
+
+            case .fetchMyProfile:
+                return .run { send in
+                    do {
+                        let profile = try await fetchMyProfileUseCase.execute()
+                        await send(.myProfileLoaded(profile))
+                    } catch {
+                        await send(.myProfileFailed(error))
+                    }
+                }
+
+            case let .myProfileLoaded(profile):
+                state.myUserId = profile.userId
+                return .none
+
+            case .myProfileFailed:
+                // 프로필 로드 실패해도 포스트는 볼 수 있어야 함
+                return .none
 
             case .fetchPosts:
                 guard !state.isLoading else { return .none }
@@ -174,8 +209,36 @@ struct CommunityFeature: Sendable {
                 return .none
 
             case .writePostTapped:
-                state.destination = .postWrite(PostWriteFeature.State())
+                state.destination = .postWrite(PostWriteFeature.State(mode: .create))
                 return .none
+
+            case let .moreButtonTapped(postId):
+                state.selectedPostId = postId
+                return .none
+
+            case .actionSheetDismissed:
+                state.selectedPostId = nil
+                return .none
+
+            case let .editPostTapped(postId):
+                state.selectedPostId = nil
+                state.destination = .postWrite(
+                    PostWriteFeature.State(mode: .edit(postId: postId))
+                )
+                return .none
+
+            case let .deletePostTapped(postId):
+                state.selectedPostId = nil
+
+                return .run { send in
+                    do {
+                        try await deletePostUseCase.execute(id: postId)
+                        // 삭제 후 포스트 목록 다시 불러오기
+                        await send(.fetchPosts)
+                    } catch {
+                        await send(.postsFailed(error))
+                    }
+                }
 
             case let .likePostTapped(postId):
                 guard let post = state.posts.first(where: { $0.postId == postId }) else {

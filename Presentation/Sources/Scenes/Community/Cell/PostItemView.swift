@@ -10,7 +10,9 @@ import Domain
 
 struct PostItemView: View {
     let post: Post
+    let isMyPost: Bool
     let onLikePostTapped: (String) -> Void
+    let onMoreTapped: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -31,6 +33,15 @@ struct PostItemView: View {
                 }
 
                 Spacer()
+
+                if isMyPost, let onMoreTapped {
+                    Button {
+                        onMoreTapped()
+                    } label: {
+                        AppIcon.more
+                            .foregroundStyle(.custom(.gray(.gray60)))
+                    }
+                }
             }
 
             // 이미지

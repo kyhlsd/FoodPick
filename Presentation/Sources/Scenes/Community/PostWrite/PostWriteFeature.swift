@@ -12,13 +12,21 @@ import ComposableArchitecture
 
 @Reducer
 struct PostWriteFeature: Sendable {
+    // MARK: - Mode
+    enum Mode: Sendable {
+        case create
+        case edit(postId: String)
+    }
+
     // MARK: - State
     @ObservableState
     struct State: Sendable {
+        let mode: Mode
         var selectedRestaurant: Restaurant?
         var restaurantSearchText = ""
         var restaurantSearchResults: [Restaurant] = []
         var isSearching = false
+        var isLoading = false
         var title = ""
         var content = ""
         var selectedMediaData: [(Data, MediaType)] = []
@@ -37,20 +45,28 @@ struct PostWriteFeature: Sendable {
             !title.isEmpty &&
             !content.isEmpty &&
             !isUploading &&
-            !isSaving
+            !isSaving &&
+            !isLoading
         }
-        
+
         var maxSelectionCount: Int {
             maxMedia - selectedMediaData.count - uploadedMediaURLs.count
         }
 
         @Presents var alert: AlertState<PostWriteFeature.Alert>?
+
+        init(mode: Mode = .create) {
+            self.mode = mode
+        }
     }
 
     // MARK: - Action
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         case onAppear
+        case fetchPostDetail
+        case postDetailLoaded(PostDetail)
+        case postDetailFailed(Error)
         case restaurantSearchTextChanged(String)
         case restaurantSearchSubmitted
         case restaurantSearchResult([Restaurant])
@@ -65,14 +81,17 @@ struct PostWriteFeature: Sendable {
         case uploadSuccess([String])
         case uploadFailed(Error)
         case createPost
-        case postCreated(PostDetail)
+        case editPost
+        case postSaved(PostDetail)
         case postFailed(Error)
         case alert(PresentationAction<PostWriteFeature.Alert>)
     }
 
     // MARK: - Dependencies
     @Dependency(\.searchRestaurants) var searchRestaurantsUseCase
+    @Dependency(\.fetchPostDetail) var fetchPostDetailUseCase
     @Dependency(\.createPost) var createPostUseCase
+    @Dependency(\.editPost) var editPostUseCase
     @Dependency(\.uploadPostFiles) var uploadPostFilesUseCase
     @Dependency(\.dismiss) var dismiss
 
@@ -82,6 +101,47 @@ struct PostWriteFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                switch state.mode {
+                case .create:
+                    return .none
+                case .edit:
+                    return .send(.fetchPostDetail)
+                }
+
+            case .fetchPostDetail:
+                guard case let .edit(postId) = state.mode else {
+                    return .none
+                }
+                state.isLoading = true
+
+                return .run { send in
+                    do {
+                        let postDetail = try await fetchPostDetailUseCase.execute(id: postId)
+                        await send(.postDetailLoaded(postDetail))
+                    } catch {
+                        await send(.postDetailFailed(error))
+                    }
+                }
+
+            case let .postDetailLoaded(postDetail):
+                state.isLoading = false
+                state.selectedRestaurant = postDetail.restaurant
+                state.title = postDetail.title
+                state.content = postDetail.content
+                state.uploadedMediaURLs = postDetail.files
+                return .none
+
+            case let .postDetailFailed(error):
+                state.isLoading = false
+                state.alert = AlertState {
+                    TextState("포스트 로드 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
                 return .none
 
             case let .restaurantSearchTextChanged(text):
@@ -150,7 +210,12 @@ struct PostWriteFeature: Sendable {
 
             case .saveTapped:
                 if state.selectedMediaData.isEmpty {
-                    return .send(.createPost)
+                    switch state.mode {
+                    case .create:
+                        return .send(.createPost)
+                    case .edit:
+                        return .send(.editPost)
+                    }
                 } else {
                     return .send(.uploadMedia)
                 }
@@ -175,7 +240,12 @@ struct PostWriteFeature: Sendable {
                 state.isUploading = false
                 state.uploadedMediaURLs.append(contentsOf: urls)
                 state.selectedMediaData = []
-                return .send(.createPost)
+                switch state.mode {
+                case .create:
+                    return .send(.createPost)
+                case .edit:
+                    return .send(.editPost)
+                }
 
             case let .uploadFailed(error):
                 state.isUploading = false
@@ -195,7 +265,7 @@ struct PostWriteFeature: Sendable {
                     return .none
                 }
                 state.isSaving = true
-                
+
                 let request = CreatePostRequest(
                     category: restaurant.category,
                     title: state.title,
@@ -205,17 +275,43 @@ struct PostWriteFeature: Sendable {
                     longitude: restaurant.geolocation.longitude,
                     files: state.uploadedMediaURLs
                 )
-                
+
                 return .run { send in
                     do {
                         let postDetail = try await createPostUseCase.execute(request: request)
-                        await send(.postCreated(postDetail))
+                        await send(.postSaved(postDetail))
                     } catch {
                         await send(.postFailed(error))
                     }
                 }
 
-            case .postCreated:
+            case .editPost:
+                guard case let .edit(postId) = state.mode,
+                      let restaurant = state.selectedRestaurant else {
+                    return .none
+                }
+                state.isSaving = true
+
+                let request = EditPostRequest(
+                    category: restaurant.category,
+                    title: state.title,
+                    content: state.content,
+                    restaurantId: restaurant.restaurantId,
+                    latitude: restaurant.geolocation.latitude,
+                    longitude: restaurant.geolocation.longitude,
+                    files: state.uploadedMediaURLs
+                )
+
+                return .run { send in
+                    do {
+                        let postDetail = try await editPostUseCase.execute(id: postId, request: request)
+                        await send(.postSaved(postDetail))
+                    } catch {
+                        await send(.postFailed(error))
+                    }
+                }
+
+            case .postSaved:
                 state.isSaving = false
                 return .run { _ in
                     await dismiss()
