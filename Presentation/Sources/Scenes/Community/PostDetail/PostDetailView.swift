@@ -403,15 +403,14 @@ private struct PostCommentsSection: View {
                                 isMyComment: myUserId == comment.creator.userId,
                                 isEditing: editingCommentId == comment.commentId,
                                 editingText: $editingCommentText,
-                                canSubmitEdit: canSubmitEdit,
-                                onMoreTapped: {
-                                    onCommentMoreTapped(comment.commentId)
-                                },
-                                onCancelEditTapped: onCancelEditTapped,
-                                onSubmitEditTapped: {
-                                    onSubmitEditTapped(comment.commentId)
-                                }
-                            )
+                                canSubmitEdit: canSubmitEdit
+                            ) {
+                                onCommentMoreTapped(comment.commentId)
+                            } onCancelEditTapped: {
+                                onCancelEditTapped()
+                            } onSubmitEditTapped: {
+                                onSubmitEditTapped(comment.commentId)
+                            }
 
                             if index < comments.count - 1 {
                                 MyDivider()

@@ -30,10 +30,7 @@ struct PostSearchResultView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
                             // 검색 결과 헤더
-                            Text("\(store.searchQuery)(으)로 검색한 결과 (\(store.posts.count))")
-                                .font(.pretendard(size: .body2, weight: .bold))
-                                .foregroundStyle(.custom(.gray(.gray90)))
-                                .padding(.horizontal, .xLarge)
+                            SearchedHeaderView(searchText: store.searchQuery, count: store.posts.count)
 
                             // 검색 결과 목록
                             if store.posts.isEmpty {
@@ -64,15 +61,11 @@ struct PostSearchResultView: View {
                                         .buttonStyle(.plain)
                                     }
                                 }
-                                .padding(.horizontal, .xLarge)
                             }
 
-                            // 탭바가 가리지 않도록 추가
-                            Rectangle()
-                                .fill(.clear)
-                                .frame(height: 110)
+                            Spacer(minLength: 110)
                         }
-                        .padding(.top, .xLarge)
+                        .padding(.horizontal, .xLarge)
                     }
                 }
             }
@@ -113,6 +106,28 @@ struct PostSearchResultView: View {
                 store.send(.onAppear)
             }
         }
+    }
+}
+
+private struct SearchedHeaderView: View {
+    let searchText: String
+    let count: Int
+    
+    var body: some View {
+        Text(attributedTitle)
+            .font(.pretendard(size: .body2, weight: .bold))
+    }
+    
+    private var attributedTitle: AttributedString {
+        var attributedString = AttributedString("\(searchText)(으)로 검색한 결과 (\(count))")
+        attributedString.foregroundColor = .custom(.gray(.gray90))
+
+        // 검색어 부분 찾기
+        if let range = attributedString.range(of: searchText) {
+            attributedString[range].foregroundColor = .custom(.brand(.deepSprout))
+        }
+
+        return attributedString
     }
 }
 

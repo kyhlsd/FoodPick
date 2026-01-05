@@ -171,5 +171,4 @@ struct PostSearchResultFeature: Sendable {
     }
 }
 
-extension PostSearchResultFeature.State: Sendable {}
 extension PostSearchResultFeature.Destination.State: Sendable {}
