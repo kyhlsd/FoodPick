@@ -64,7 +64,7 @@ struct SearchRestaurantView: View {
                     .padding(.horizontal, .xLarge)
                 }
             }
-            .navigationTitle("검색 결과")
+            .navigationTitle("식당 검색")
             .navigationDestination(
                 item: $store.scope(state: \.destination?.detail, action: \.destination.detail)
             ) { detailStore in

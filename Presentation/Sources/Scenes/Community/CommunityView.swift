@@ -153,20 +153,43 @@ struct CommunityView: View {
                 }
             }
             .alert($store.scope(state: \.alert, action: \.alert))
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
-            ) { store in
-                PostDetailView(store: store)
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.postWrite, action: \.destination.postWrite)
-            ) { store in
-                PostWriteView(store: store)
-            }
+            .communityDestinations(store: store)
             .onAppear {
                 store.send(.onAppear)
             }
         }
+    }
+}
+
+// MARK: - Community Destinations Modifier
+private struct CommunityDestinationsModifier: ViewModifier {
+    @Perception.Bindable var store: StoreOf<CommunityFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
+                ) { store in
+                    PostDetailView(store: store)
+                }
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.postWrite, action: \.destination.postWrite)
+                ) { store in
+                    PostWriteView(store: store)
+                }
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.postSearchResult, action: \.destination.postSearchResult)
+                ) { store in
+                    PostSearchResultView(store: store)
+                }
+        }
+    }
+}
+
+private extension View {
+    func communityDestinations(store: StoreOf<CommunityFeature>) -> some View {
+        modifier(CommunityDestinationsModifier(store: store))
     }
 }
 

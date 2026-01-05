@@ -36,11 +36,6 @@ struct CommunityFeature: Sendable {
             !isLoadingMore && nextCursor != "0" && nextCursor != nil
         }
 
-        func isMyPost(_ post: Post) -> Bool {
-            guard let myUserId = myUserId else { return false }
-            return post.creator.userId == myUserId
-        }
-
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<CommunityFeature.Alert>?
     }
@@ -207,6 +202,15 @@ struct CommunityFeature: Sendable {
                 return .none
 
             case .searchSubmitted:
+                guard !state.searchText.isEmpty else {
+                    return .none
+                }
+                state.destination = .postSearchResult(
+                    PostSearchResultFeature.State(
+                        searchQuery: state.searchText,
+                        myUserId: state.myUserId
+                    )
+                )
                 return .none
 
             case let .postTapped(postId):
@@ -299,6 +303,7 @@ extension CommunityFeature {
     enum Destination {
         case postDetail(PostDetailFeature)
         case postWrite(PostWriteFeature)
+        case postSearchResult(PostSearchResultFeature)
     }
 }
 

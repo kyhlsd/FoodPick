@@ -114,6 +114,7 @@ struct PostDetailView: View {
                     }
                 }
             }
+            .hideKeyboardOnTap()
             .confirmationDialog(
                 "",
                 isPresented: Binding(
@@ -406,10 +407,11 @@ private struct PostCommentsSection: View {
                                 onMoreTapped: {
                                     onCommentMoreTapped(comment.commentId)
                                 },
-                                onCancelEditTapped: onCancelEditTapped
-                            ) {
-                                onSubmitEditTapped(comment.commentId)
-                            }
+                                onCancelEditTapped: onCancelEditTapped,
+                                onSubmitEditTapped: {
+                                    onSubmitEditTapped(comment.commentId)
+                                }
+                            )
 
                             if index < comments.count - 1 {
                                 MyDivider()
