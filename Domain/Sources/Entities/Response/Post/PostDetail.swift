@@ -18,7 +18,7 @@ public struct PostDetail: Sendable {
     public let files: [String]
     public var isLike: Bool
     public var likeCount: Int
-    public let comments: [Comment]
+    public var comments: [Comment]
     public let createdAt: Date
     public let updatedAt: Date
     

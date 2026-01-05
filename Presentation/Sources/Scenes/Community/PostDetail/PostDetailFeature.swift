@@ -20,6 +20,8 @@ struct PostDetailFeature: Sendable {
         var isLoading = false
         var currentImageIndex = 0
         var selectedPostId: String?
+        var commentText = ""
+        var isSubmittingComment = false
 
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<PostDetailFeature.Alert>?
@@ -30,10 +32,15 @@ struct PostDetailFeature: Sendable {
             }
             return postDetail.creator.userId == myUserId
         }
+
+        var canSubmitComment: Bool {
+            !commentText.isEmpty && !isSubmittingComment
+        }
     }
 
     // MARK: - Action
-    enum Action {
+    enum Action: BindableAction {
+        case binding(BindingAction<State>)
         case onAppear
         case fetchPostDetail
         case postDetailLoaded(PostDetail)
@@ -42,6 +49,10 @@ struct PostDetailFeature: Sendable {
         case likePostTapped
         case likePostToggled(Bool)
         case likePostFailed(Error)
+        case commentTextChanged(String)
+        case submitCommentTapped
+        case commentCreated(Comment)
+        case commentFailed(Error)
         case moreButtonTapped
         case actionSheetDismissed
         case editPostTapped
@@ -54,12 +65,17 @@ struct PostDetailFeature: Sendable {
     @Dependency(\.fetchPostDetail) var fetchPostDetailUseCase
     @Dependency(\.likePost) var likePostUseCase
     @Dependency(\.deletePost) var deletePostUseCase
+    @Dependency(\.createComment) var createCommentUseCase
     @Dependency(\.dismiss) var dismiss
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
+        BindingReducer()
         Reduce { state, action in
             switch action {
+            case .binding:
+                return .none
+
             case .onAppear:
                 return .send(.fetchPostDetail)
 
@@ -121,6 +137,51 @@ struct PostDetailFeature: Sendable {
             case let .likePostFailed(error):
                 state.alert = AlertState {
                     TextState("좋아요 처리 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case let .commentTextChanged(text):
+                state.commentText = text
+                return .none
+
+            case .submitCommentTapped:
+                guard !state.commentText.isEmpty else {
+                    return .none
+                }
+                state.isSubmittingComment = true
+
+                let commentText = state.commentText
+                let postId = state.postId
+
+                return .run { send in
+                    do {
+                        let comment = try await createCommentUseCase.execute(
+                            postId: postId,
+                            parentId: nil,
+                            content: commentText
+                        )
+                        await send(.commentCreated(comment))
+                    } catch {
+                        await send(.commentFailed(error))
+                    }
+                }
+
+            case let .commentCreated(comment):
+                state.isSubmittingComment = false
+                state.commentText = ""
+                state.postDetail?.comments.append(comment)
+                return .none
+
+            case let .commentFailed(error):
+                state.isSubmittingComment = false
+                state.alert = AlertState {
+                    TextState("댓글 작성 실패")
                 } actions: {
                     ButtonState(role: .cancel) {
                         TextState("확인")

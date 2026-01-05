@@ -61,11 +61,16 @@ struct PostDetailView: View {
                             // 식당 정보
                             PostRestaurantSection(restaurant: post.restaurant)
 
-                            // 댓글 섹션
-                            if !post.comments.isEmpty {
-                                MyDivider()
+                            MyDivider()
 
-                                PostCommentsSection(comments: post.comments)
+                            // 댓글 섹션
+                            PostCommentsSection(
+                                comments: post.comments,
+                                commentText: $store.commentText.sending(\.commentTextChanged),
+                                isSubmitting: store.isSubmittingComment,
+                                canSubmit: store.canSubmitComment
+                            ) {
+                                store.send(.submitCommentTapped)
                             }
 
                             Spacer(minLength: 110)
@@ -80,7 +85,7 @@ struct PostDetailView: View {
                         ToolbarItem(placement: .topBarTrailing) {
                             HeartButton(
                                 isLike: post.isLike,
-                                nonLikeColor: .custom(.gray(.gray60))
+                                nonLikeColor: .custom(.gray(.gray90))
                             ) {
                                 store.send(.likePostTapped)
                             }
@@ -221,7 +226,7 @@ private struct PostMetricsSection: View {
                     .foregroundStyle(.custom(.gray(.gray90)))
             }
 
-            if let distance = distance {
+            if let distance {
                 HStack(spacing: 4) {
                     AppIcon.distance
                         .resizable()
@@ -308,14 +313,105 @@ private struct PostRestaurantSection: View {
 // MARK: - Post Comments Section
 private struct PostCommentsSection: View {
     let comments: [Comment]
+    @Binding var commentText: String
+    let isSubmitting: Bool
+    let canSubmit: Bool
+    let onSubmit: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
-            Text("댓글 \(comments.count)")
-                .font(.pretendard(size: .body1, weight: .bold))
+            // 댓글 제목
+            Text("댓글 (\(comments.count))")
+                .font(.pretendard(size: .body2, weight: .bold))
                 .foregroundStyle(.custom(.gray(.gray90)))
 
-            // TODO: 댓글 리스트 표시
+            // 댓글 입력
+            HStack(alignment: .top, spacing: AppPadding.small.value) {
+                TextField("댓글을 입력하세요", text: $commentText, axis: .vertical)
+                    .font(.pretendard(size: .body2, weight: .regular))
+                    .foregroundStyle(.custom(.gray(.gray90)))
+                    .lineLimit(1...5)
+                    .padding(.all, AppPadding.medium.value)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.custom(.gray(.gray0)))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.custom(.gray(.gray30)), lineWidth: 1)
+                    )
+                    .disabled(isSubmitting)
+
+                PrimaryButton(
+                    title: "등록",
+                    height: 40,
+                    isEnabled: canSubmit,
+                    isLoading: isSubmitting
+                ) {
+                    onSubmit()
+                }
+                .frame(width: 60)
+            }
+
+            MyDivider()
+
+            // 댓글 목록
+            if comments.isEmpty {
+                Text("작성된 댓글이 없습니다")
+                    .font(.pretendard(size: .body2, weight: .medium))
+                    .foregroundStyle(.custom(.gray(.gray60)))
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, AppPadding.large.value)
+            } else {
+                VStack(alignment: .leading, spacing: AppPadding.small.value) {
+                    ForEach(Array(comments.enumerated()), id: \.element.commentId) { index, comment in
+                        VStack(spacing: AppPadding.small.value) {
+                            CommentItemView(comment: comment)
+                            
+                            if index < comments.count - 1 {
+                                MyDivider()
+                            }
+                        }
+                    }
+                }
+                .padding(.all, AppPadding.medium.value)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.custom(.gray(.gray0)))
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Comment Item View
+private struct CommentItemView: View {
+    let comment: Comment
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppPadding.small.value) {
+            HStack(spacing: AppPadding.small.value) {
+                AuthenticatedImage(imagePath: comment.creator.profileImage)
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: AppPadding.tiny.value) {
+                    Text(comment.creator.nickname)
+                        .font(.pretendard(size: .caption1, weight: .semiBold))
+                        .foregroundStyle(.custom(.gray(.gray90)))
+
+                    Text(TimeFormatter.toRelativeTimeString(from: comment.createdAt))
+                        .font(.pretendard(size: .caption2, weight: .medium))
+                        .foregroundStyle(.custom(.gray(.gray60)))
+                }
+
+                Spacer()
+            }
+
+            Text(comment.content)
+                .font(.pretendard(size: .body2, weight: .regular))
+                .foregroundStyle(.custom(.gray(.gray90)))
+                .lineSpacing(4)
         }
     }
 }
