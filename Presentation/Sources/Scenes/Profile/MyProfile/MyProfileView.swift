@@ -17,75 +17,33 @@ struct MyProfileView: View {
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
-
+            
             ZStack {
                 Color.custom(.gray(.gray15))
                     .ignoresSafeArea()
 
-                if store.isLoading {
+                if store.profileEditor.isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
-                } else if let nickname = store.displayNickname {
+                } else if store.profileEditor.displayNickname != nil {
                     ScrollView {
                         VStack(spacing: AppPadding.xLarge.value) {
-                            // 프로필 이미지
-                            ProfileImageSection(
-                                profileImage: store.displayProfileImage,
-                                isUploadingImage: store.isUploadingImage,
+                            ProfileHeaderSection(
+                                store: store,
                                 selectedPhotoItem: $selectedPhotoItem
                             )
 
-                            // 닉네임 + 이메일
-                            VStack(spacing: AppPadding.small.value) {
-                                NicknameSection(
-                                    nickname: nickname,
-                                    isEditingNickname: store.isEditingNickname,
-                                    editingNickname: $store.editingNickname,
-                                    onEditTapped: {
-                                        store.send(.editNicknameTapped)
-                                    },
-                                    onCancelEdit: {
-                                        store.send(.cancelEditNickname)
-                                    },
-                                    onSave: {
-                                        store.send(.saveNickname)
-                                    }
-                                )
-
-                                // 이메일
-                                if let email = store.displayEmail {
-                                    Text(email)
-                                        .font(.pretendard(size: .body2, weight: .regular))
-                                        .foregroundStyle(.custom(.gray(.gray60)))
-                                }
-                            }
-                            
-                            // 채팅 목록 보기
                             PrimaryButton(
                                 title: "채팅 목록 보기",
                                 height: 40,
-                                fontSize: .body1,
+                                fontSize: .body1
                             ) {
-                                
+
                             }
 
-                            // 탭 선택
-                            TabSelector(
-                                selectedTab: store.selectedTab
-                            ) {
-                                store.send(.tabSelected($0))
-                            }
+                            MyDivider()
 
-                            // 그리드 표시
-                            if store.selectedTab == .posts {
-                                PostGridSection(posts: store.userPosts) { postId in
-                                    store.send(.postTapped(postId: postId))
-                                }
-                            } else {
-                                RestaurantGridSection(restaurants: store.likedRestaurants) { restaurantId in
-                                    store.send(.restaurantTapped(restaurantId: restaurantId))
-                                }
-                            }
+                            ContentTabSection(store: store)
 
                             Spacer(minLength: 110)
                         }
@@ -97,7 +55,7 @@ struct MyProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        store.send(.settingsButtonTapped)
+                        store.send(.settings(.settingsButtonTapped))
                     } label: {
                         AppIcon.more
                             .font(.system(size: 20))
@@ -116,8 +74,11 @@ struct MyProfileView: View {
                     }
                 }
             }
-            .alert($store.scope(state: \.alert, action: \.alert))
-            .confirmationDialog($store.scope(state: \.confirmationDialog, action: \.confirmationDialog))
+            .alert($store.scope(state: \.profileEditor.alert, action: \.profileEditor.alert))
+            .alert($store.scope(state: \.content.alert, action: \.content.alert))
+            .alert($store.scope(state: \.settings.alert, action: \.settings.alert))
+            .confirmationDialog($store.scope(state: \.settings.confirmationDialog,
+                                             action: \.settings.confirmationDialog))
             .navigationDestination(
                 item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
             ) { postDetailStore in
@@ -149,9 +110,132 @@ struct MyProfileView: View {
             if let data = try? await item.loadTransferable(type: Data.self),
                let uiImage = UIImage(data: data),
                let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
-                store.send(.photoDataSelected(jpegData))
+                store.send(.profileEditor(.photoDataSelected(jpegData)))
             }
             selectedPhotoItem = nil
+        }
+    }
+}
+
+// MARK: - Profile Header Section
+private struct ProfileHeaderSection: View {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+
+    var body: some View {
+        WithPerceptionTracking {
+            VStack(spacing: AppPadding.xLarge.value) {
+                // 프로필 이미지
+                ProfileImageSection(
+                    profileImage: store.profileEditor.displayProfileImage,
+                    isUploadingImage: store.profileEditor.isUploadingImage,
+                    selectedPhotoItem: $selectedPhotoItem
+                )
+
+                // 닉네임 + 이메일
+                VStack(spacing: AppPadding.small.value) {
+                    // 닉네임 (scope를 사용하여 바인딩)
+                    NicknameEditorView(
+                        store: store.scope(state: \.profileEditor, action: \.profileEditor)
+                    )
+
+                    // 이메일
+                    if let email = store.profileEditor.displayEmail {
+                        Text(email)
+                            .font(.pretendard(size: .body2, weight: .regular))
+                            .foregroundStyle(.custom(.gray(.gray60)))
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Nickname Editor View
+private struct NicknameEditorView: View {
+    @Perception.Bindable var store: StoreOf<ProfileEditorFeature>
+
+    var body: some View {
+        WithPerceptionTracking {
+            VStack(spacing: AppPadding.medium.value) {
+                if store.isEditingNickname {
+                    HStack(spacing: AppPadding.small.value) {
+                        TextField("닉네임", text: $store.editingNickname)
+                            .font(.pretendard(size: .body2, weight: .regular))
+                            .foregroundStyle(.custom(.gray(.gray90)))
+                            .padding(.all, AppPadding.medium.value)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.custom(.gray(.gray0)))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(.custom(.gray(.gray30)), lineWidth: 1)
+                            )
+                        
+                        Button {
+                            store.send(.cancelEditNickname)
+                        } label: {
+                            Text("취소")
+                                .font(.pretendard(size: .body2, weight: .medium))
+                                .foregroundStyle(.custom(.gray(.gray60)))
+                        }
+                        
+                        Button {
+                            store.send(.saveNickname)
+                        } label: {
+                            Text("저장")
+                                .font(.pretendard(size: .body2, weight: .semiBold))
+                                .foregroundStyle(.custom(.brand(.blackSprout)))
+                        }
+                        .disabled(store.editingNickname.isEmpty)
+                    }
+                } else {
+                    HStack(spacing: AppPadding.small.value) {
+                        Text(store.displayNickname ?? "")
+                            .font(.pretendard(size: .title1, weight: .bold))
+                            .foregroundStyle(.custom(.gray(.gray90)))
+                        
+                        Button {
+                            store.send(.editNicknameTapped)
+                        } label: {
+                            AppIcon.pencil
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .foregroundStyle(.custom(.gray(.gray60)))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Content Tab Section
+private struct ContentTabSection: View {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    var body: some View {
+        WithPerceptionTracking {
+            VStack(spacing: AppPadding.medium.value) {
+                // 탭 선택
+                TabSelector(
+                    selectedTab: store.content.selectedTab
+                ) {
+                    store.send(.content(.tabSelected($0)))
+                }
+
+                // 그리드 표시
+                if store.content.selectedTab == .posts {
+                    PostGridSection(posts: store.content.userPosts) { postId in
+                        store.send(.postTapped(postId: postId))
+                    }
+                } else {
+                    RestaurantGridSection(restaurants: store.content.likedRestaurants) { restaurantId in
+                        store.send(.restaurantTapped(restaurantId: restaurantId))
+                    }
+                }
+            }
         }
     }
 }
@@ -201,77 +285,14 @@ private struct ProfileImageSection: View {
     }
 }
 
-// MARK: - Nickname Section
-private struct NicknameSection: View {
-    let nickname: String
-    let isEditingNickname: Bool
-    @Binding var editingNickname: String
-    let onEditTapped: () -> Void
-    let onCancelEdit: () -> Void
-    let onSave: () -> Void
-
-    var body: some View {
-        VStack(spacing: AppPadding.medium.value) {
-            if isEditingNickname {
-                HStack(spacing: AppPadding.small.value) {
-                    TextField("닉네임", text: $editingNickname)
-                        .font(.pretendard(size: .body2, weight: .regular))
-                        .foregroundStyle(.custom(.gray(.gray90)))
-                        .padding(.all, AppPadding.medium.value)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.custom(.gray(.gray0)))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(.custom(.gray(.gray30)), lineWidth: 1)
-                        )
-
-                    Button {
-                        onCancelEdit()
-                    } label: {
-                        Text("취소")
-                            .font(.pretendard(size: .body2, weight: .medium))
-                            .foregroundStyle(.custom(.gray(.gray60)))
-                    }
-
-                    Button {
-                        onSave()
-                    } label: {
-                        Text("저장")
-                            .font(.pretendard(size: .body2, weight: .semiBold))
-                            .foregroundStyle(.custom(.brand(.blackSprout)))
-                    }
-                    .disabled(editingNickname.isEmpty)
-                }
-            } else {
-                HStack(spacing: AppPadding.small.value) {
-                    Text(nickname)
-                        .font(.pretendard(size: .title1, weight: .bold))
-                        .foregroundStyle(.custom(.gray(.gray90)))
-
-                    Button {
-                        onEditTapped()
-                    } label: {
-                        AppIcon.pencil
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(.custom(.gray(.gray60)))
-                    }
-                }
-            }
-        }
-    }
-}
-
 // MARK: - Tab Selector
 private struct TabSelector: View {
-    let selectedTab: MyProfileFeature.State.Tab
-    let onTabSelected: (MyProfileFeature.State.Tab) -> Void
+    let selectedTab: ProfileContentFeature.State.Tab
+    let onTabSelected: (ProfileContentFeature.State.Tab) -> Void
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(MyProfileFeature.State.Tab.allCases, id: \.self) { tab in
+            ForEach(ProfileContentFeature.State.Tab.allCases, id: \.self) { tab in
                 Button {
                     onTabSelected(tab)
                 } label: {
