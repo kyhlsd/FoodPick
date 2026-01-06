@@ -8,8 +8,6 @@
 import Foundation
 import Domain
 import ComposableArchitecture
-import PhotosUI
-import SwiftUI
 
 @Reducer
 struct MyProfileFeature: Sendable {
@@ -25,7 +23,6 @@ struct MyProfileFeature: Sendable {
         var isLoading = false
         var isEditingNickname = false
         var editingNickname = ""
-        var selectedPhotoItem: PhotosPickerItem?
         var isUploadingImage = false
         var selectedTab: Tab = .posts
         var userPosts: [Post] = []
@@ -72,7 +69,7 @@ struct MyProfileFeature: Sendable {
         case saveNickname
         case nicknameUpdated(MyProfile)
         case nicknameUpdateFailed(Error)
-        case photoItemSelected
+        case photoDataSelected(Data)
         case profileImageUploaded(String)
         case profileImageUploadFailed(Error)
         case settingsButtonTapped
@@ -104,9 +101,6 @@ struct MyProfileFeature: Sendable {
         BindingReducer()
         Reduce { state, action in
             switch action {
-            case .binding(\.selectedPhotoItem):
-                return .send(.photoItemSelected)
-
             case .binding:
                 return .none
 
@@ -285,27 +279,22 @@ struct MyProfileFeature: Sendable {
                 }
                 return .none
 
-            case .photoItemSelected:
-                guard let photoItem = state.selectedPhotoItem else {
-                    return .none
-                }
+            case let .photoDataSelected(imageData):
                 state.isUploadingImage = true
 
                 return .run { send in
                     do {
-                        if let imageData = try await photoItem.loadTransferable(type: Data.self) {
-                            let response = try await uploadProfileImageUseCase.execute(
-                                imageData: imageData,
-                                imageType: .jpg,
-                                onProgress: nil
-                            )
+                        let response = try await uploadProfileImageUseCase.execute(
+                            imageData: imageData,
+                            imageType: .jpg,
+                            onProgress: nil
+                        )
 
-                            // 이미지 업로드 후 프로필 업데이트
-                            let updatedProfile = try await updateMyProfileUseCase.execute(
-                                request: ProfileRequest(profileImage: response.profileImage)
-                            )
-                            await send(.profileImageUploaded(updatedProfile.profileImage ?? ""))
-                        }
+                        // 이미지 업로드 후 프로필 업데이트
+                        let updatedProfile = try await updateMyProfileUseCase.execute(
+                            request: ProfileRequest(profileImage: response.profileImage)
+                        )
+                        await send(.profileImageUploaded(updatedProfile.profileImage ?? ""))
                     } catch {
                         await send(.profileImageUploadFailed(error))
                     }
@@ -313,7 +302,6 @@ struct MyProfileFeature: Sendable {
 
             case let .profileImageUploaded(imagePath):
                 state.isUploadingImage = false
-                state.selectedPhotoItem = nil
                 if let myProfile = state.myProfile {
                     state.myProfile = MyProfile(
                         userId: myProfile.userId,
@@ -327,7 +315,6 @@ struct MyProfileFeature: Sendable {
 
             case let .profileImageUploadFailed(error):
                 state.isUploadingImage = false
-                state.selectedPhotoItem = nil
                 state.alert = AlertState {
                     TextState("프로필 이미지 업로드 실패")
                 } actions: {

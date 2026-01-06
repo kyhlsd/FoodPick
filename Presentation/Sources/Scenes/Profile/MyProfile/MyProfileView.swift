@@ -12,6 +12,7 @@ import PhotosUI
 
 struct MyProfileView: View {
     let store: StoreOf<MyProfileFeature>
+    @State private var selectedPhotoItem: PhotosPickerItem?
 
     var body: some View {
         WithPerceptionTracking {
@@ -31,7 +32,7 @@ struct MyProfileView: View {
                             ProfileImageSection(
                                 profileImage: store.displayProfileImage,
                                 isUploadingImage: store.isUploadingImage,
-                                selectedPhotoItem: $store.selectedPhotoItem
+                                selectedPhotoItem: $selectedPhotoItem
                             )
 
                             // 닉네임 + 이메일
@@ -135,6 +136,22 @@ struct MyProfileView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onChange(of: selectedPhotoItem) {
+                handlePhotoSelection($0)
+            }
+        }
+    }
+
+    private func handlePhotoSelection(_ item: PhotosPickerItem?) {
+        guard let item = item else { return }
+
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data),
+               let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+                store.send(.photoDataSelected(jpegData))
+            }
+            selectedPhotoItem = nil
         }
     }
 }
