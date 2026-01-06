@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
-import Domain
-import ComposableArchitecture
 import PhotosUI
+import Domain
+import Core
+import ComposableArchitecture
 
 struct MyProfileView: View {
     let store: StoreOf<MyProfileFeature>
@@ -74,6 +75,9 @@ struct MyProfileView: View {
                     }
                 }
             }
+            .onChange(of: selectedPhotoItem) {
+                handlePhotoSelection($0)
+            }
             .alert($store.scope(state: \.profileEditor.alert, action: \.profileEditor.alert))
             .alert($store.scope(state: \.content.alert, action: \.content.alert))
             .alert($store.scope(state: \.settings.alert, action: \.settings.alert))
@@ -97,20 +101,16 @@ struct MyProfileView: View {
             .onAppear {
                 store.send(.onAppear)
             }
-            .onChange(of: selectedPhotoItem) {
-                handlePhotoSelection($0)
-            }
         }
     }
 
     private func handlePhotoSelection(_ item: PhotosPickerItem?) {
-        guard let item = item else { return }
+        guard let item else { return }
 
         Task {
             if let data = try? await item.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data),
-               let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
-                store.send(.profileEditor(.photoDataSelected(jpegData)))
+               let compressedData = ImageCompressor.compress(data, maxSizeInMB: 1.0) {
+                store.send(.profileEditor(.photoDataSelected(compressedData)))
             }
             selectedPhotoItem = nil
         }
