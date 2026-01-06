@@ -93,6 +93,16 @@ struct MyProfileView: View {
             }
             .hideKeyboardOnTap()
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        store.send(.settingsButtonTapped)
+                    } label: {
+                        AppIcon.more
+                            .font(.system(size: 20))
+                            .foregroundStyle(.custom(.gray(.gray90)))
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         store.send(.searchButtonTapped)
@@ -105,6 +115,7 @@ struct MyProfileView: View {
                 }
             }
             .alert($store.scope(state: \.alert, action: \.alert))
+            .confirmationDialog($store.scope(state: \.confirmationDialog, action: \.confirmationDialog))
             .navigationDestination(
                 item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
             ) { postDetailStore in
