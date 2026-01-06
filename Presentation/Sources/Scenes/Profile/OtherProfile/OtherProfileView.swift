@@ -34,7 +34,7 @@ struct OtherProfileView: View {
                         PrimaryButton(
                             title: "채팅하기",
                             height: 40,
-                            fontSize: .body2
+                            fontSize: .body1
                         ) {
                             
                         }

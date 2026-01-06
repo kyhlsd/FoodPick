@@ -62,7 +62,8 @@ struct MyProfileView: View {
                             // 채팅 목록 보기
                             PrimaryButton(
                                 title: "채팅 목록 보기",
-                                height: 40
+                                height: 40,
+                                fontSize: .body1,
                             ) {
                                 
                             }
