@@ -377,6 +377,7 @@ private struct PostCommentsSection: View {
                 PrimaryButton(
                     title: "등록",
                     height: 40,
+                    fontSize: .body2,
                     isEnabled: canSubmit,
                     isLoading: isSubmitting
                 ) {

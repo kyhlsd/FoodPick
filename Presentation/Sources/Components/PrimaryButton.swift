@@ -10,6 +10,7 @@ import SwiftUI
 struct PrimaryButton: View {
     let title: String
     let height: CGFloat
+    let fontSize: AppFont.Pretendard
     let isEnabled: Bool
     let isLoading: Bool
     let action: () -> Void
@@ -17,12 +18,14 @@ struct PrimaryButton: View {
     init(
         title: String,
         height: CGFloat = 50,
+        fontSize: AppFont.Pretendard = .title1,
         isEnabled: Bool = true,
         isLoading: Bool = false,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.height = height
+        self.fontSize = fontSize
         self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.action = action
@@ -32,7 +35,7 @@ struct PrimaryButton: View {
         Button(action: action) {
             ZStack {
                 Text(title)
-                    .font(.pretendard(size: .title1, weight: .bold))
+                    .font(.pretendard(size: fontSize, weight: .bold))
                     .foregroundStyle(.custom(.gray(.gray0)))
                     .opacity(isLoading ? 0 : 1)
 

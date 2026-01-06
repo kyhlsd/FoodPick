@@ -17,6 +17,7 @@ struct TabBarFeature: Sendable {
         var home = HomeFeature.State()
         var order = OrderFeature.State()
         var community = CommunityFeature.State()
+        var profile = MyProfileFeature.State()
 
         @Presents var destination: Destination.State?
 
@@ -34,6 +35,7 @@ struct TabBarFeature: Sendable {
         case home(HomeFeature.Action)
         case order(OrderFeature.Action)
         case community(CommunityFeature.Action)
+        case profile(MyProfileFeature.Action)
     }
     
     // MARK: - Body
@@ -48,6 +50,10 @@ struct TabBarFeature: Sendable {
 
         Scope(state: \.community, action: \.community) {
             CommunityFeature()
+        }
+
+        Scope(state: \.profile, action: \.profile) {
+            MyProfileFeature()
         }
 
         Reduce { state, action in
@@ -70,6 +76,9 @@ struct TabBarFeature: Sendable {
                 return .none
 
             case .community:
+                return .none
+
+            case .profile:
                 return .none
             }
         }

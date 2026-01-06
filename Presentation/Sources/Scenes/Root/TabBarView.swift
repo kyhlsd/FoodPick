@@ -234,7 +234,7 @@ extension TabBarFeature.Tab {
         case .community:
             CommunityView(store: store.scope(state: \.community, action: \.community))
         case .profile:
-            Text("Profile")
+            MyProfileView(store: store.scope(state: \.profile, action: \.profile))
         }
     }
 }
