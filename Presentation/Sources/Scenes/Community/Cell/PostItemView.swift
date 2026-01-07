@@ -47,7 +47,7 @@ struct PostItemView: View {
             // 이미지
             if !post.files.isEmpty {
                 PostMediaView(
-                    images: post.files,
+                    files: post.files,
                     isLike: post.isLike
                 ) {
                     onLikePostTapped(post.postId)
@@ -169,52 +169,18 @@ struct PostItemView: View {
 
 // MARK: - Post Media View
 private struct PostMediaView: View {
-    let images: [String]
+    let files: [String]
     let isLike: Bool
     let onLikeTapped: () -> Void
 
     var body: some View {
-        GeometryReader { geometry in
-            let width = geometry.size.width
-            // 왼쪽 큰 정사각형 (2/3 너비)
-            let largeSize = (width - AppPadding.tiny.value) * 2 / 3
-            // 오른쪽 작은 정사각형 (1/3 너비)
-            let smallSize = (largeSize - AppPadding.tiny.value) / 2
-
-            HStack(spacing: AppPadding.tiny.value) {
-                // 왼쪽 큰 미디어 + 좋아요 버튼
-                ZStack(alignment: .topLeading) {
-                    AuthenticatedMedia(
-                        mediaPath: !images.isEmpty ? images[0] : nil,
-                        showsPlaybackControls: true
-                    )
-                    .frame(width: largeSize, height: largeSize)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                    // 좋아요 버튼
-                    HeartButton(isLike: isLike, nonLikeColor: .custom(.gray(.gray0))) {
-                        onLikeTapped()
-                    }
-                    .padding(AppPadding.small.value)
-                }
-
-                VStack(spacing: AppPadding.tiny.value) {
-                    AuthenticatedMedia(
-                        mediaPath: images.count > 1 ? images[1] : nil,
-                        showsPlaybackControls: false
-                    )
-                    .frame(width: smallSize, height: smallSize)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                    AuthenticatedMedia(
-                        mediaPath: images.count > 2 ? images[2] : nil,
-                        showsPlaybackControls: false
-                    )
-                    .frame(width: smallSize, height: smallSize)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
+        ZStack(alignment: .topLeading) {
+            MultipleAuthenticatedMedia(files: files)
+            
+            HeartButton(isLike: isLike, nonLikeColor: .custom(.gray(.gray0))) {
+                onLikeTapped()
             }
+            .padding(AppPadding.small.value)
         }
-        .aspectRatio(3 / 2, contentMode: .fit)
     }
 }

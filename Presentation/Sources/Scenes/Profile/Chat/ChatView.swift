@@ -70,6 +70,13 @@ private struct ChatBubbleCell: View {
     let chat: Chat
     let isMine: Bool
     
+    var fileCount: Int {
+        guard let files = chat.files else {
+            return 0
+        }
+        return files.count
+    }
+    
     var body: some View {
         HStack(alignment: .top, spacing: AppPadding.small.value) {
             if !isMine {
@@ -95,15 +102,15 @@ private struct ChatBubbleCell: View {
                     
                     Text(chat.content)
                         .font(.pretendard(size: .body2, weight: .medium))
+                        .foregroundStyle(isMine
+                                         ? .custom(.gray(.gray0))
+                                         : .custom(.gray(.gray90))
+                        )
                         .padding(.horizontal, .medium)
                         .padding(.vertical, .small)
                         .background(isMine
                                     ? .custom(.brand(.blackSprout))
                                     : .custom(.gray(.gray0))
-                        )
-                        .foregroundStyle(isMine
-                                         ? .custom(.gray(.gray0))
-                                         : .custom(.gray(.gray90))
                         )
                         .clipShape(
                             RoundedRectangle(cornerRadius: 8)
