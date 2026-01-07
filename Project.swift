@@ -182,7 +182,8 @@ let project = Project(
                         .external(name: "Alamofire"),
                         .external(name: "KakaoSDKCommon"),
                         .external(name: "KakaoSDKUser"),
-                        .external(name: "KakaoSDKAuth")
+                        .external(name: "KakaoSDKAuth"),
+                        .external(name: "SocketIO")
                     ],
                     settings: .settings(
                         base: [

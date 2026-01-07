@@ -12,7 +12,8 @@ import PackageDescription
             "KakaoSDKAuth": .staticFramework,
             "KakaoSDKCommon": .staticFramework,
             "Kingfisher": .staticFramework,
-            "iamport-ios": .staticFramework
+            "iamport-ios": .staticFramework,
+            "SocketIO": .staticFramework
         ]
     )
 #endif
@@ -24,6 +25,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.23.1"),
         .package(url: "https://github.com/kakao/kakao-ios-sdk", from: "2.26.0"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.6.2"),
-        .package(url: "https://github.com/iamport/iamport-ios.git", from: "1.4.7")
+        .package(url: "https://github.com/iamport/iamport-ios.git", from: "1.4.7"),
+        .package(url: "https://github.com/socketio/socket.io-client-swift.git", from: "16.1.1")
     ]
 )
