@@ -42,8 +42,6 @@ struct MyProfileView: View {
                                 store.send(.chatListButtonTapped)
                             }
 
-                            MyDivider()
-
                             ContentTabSection(store: store)
 
                             Spacer(minLength: 110)

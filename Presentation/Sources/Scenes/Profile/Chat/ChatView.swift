@@ -106,20 +106,17 @@ private struct ChatBubbleCell: View {
                         timeText
                     }
                     
-                    VStack(
-                        alignment: isMine ? .trailing : .leading,
-                        spacing: AppPadding.tiny.value
-                    ) {
+                    Group {
                         if let files = chat.files, !files.isEmpty {
                             MultipleAuthenticatedMedia(files: files)
+                        } else {
+                            Text(chat.content)
+                                .font(.pretendard(size: .body2, weight: .medium))
+                                .foregroundStyle(isMine
+                                                 ? .custom(.gray(.gray0))
+                                                 : .custom(.gray(.gray90))
+                                )
                         }
-                        
-                        Text(chat.content)
-                            .font(.pretendard(size: .body2, weight: .medium))
-                            .foregroundStyle(isMine
-                                             ? .custom(.gray(.gray0))
-                                             : .custom(.gray(.gray90))
-                            )
                     }
                     .padding(.horizontal, .medium)
                     .padding(.vertical, .small)
@@ -155,21 +152,11 @@ private struct ChatBubbleCell: View {
 private struct DateSeperator: View {
     let date: Date
     
-    var dateString: String {
-        if Calendar.current.isDateInToday(date) {
-            return "오늘"
-        } else if Calendar.current.isDateInYesterday(date) {
-            return "어제"
-        } else {
-            return TimeFormatter.toKoreanDateOnlyFormat(from: date)
-        }
-    }
-    
     var body: some View {
         HStack(spacing: AppPadding.small.value) {
             MyDivider(color: .custom(.gray(.gray45)))
             
-            Text(dateString)
+            Text(TimeFormatter.toKoreanDateOnlyFormat(from: date))
                 .font(.pretendard(size: .caption2, weight: .regular))
                 .foregroundStyle(.custom(.gray(.gray60)))
             
@@ -309,7 +296,7 @@ private struct ChatInputBar: View {
                     Chat(
                         chatId: "chat_007",
                         roomId: roomId,
-                        content: "사진 보내드려요",
+                        content: "Media",
                         createdAt: Date(timeIntervalSinceNow: -180),
                         updatedAt: Date(timeIntervalSinceNow: -180),
                         sender: myProfile,

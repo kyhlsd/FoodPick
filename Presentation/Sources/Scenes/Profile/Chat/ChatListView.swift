@@ -49,6 +49,8 @@ struct ChatListView: View {
                                                 .padding(.leading, 60)
                                         }
                                     }
+                                    
+                                    Spacer(minLength: 110)
                                 }
                             }
                         }

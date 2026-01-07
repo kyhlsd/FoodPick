@@ -23,7 +23,17 @@ struct TabBarFeature: Sendable {
 
         var isTabBarVisible: Bool {
             // HomeFeature의 detail이나 search destination이 있으면 탭바 숨김
-            return home.destination == nil
+            if home.destination != nil { return false }
+            
+            // Chat 화면에서 탭바 숨김
+            if let profileDestination = profile.destination,
+               case .chatList(let chatListState) = profileDestination {
+                if chatListState.destination?.chat != nil {
+                    return false
+                }
+            }
+            
+            return true
         }
     }
 

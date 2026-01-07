@@ -84,9 +84,15 @@ enum TimeFormatter {
     /// - Returns: 날짜 형식 문자열 (예: "2025년 4월 21일")
     static func toKoreanDateOnlyFormat(from date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년 M월 d일"
-        return formatter.string(from: date)
+        if Calendar.current.isDateInToday(date) {
+            return "오늘"
+        } else if Calendar.current.isDateInYesterday(date) {
+            return "어제"
+        } else {
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.dateFormat = "yyyy년 M월 d일"
+            return formatter.string(from: date)
+        }
     }
 
     /// 상대적 시간 문자열로 변환합니다.

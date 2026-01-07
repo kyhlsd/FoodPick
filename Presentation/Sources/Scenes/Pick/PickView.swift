@@ -18,7 +18,7 @@ struct PickView: View {
     var body: some View {
         WithPerceptionTracking {
             // 임시 뷰 - 추후 제대로 된 Pick 화면으로 교체
-            ContentView()
+            Text("Temp")
         }
     }
 }
