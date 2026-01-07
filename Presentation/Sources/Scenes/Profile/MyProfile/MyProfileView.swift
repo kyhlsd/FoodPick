@@ -39,7 +39,7 @@ struct MyProfileView: View {
                                 height: 40,
                                 fontSize: .body1
                             ) {
-
+                                store.send(.chatListButtonTapped)
                             }
 
                             MyDivider()
@@ -83,21 +83,7 @@ struct MyProfileView: View {
             .alert($store.scope(state: \.settings.alert, action: \.settings.alert))
             .confirmationDialog($store.scope(state: \.settings.confirmationDialog,
                                              action: \.settings.confirmationDialog))
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
-            ) { postDetailStore in
-                PostDetailView(store: postDetailStore)
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.restaurantDetail, action: \.destination.restaurantDetail)
-            ) { restaurantDetailStore in
-                RestaurantDetailView(store: restaurantDetailStore)
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.searchUser, action: \.destination.searchUser)
-            ) { searchUserStore in
-                SearchUserView(store: searchUserStore)
-            }
+            .profileDestinations(store: store)
             .onAppear {
                 store.send(.onAppear)
             }
@@ -114,6 +100,43 @@ struct MyProfileView: View {
             }
             selectedPhotoItem = nil
         }
+    }
+}
+
+// MARK: - Modifiers
+private struct ProfileDestinationModifier: ViewModifier {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
+                ) { postDetailStore in
+                    PostDetailView(store: postDetailStore)
+                }
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.restaurantDetail, action: \.destination.restaurantDetail)
+                ) { restaurantDetailStore in
+                    RestaurantDetailView(store: restaurantDetailStore)
+                }
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.searchUser, action: \.destination.searchUser)
+                ) { searchUserStore in
+                    SearchUserView(store: searchUserStore)
+                }
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.chatList, action: \.destination.chatList)
+                ) { chatListStore in
+                    ChatListView(store: chatListStore)
+                }
+        }
+    }
+}
+
+private extension View {
+    func profileDestinations(store: StoreOf<MyProfileFeature>) -> some View {
+        modifier(ProfileDestinationModifier(store: store))
     }
 }
 

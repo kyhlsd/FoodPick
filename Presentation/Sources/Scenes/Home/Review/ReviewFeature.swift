@@ -30,7 +30,7 @@ struct ReviewFeature: Sendable {
         }
 
         func isMyReview(_ review: ReviewForListResponse) -> Bool {
-            guard let myUserId = myUserId else { return false }
+            guard let myUserId else { return false }
             return review.creator.userId == myUserId
         }
 

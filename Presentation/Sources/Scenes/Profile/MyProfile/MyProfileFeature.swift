@@ -28,6 +28,7 @@ struct MyProfileFeature: Sendable {
         case content(ProfileContentFeature.Action)
         case settings(ProfileSettingsFeature.Action)
         case searchButtonTapped
+        case chatListButtonTapped
         case postTapped(postId: String)
         case restaurantTapped(restaurantId: String)
         case destination(PresentationAction<Destination.Action>)
@@ -75,6 +76,12 @@ struct MyProfileFeature: Sendable {
                 )
                 return .none
 
+            case .chatListButtonTapped:
+                if let myUserId = state.profileEditor.myProfile?.userId {
+                    state.destination = .chatList(ChatListFeature.State(myUserId: myUserId))
+                }
+                return .none
+
             case let .postTapped(postId):
                 state.destination = .postDetail(
                     PostDetailFeature.State(postId: postId, myUserId: state.profileEditor.myProfile?.userId)
@@ -102,6 +109,7 @@ extension MyProfileFeature {
         case postDetail(PostDetailFeature)
         case restaurantDetail(RestaurantDetailFeature)
         case searchUser(SearchUserFeature)
+        case chatList(ChatListFeature)
     }
 }
 
