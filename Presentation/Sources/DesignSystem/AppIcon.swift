@@ -63,5 +63,5 @@ enum AppIcon {
     static let video = Image(systemName: "video.fill")
     static let chat = Image(systemName: "message.fill")
     static let paperplane = Image(systemName: "paperplane.fill")
-    static let plus = Image(systemName: "plus")
+    static let photoPlus = Image(systemName: "photo.badge.plus")
 }

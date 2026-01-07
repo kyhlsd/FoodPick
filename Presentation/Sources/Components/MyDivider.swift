@@ -8,9 +8,15 @@
 import SwiftUI
 
 struct MyDivider: View {
+    let color: Color
+    
+    init(color: Color = .custom(.gray(.gray30))) {
+        self.color = color
+    }
+    
     var body: some View {
         Rectangle()
-            .fill(Color.custom(.gray(.gray30)))
+            .fill(color)
             .frame(height: 1)
             .frame(maxWidth: .infinity)
     }

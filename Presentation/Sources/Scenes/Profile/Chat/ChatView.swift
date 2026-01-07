@@ -33,7 +33,11 @@ struct ChatView: View {
                         WithPerceptionTracking {
                             ScrollView {
                                 LazyVStack(spacing: AppPadding.large.value) {
-                                    ForEach(store.chats, id: \.chatId) { chat in
+                                    ForEach(Array(store.chats.enumerated()), id: \.element.chatId) { index, chat in
+                                        if shouldShowDateSeparator(at: index, chats: store.chats) {
+                                            DateSeperator(date: chat.createdAt)
+                                        }
+                                        
                                         ChatBubbleCell(
                                             chat: chat,
                                             isMine: chat.sender.userId == store.myUserId
@@ -62,6 +66,15 @@ struct ChatView: View {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { store.send(.onAppear) }
         }
+    }
+    
+    private func shouldShowDateSeparator(at index: Int, chats: [Chat]) -> Bool {
+        if index == 0 { return true }
+
+        let previousChat = chats[index - 1]
+        let currentChat = chats[index]
+
+        return !previousChat.createdAt.isSameDay(as: currentChat.createdAt)
     }
 }
 
@@ -95,7 +108,7 @@ private struct ChatBubbleCell: View {
                     
                     VStack(
                         alignment: isMine ? .trailing : .leading,
-                           spacing: AppPadding.tiny.value
+                        spacing: AppPadding.tiny.value
                     ) {
                         if let files = chat.files, !files.isEmpty {
                             MultipleAuthenticatedMedia(files: files)
@@ -138,6 +151,39 @@ private struct ChatBubbleCell: View {
     }
 }
 
+// MARK: - Date Seperator
+private struct DateSeperator: View {
+    let date: Date
+    
+    var dateString: String {
+        if Calendar.current.isDateInToday(date) {
+            return "오늘"
+        } else if Calendar.current.isDateInYesterday(date) {
+            return "어제"
+        } else {
+            return TimeFormatter.toKoreanDateOnlyFormat(from: date)
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: AppPadding.small.value) {
+            MyDivider(color: .custom(.gray(.gray45)))
+            
+            Text(dateString)
+                .font(.pretendard(size: .caption2, weight: .regular))
+                .foregroundStyle(.custom(.gray(.gray60)))
+            
+            MyDivider(color: .custom(.gray(.gray45)))
+        }
+    }
+}
+
+private extension Date {
+    func isSameDay(as other: Date) -> Bool {
+        Calendar.current.isDate(self, inSameDayAs: other)
+    }
+}
+
 // MARK: - Chat Input Bar
 private struct ChatInputBar: View {
     @Binding var text: String
@@ -153,15 +199,15 @@ private struct ChatInputBar: View {
         VStack(spacing: 0) {
             MyDivider()
             
-            HStack(alignment: .top, spacing: AppPadding.small.value) {
+            HStack(alignment: .top, spacing: AppPadding.medium.value) {
                 Button {
                     
                 } label: {
-                    AppIcon.plus
+                    AppIcon.photoPlus
                         .font(.system(size: 20))
                         .foregroundStyle(.custom(.gray(.gray60)))
                 }
-                .offset(y: 6)
+                .offset(y: 4)
                 
                 TextField("메시지를 입력하세요", text: $text, axis: .vertical)
                     .font(.pretendard(size: .body2, weight: .regular))
@@ -210,8 +256,8 @@ private struct ChatInputBar: View {
                         chatId: "chat_001",
                         roomId: roomId,
                         content: "안녕하세요!",
-                        createdAt: Date(timeIntervalSinceNow: -600),
-                        updatedAt: Date(timeIntervalSinceNow: -600),
+                        createdAt: Date(timeIntervalSinceNow: -86400),
+                        updatedAt: Date(timeIntervalSinceNow: -86400),
                         sender: otherProfile,
                         files: nil
                     ),
@@ -263,7 +309,7 @@ private struct ChatInputBar: View {
                     Chat(
                         chatId: "chat_007",
                         roomId: roomId,
-                        content: "사진 보내기",
+                        content: "사진 보내드려요",
                         createdAt: Date(timeIntervalSinceNow: -180),
                         updatedAt: Date(timeIntervalSinceNow: -180),
                         sender: myProfile,
