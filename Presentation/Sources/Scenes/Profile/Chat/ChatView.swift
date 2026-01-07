@@ -16,12 +16,245 @@ struct ChatView: View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
             
-            ZStack {
-                Text(store.roomId)
+            VStack(spacing: 0) {
+                ZStack {
+                    Color.custom(.brand(.brightSprout))
+                        .ignoresSafeArea()
+                    
+                    if store.isLoading {
+                        ProgressView()
+                            .progressViewStyle(
+                                CircularProgressViewStyle(tint: .custom(.gray(.gray15)))
+                            )
+                            .zIndex(1)
+                    }
+                    
+                    ScrollViewReader { proxy in
+                        WithPerceptionTracking {
+                            ScrollView {
+                                LazyVStack(spacing: AppPadding.large.value) {
+                                    ForEach(store.chats, id: \.chatId) { chat in
+                                        ChatBubbleCell(
+                                            chat: chat,
+                                            isMine: chat.sender.userId == store.myUserId
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, .xLarge)
+                            }
+                            .onAppear {
+                                if let lastId = store.chats.last?.chatId {
+                                    proxy.scrollTo(lastId, anchor: .bottom)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                ChatInputBar(
+                    text: $store.messageText.sending(\.textChanged)
+                ) {
+                    store.send(.sendButtonTapped)
+                }
             }
-            .onAppear {
-                store.send(.onAppear)
+            .hideKeyboardOnTap()
+            .navigationTitle(store.otherNickname)
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear { store.send(.onAppear) }
+        }
+    }
+}
+
+// MARK: - Chat Bubble Cell
+private struct ChatBubbleCell: View {
+    let chat: Chat
+    let isMine: Bool
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: AppPadding.small.value) {
+            if !isMine {
+                AuthenticatedImage(imagePath: chat.sender.profileImage)
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(.custom(.gray(.gray30)), lineWidth: 1))
+            } else {
+                Spacer()
+            }
+            
+            VStack(alignment: isMine ? .trailing : .leading, spacing: AppPadding.tiny.value) {
+                if !isMine {
+                    Text(chat.sender.nickname)
+                        .font(.pretendard(size: .body3, weight: .medium))
+                        .foregroundStyle(.custom(.gray(.gray75)))
+                }
+                
+                HStack(alignment: .bottom, spacing: 6) {
+                    if isMine {
+                        timeText
+                    }
+                    
+                    Text(chat.content)
+                        .font(.pretendard(size: .body2, weight: .medium))
+                        .padding(.horizontal, .medium)
+                        .padding(.vertical, .small)
+                        .background(isMine
+                                    ? .custom(.brand(.blackSprout))
+                                    : .custom(.gray(.gray0))
+                        )
+                        .foregroundStyle(isMine
+                                         ? .custom(.gray(.gray0))
+                                         : .custom(.gray(.gray90))
+                        )
+                        .clipShape(
+                            RoundedRectangle(cornerRadius: 8)
+                        )
+                    
+                    if !isMine {
+                        timeText
+                    }
+                }
+            }
+            
+            if !isMine {
+                Spacer()
             }
         }
+    }
+    
+    private var timeText: some View {
+        Text(TimeFormatter.toKoreanAMPMFormat(from: chat.createdAt))
+            .font(.pretendard(size: .caption1, weight: .regular))
+            .foregroundStyle(.custom(.gray(.gray60)))
+            .padding(.bottom, 2)
+    }
+}
+
+// MARK: - Chat Input Bar
+private struct ChatInputBar: View {
+    @Binding var text: String
+    let onSend: () -> Void
+    
+    var isEmpty: Bool {
+        text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .isEmpty
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            MyDivider()
+            
+            HStack(alignment: .top, spacing: AppPadding.small.value) {
+                Button {
+                    
+                } label: {
+                    AppIcon.plus
+                        .font(.system(size: 20))
+                        .foregroundStyle(.custom(.gray(.gray60)))
+                }
+                .offset(y: 6)
+                
+                TextField("메시지를 입력하세요", text: $text, axis: .vertical)
+                    .font(.pretendard(size: .body2, weight: .regular))
+                    .padding(.horizontal, .large)
+                    .padding(.vertical, .small)
+                    .background(.custom(.gray(.gray15)))
+                    .cornerRadius(20)
+                    .lineLimit(1...6)
+                
+                Button(action: onSend) {
+                    AppIcon.paperplane
+                        .font(.system(size: 20))
+                        .foregroundStyle(isEmpty ? .custom(.gray(.gray30)) : .custom(.brand(.blackSprout)))
+                }
+                .disabled(isEmpty)
+                .offset(y: 4)
+            }
+            .padding(.horizontal, .large)
+            .padding(.vertical, .small)
+            .background(.custom(.gray(.gray0)))
+        }
+    }
+}
+
+#Preview {
+    let roomId = "room_id"
+    let myProfile = Profile(
+        userId: "user_me",
+        nickname: "김학도",
+        profileImage: nil
+    )
+    let otherProfile = Profile(
+        userId: "user_other",
+        nickname: "김민교",
+        profileImage: nil
+    )
+    
+    NavigationStack {
+        ChatView(
+            store: Store(initialState: ChatFeature.State(
+                roomId: roomId,
+                myUserId: myProfile.userId,
+                otherNickname: otherProfile.nickname,
+                chats: [
+                    Chat(
+                        chatId: "chat_001",
+                        roomId: roomId,
+                        content: "안녕하세요!",
+                        createdAt: Date(timeIntervalSinceNow: -600),
+                        updatedAt: Date(timeIntervalSinceNow: -600),
+                        sender: otherProfile,
+                        files: nil
+                    ),
+                    Chat(
+                        chatId: "chat_002",
+                        roomId: roomId,
+                        content: "안녕하세요 🙂",
+                        createdAt: Date(timeIntervalSinceNow: -540),
+                        updatedAt: Date(timeIntervalSinceNow: -540),
+                        sender: myProfile,
+                        files: nil
+                    ),
+                    Chat(
+                        chatId: "chat_003",
+                        roomId: roomId,
+                        content: "채팅 기능 테스트 중이신가요? 채팅 기능 테스트 중이신가요? 채팅 기능 테스트 중이신가요?",
+                        createdAt: Date(timeIntervalSinceNow: -420),
+                        updatedAt: Date(timeIntervalSinceNow: -420),
+                        sender: otherProfile,
+                        files: nil
+                    ),
+                    Chat(
+                        chatId: "chat_004",
+                        roomId: roomId,
+                        content: "네! Socket.IO 연동 확인 중이에요 👍 네! Socket.IO 연동 확인 중이에요 👍 네! Socket.IO 연동 확인 중이에요 👍",
+                        createdAt: Date(timeIntervalSinceNow: -360),
+                        updatedAt: Date(timeIntervalSinceNow: -360),
+                        sender: myProfile,
+                        files: nil
+                    ),
+                    Chat(
+                        chatId: "chat_005",
+                        roomId: roomId,
+                        content: "실시간 수신은 문제 없어요?",
+                        createdAt: Date(timeIntervalSinceNow: -240),
+                        updatedAt: Date(timeIntervalSinceNow: -240),
+                        sender: otherProfile,
+                        files: nil
+                    ),
+                    Chat(
+                        chatId: "chat_006",
+                        roomId: roomId,
+                        content: "네, 백그라운드 복귀도 잘 됩니다!",
+                        createdAt: Date(timeIntervalSinceNow: -180),
+                        updatedAt: Date(timeIntervalSinceNow: -180),
+                        sender: myProfile,
+                        files: nil
+                    )
+                ]
+            )) {
+                ChatFeature()
+            }
+        )
     }
 }

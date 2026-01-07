@@ -8,7 +8,6 @@
 import SwiftUI
 
 enum AppIcon {
-    
     static let chevron = Image("chevron", bundle: .module).renderingMode(.template)
     static let search = Image("search", bundle: .module).renderingMode(.template)
     static let likeEmpty = Image("like_empty", bundle: .module).renderingMode(.template)
@@ -63,4 +62,6 @@ enum AppIcon {
     static let pencil = Image(systemName: "pencil.line")
     static let video = Image(systemName: "video.fill")
     static let chat = Image(systemName: "message.fill")
+    static let paperplane = Image(systemName: "paperplane.fill")
+    static let plus = Image(systemName: "plus")
 }

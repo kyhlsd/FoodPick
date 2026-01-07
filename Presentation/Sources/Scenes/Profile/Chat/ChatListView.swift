@@ -41,10 +41,8 @@ struct ChatListView: View {
                                     ForEach(filtered, id: \.roomId) { chatRoom in
                                         ChatRoomCell(
                                             chatRoom: chatRoom,
-                                            myUserId: store.myUserId
-                                        ) {
-                                            store.send(.chatRoomTapped(chatRoom.roomId))
-                                        }
+                                            store: store
+                                        )
                                         
                                         if chatRoom.roomId != filtered.last?.roomId {
                                             MyDivider()
@@ -78,63 +76,68 @@ struct ChatListView: View {
 // MARK: - Chat Room Cell
 private struct ChatRoomCell: View {
     let chatRoom: ChatRoom
-    let myUserId: String
-    let onTap: () -> Void
-
+    @Perception.Bindable var store: StoreOf<ChatListFeature>
+    
     private var otherParticipant: Profile? {
-        chatRoom.participants.first { $0.userId != myUserId }
+        chatRoom.participants.first { $0.userId != store.myUserId }
     }
     
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: AppPadding.medium.value) {
-                // 프로필 이미지
-                if let participant = otherParticipant {
-                    AuthenticatedImage(imagePath: participant.profileImage)
-                        .frame(width: 56, height: 56)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(.custom(.gray(.gray30)), lineWidth: 1)
-                        )
-                } else {
-                    Circle()
-                        .fill(.custom(.gray(.gray30)))
-                        .frame(width: 56, height: 56)
+        WithPerceptionTracking {
+            Button {
+                if let otherNickname = otherParticipant?.nickname {
+                    store.send(.chatRoomTapped(chatRoom.roomId, otherNickname))
                 }
-
-                // 채팅 정보
-                VStack(alignment: .leading, spacing: AppPadding.tiny.value) {
-                    HStack {
-                        Text(otherParticipant?.nickname ?? "알 수 없음")
-                            .font(.pretendard(size: .body2, weight: .semiBold))
-                            .foregroundStyle(.custom(.gray(.gray90)))
-
-                        Spacer()
-
+            } label: {
+                HStack(spacing: AppPadding.medium.value) {
+                    // 프로필 이미지
+                    if let participant = otherParticipant {
+                        AuthenticatedImage(imagePath: participant.profileImage)
+                            .frame(width: 56, height: 56)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(.custom(.gray(.gray30)), lineWidth: 1)
+                            )
+                    } else {
+                        Circle()
+                            .fill(.custom(.gray(.gray30)))
+                            .frame(width: 56, height: 56)
+                    }
+                    
+                    // 채팅 정보
+                    VStack(alignment: .leading, spacing: AppPadding.tiny.value) {
+                        HStack {
+                            Text(otherParticipant?.nickname ?? "알 수 없음")
+                                .font(.pretendard(size: .body2, weight: .semiBold))
+                                .foregroundStyle(.custom(.gray(.gray90)))
+                            
+                            Spacer()
+                            
+                            if let lastChat = chatRoom.lastChat {
+                                Text(TimeFormatter.toRelativeTimeString(from: lastChat.createdAt))
+                                    .font(.pretendard(size: .body3, weight: .regular))
+                                    .foregroundStyle(.custom(.gray(.gray60)))
+                            }
+                        }
+                        
                         if let lastChat = chatRoom.lastChat {
-                            Text(TimeFormatter.toRelativeTimeString(from: lastChat.createdAt))
+                            Text(lastChat.content)
                                 .font(.pretendard(size: .body3, weight: .regular))
                                 .foregroundStyle(.custom(.gray(.gray60)))
+                                .lineLimit(1)
+                        } else {
+                            Text("메시지가 없습니다")
+                                .font(.pretendard(size: .body3, weight: .regular))
+                                .foregroundStyle(.custom(.gray(.gray45)))
                         }
                     }
-
-                    if let lastChat = chatRoom.lastChat {
-                        Text(lastChat.content)
-                            .font(.pretendard(size: .body3, weight: .regular))
-                            .foregroundStyle(.custom(.gray(.gray60)))
-                            .lineLimit(1)
-                    } else {
-                        Text("메시지가 없습니다")
-                            .font(.pretendard(size: .body3, weight: .regular))
-                            .foregroundStyle(.custom(.gray(.gray45)))
-                    }
                 }
+                .padding(.vertical, .large)
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, .large)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
     }
 }
 
