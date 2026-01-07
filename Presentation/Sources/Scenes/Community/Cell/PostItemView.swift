@@ -46,7 +46,7 @@ struct PostItemView: View {
 
             // 이미지
             if !post.files.isEmpty {
-                PostImagesView(
+                PostMediaView(
                     images: post.files,
                     isLike: post.isLike
                 ) {
@@ -167,8 +167,8 @@ struct PostItemView: View {
     }
 }
 
-// MARK: - Post Images View
-private struct PostImagesView: View {
+// MARK: - Post Media View
+private struct PostMediaView: View {
     let images: [String]
     let isLike: Bool
     let onLikeTapped: () -> Void
@@ -182,11 +182,14 @@ private struct PostImagesView: View {
             let smallSize = (largeSize - AppPadding.tiny.value) / 2
 
             HStack(spacing: AppPadding.tiny.value) {
-                // 왼쪽 큰 이미지 + 좋아요 버튼
+                // 왼쪽 큰 미디어 + 좋아요 버튼
                 ZStack(alignment: .topLeading) {
-                    AuthenticatedImage(imagePath: !images.isEmpty ? images[0] : nil)
-                        .frame(width: largeSize, height: largeSize)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    AuthenticatedMedia(
+                        mediaPath: !images.isEmpty ? images[0] : nil,
+                        showsPlaybackControls: true
+                    )
+                    .frame(width: largeSize, height: largeSize)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
                     // 좋아요 버튼
                     HeartButton(isLike: isLike, nonLikeColor: .custom(.gray(.gray0))) {
@@ -196,13 +199,19 @@ private struct PostImagesView: View {
                 }
 
                 VStack(spacing: AppPadding.tiny.value) {
-                    AuthenticatedImage(imagePath: images.count > 1 ? images[1] : nil)
-                        .frame(width: smallSize, height: smallSize)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    AuthenticatedMedia(
+                        mediaPath: images.count > 1 ? images[1] : nil,
+                        showsPlaybackControls: false
+                    )
+                    .frame(width: smallSize, height: smallSize)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                    AuthenticatedImage(imagePath: images.count > 2 ? images[2] : nil)
-                        .frame(width: smallSize, height: smallSize)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    AuthenticatedMedia(
+                        mediaPath: images.count > 2 ? images[2] : nil,
+                        showsPlaybackControls: false
+                    )
+                    .frame(width: smallSize, height: smallSize)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
         }

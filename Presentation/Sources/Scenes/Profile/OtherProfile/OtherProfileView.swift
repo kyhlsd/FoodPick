@@ -102,11 +102,16 @@ private struct PostGridSection: View {
                     spacing: 4
                 ) {
                     ForEach(posts, id: \.postId) { post in
-                        AuthenticatedImage(imagePath: post.files.first)
+                        AuthenticatedMedia(mediaPath: post.files.first, showsPlaybackControls: false)
                             .aspectRatio(1, contentMode: .fit)
-                            .onTapGesture {
-                                onPostTapped(post.postId)
-                            }
+                            .allowsHitTesting(false)  // 비디오 플레이어의 터치 비활성화
+                            .overlay(
+                                Color.clear
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        onPostTapped(post.postId)
+                                    }
+                            )
                     }
                 }
             }

@@ -5,7 +5,7 @@
 //  Created by 김영훈 on 12/16/25.
 //
 
-public enum MediaType: Sendable {
+public enum MediaType: String, Sendable {
     case jpg
     case png
     case jpeg
@@ -95,5 +95,16 @@ public enum MediaType: Sendable {
             return true
         }
         return false
+    }
+
+    /// Path에서 확장자를 추출하여 MediaType 반환
+    public static func from(path: String) -> MediaType? {
+        let pathComponents = path.split(separator: "/")
+        guard let lastComponent = pathComponents.last else { return nil }
+
+        let fileNameComponents = lastComponent.split(separator: ".")
+        guard let ext = fileNameComponents.last?.lowercased() else { return nil }
+
+        return MediaType(rawValue: String(ext))
     }
 }

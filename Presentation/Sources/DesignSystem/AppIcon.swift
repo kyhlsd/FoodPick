@@ -61,4 +61,5 @@ enum AppIcon {
     static let trash = Image(systemName: "trash")
     static let playCircle = Image(systemName: "play.circle")
     static let pencil = Image(systemName: "pencil.line")
+    static let video = Image(systemName: "video.fill")
 }

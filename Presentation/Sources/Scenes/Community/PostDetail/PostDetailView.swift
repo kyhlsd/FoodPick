@@ -36,7 +36,7 @@ struct PostDetailView: View {
 
                             // 이미지/영상 슬라이더
                             if !post.files.isEmpty {
-                                ImageSliderSection(
+                                MediaSliderSection(
                                     files: post.files,
                                     currentIndex: store.currentImageIndex
                                 ) {
@@ -146,8 +146,8 @@ struct PostDetailView: View {
     }
 }
 
-// MARK: - Image Slider Section
-private struct ImageSliderSection: View {
+// MARK: - Media Slider Section
+private struct MediaSliderSection: View {
     let files: [String]
     let currentIndex: Int
     let onIndexChanged: (Int) -> Void
@@ -159,7 +159,7 @@ private struct ImageSliderSection: View {
                 set: { onIndexChanged($0) }
             )) {
                 ForEach(Array(files.enumerated()), id: \.offset) { index, filePath in
-                    AuthenticatedImage(imagePath: filePath)
+                    AuthenticatedMedia(mediaPath: filePath, showsPlaybackControls: true)
                         .frame(maxWidth: .infinity)
                         .frame(height: 240)
                         .tag(index)
