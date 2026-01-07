@@ -189,6 +189,11 @@ private struct VideoPlayerView: View {
             // 중앙 재생 버튼 (재생 중이 아닐 때만 표시)
             if !isPlaying {
                 Button {
+                    // 비디오가 끝났으면 처음부터 재생
+                    if let currentItem = player?.currentItem,
+                       currentItem.currentTime() >= currentItem.duration {
+                        player?.seek(to: .zero)
+                    }
                     player?.play()
                 } label: {
                     PlayButtonOverlay(isSmall: isSmall)
@@ -260,6 +265,7 @@ private final class PlayerCoordinator: NSObject, @unchecked Sendable {
     private var player: AVPlayer?
     private var currentURL: URL?
     private var playbackObserver: NSKeyValueObservation?
+    private var endTimeObserver: NSObjectProtocol?
     var isPlayingBinding: Binding<Bool>
 
     init(isPlaying: Binding<Bool>) {
@@ -303,10 +309,25 @@ private final class PlayerCoordinator: NSObject, @unchecked Sendable {
 
     private func setupPlaybackObserver(for player: AVPlayer) {
         playbackObserver?.invalidate()
+        if let endTimeObserver {
+            NotificationCenter.default.removeObserver(endTimeObserver)
+            self.endTimeObserver = nil
+        }
 
         playbackObserver = player.observe(\.timeControlStatus, options: [.new]) { [weak self] player, _ in
             Task { @MainActor in
                 self?.isPlayingBinding.wrappedValue = (player.timeControlStatus == .playing)
+            }
+        }
+
+        // 비디오 끝 지점 도달 감지
+        endTimeObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: player.currentItem,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.isPlayingBinding.wrappedValue = false
             }
         }
     }
@@ -314,6 +335,10 @@ private final class PlayerCoordinator: NSObject, @unchecked Sendable {
     private func cleanupPlayer() {
         playbackObserver?.invalidate()
         playbackObserver = nil
+        if let endTimeObserver {
+            NotificationCenter.default.removeObserver(endTimeObserver)
+            self.endTimeObserver = nil
+        }
         player?.pause()
         player?.replaceCurrentItem(with: nil)
         player = nil
