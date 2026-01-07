@@ -70,13 +70,6 @@ private struct ChatBubbleCell: View {
     let chat: Chat
     let isMine: Bool
     
-    var fileCount: Int {
-        guard let files = chat.files else {
-            return 0
-        }
-        return files.count
-    }
-    
     var body: some View {
         HStack(alignment: .top, spacing: AppPadding.small.value) {
             if !isMine {
@@ -100,21 +93,30 @@ private struct ChatBubbleCell: View {
                         timeText
                     }
                     
-                    Text(chat.content)
-                        .font(.pretendard(size: .body2, weight: .medium))
-                        .foregroundStyle(isMine
-                                         ? .custom(.gray(.gray0))
-                                         : .custom(.gray(.gray90))
-                        )
-                        .padding(.horizontal, .medium)
-                        .padding(.vertical, .small)
-                        .background(isMine
-                                    ? .custom(.brand(.blackSprout))
-                                    : .custom(.gray(.gray0))
-                        )
-                        .clipShape(
-                            RoundedRectangle(cornerRadius: 8)
-                        )
+                    VStack(
+                        alignment: isMine ? .trailing : .leading,
+                           spacing: AppPadding.tiny.value
+                    ) {
+                        if let files = chat.files, !files.isEmpty {
+                            MultipleAuthenticatedMedia(files: files)
+                        }
+                        
+                        Text(chat.content)
+                            .font(.pretendard(size: .body2, weight: .medium))
+                            .foregroundStyle(isMine
+                                             ? .custom(.gray(.gray0))
+                                             : .custom(.gray(.gray90))
+                            )
+                    }
+                    .padding(.horizontal, .medium)
+                    .padding(.vertical, .small)
+                    .background(isMine
+                                ? .custom(.brand(.blackSprout))
+                                : .custom(.gray(.gray0))
+                    )
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 8)
+                    )
                     
                     if !isMine {
                         timeText
@@ -257,6 +259,19 @@ private struct ChatInputBar: View {
                         updatedAt: Date(timeIntervalSinceNow: -180),
                         sender: myProfile,
                         files: nil
+                    ),
+                    Chat(
+                        chatId: "chat_007",
+                        roomId: roomId,
+                        content: "사진 보내기",
+                        createdAt: Date(timeIntervalSinceNow: -180),
+                        updatedAt: Date(timeIntervalSinceNow: -180),
+                        sender: myProfile,
+                        files: [
+                            "file_1",
+                            "file_2",
+                            "file_3"
+                        ]
                     )
                 ]
             )) {
