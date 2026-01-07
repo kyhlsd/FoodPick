@@ -6,7 +6,9 @@
 //
 
 import SwiftUI
+import PhotosUI
 import Domain
+import Core
 import ComposableArchitecture
 
 struct ChatView: View {
@@ -20,14 +22,6 @@ struct ChatView: View {
                 ZStack {
                     Color.custom(.brand(.brightSprout))
                         .ignoresSafeArea()
-                    
-                    if store.isLoading {
-                        ProgressView()
-                            .progressViewStyle(
-                                CircularProgressViewStyle(tint: .custom(.gray(.gray15)))
-                            )
-                            .zIndex(1)
-                    }
                     
                     ScrollViewReader { proxy in
                         WithPerceptionTracking {
@@ -53,13 +47,17 @@ struct ChatView: View {
                             }
                         }
                     }
+                    
+                    if store.isLoading {
+                        ProgressView()
+                            .progressViewStyle(
+                                CircularProgressViewStyle(tint: .custom(.gray(.gray15)))
+                            )
+                            .zIndex(1)
+                    }
                 }
                 
-                ChatInputBar(
-                    text: $store.messageText.sending(\.textChanged)
-                ) {
-                    store.send(.sendButtonTapped)
-                }
+                ChatInputBar(store: store)
             }
             .hideKeyboardOnTap()
             .navigationTitle(store.otherNickname)
@@ -173,48 +171,80 @@ private extension Date {
 
 // MARK: - Chat Input Bar
 private struct ChatInputBar: View {
-    @Binding var text: String
-    let onSend: () -> Void
-    
-    var isEmpty: Bool {
-        text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .isEmpty
-    }
+    @Perception.Bindable var store: StoreOf<ChatFeature>
+    @State private var selectedMedia: [PhotosPickerItem] = []
     
     var body: some View {
-        VStack(spacing: 0) {
-            MyDivider()
-            
-            HStack(alignment: .top, spacing: AppPadding.medium.value) {
-                Button {
-                    
-                } label: {
-                    AppIcon.photoPlus
-                        .font(.system(size: 20))
-                        .foregroundStyle(.custom(.gray(.gray60)))
-                }
-                .offset(y: 4)
+        WithPerceptionTracking {
+            VStack(spacing: 0) {
+                MyDivider()
                 
-                TextField("메시지를 입력하세요", text: $text, axis: .vertical)
+                HStack(alignment: .top, spacing: AppPadding.medium.value) {
+                    Button {
+                        store.send(.mediaButtonTapped)
+                    } label: {
+                        AppIcon.photoPlus
+                            .font(.system(size: 20))
+                            .foregroundStyle(.custom(.gray(.gray60)))
+                    }
+                    .offset(y: 4)
+                    
+                    TextField(
+                        "메시지를 입력하세요",
+                        text: $store.messageText.sending(\.textChanged),
+                        axis: .vertical
+                    )
                     .font(.pretendard(size: .body2, weight: .regular))
                     .padding(.horizontal, .large)
                     .padding(.vertical, .small)
                     .background(.custom(.gray(.gray15)))
                     .cornerRadius(20)
                     .lineLimit(1...6)
-                
-                Button(action: onSend) {
-                    AppIcon.paperplane
-                        .font(.system(size: 20))
-                        .foregroundStyle(isEmpty ? .custom(.gray(.gray30)) : .custom(.brand(.blackSprout)))
+                    
+                    Button {
+                        store.send(.sendButtonTapped)
+                    } label: {
+                        AppIcon.paperplane
+                            .font(.system(size: 20))
+                            .foregroundStyle(store.isMessageEmpty
+                                             ? .custom(.gray(.gray30))
+                                             : .custom(.brand(.blackSprout))
+                            )
+                    }
+                    .disabled(store.isMessageEmpty)
+                    .offset(y: 4)
                 }
-                .disabled(isEmpty)
-                .offset(y: 4)
+                .padding(.horizontal, .large)
+                .padding(.vertical, .small)
+                .background(.custom(.gray(.gray0)))
             }
-            .padding(.horizontal, .large)
-            .padding(.vertical, .small)
-            .background(.custom(.gray(.gray0)))
+            .photosPicker(
+                isPresented: $store.isShowingMediaPicker,
+                selection: $selectedMedia,
+                maxSelectionCount: store.maxMedia,
+                matching: .any(of: [.images, .videos])
+            )
+            .onChange(of: selectedMedia) {
+                handleMediaSelection($0)
+            }
+        }
+    }
+    
+    private func handleMediaSelection(_ items: [PhotosPickerItem]) {
+        Task {
+            var dataArray: [(Data, MediaType)] = []
+            for item in items {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    if let uiImage = UIImage(data: data),
+                       let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+                        dataArray.append((jpegData, .jpeg))
+                    } else if item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) }) {
+                        dataArray.append((data, .mp4))
+                    }
+                }
+            }
+            if !dataArray.isEmpty { store.send(.mediaSelected(dataArray)) }
+            selectedMedia = []
         }
     }
 }

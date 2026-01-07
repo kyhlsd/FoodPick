@@ -7,6 +7,7 @@
 
 import Foundation
 import Domain
+import Core
 import ComposableArchitecture
 
 @Reducer
@@ -20,15 +21,26 @@ struct ChatFeature: Sendable {
         var chats: [Chat] = []
         var messageText = ""
         var isLoading = false
+        var isShowingMediaPicker = false
+        let maxMedia = 5
+        
+        var isMessageEmpty: Bool {
+            messageText
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .isEmpty
+        }
         
         @Presents var alert: AlertState<ChatListFeature.Alert>?
     }
 
     // MARK: - Action
-    enum Action: Sendable {
+    enum Action: BindableAction {
+        case binding(BindingAction<State>)
         case onAppear
         case textChanged(String)
         case sendButtonTapped
+        case mediaButtonTapped
+        case mediaSelected([(Data, MediaType)])
     }
 
     // MARK: - Body
@@ -43,6 +55,17 @@ struct ChatFeature: Sendable {
                 return .none
                 
             case .sendButtonTapped:
+                return .none
+                
+            case .mediaButtonTapped:
+                state.isShowingMediaPicker = true
+                return .none
+                
+            case let .mediaSelected(dataArray):
+                state.isShowingMediaPicker = false
+                return .none
+                
+            case .binding:
                 return .none
             }
         }
