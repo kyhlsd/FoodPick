@@ -106,7 +106,10 @@ private enum LocalChatRepositoryKey: DependencyKey {
 }
 
 private enum ChatSocketRepositoryKey: DependencyKey {
-    static let liveValue: ChatSocketRepository = DefaultChatSocketRepositoryImpl()
+    static let liveValue: ChatSocketRepository = {
+        @Dependency(\.tokenRepository) var tokenRepository
+        return DefaultChatSocketRepositoryImpl(tokenRepository: tokenRepository)
+    }()
 }
 
 private enum FetchChatRoomKey: DependencyKey {

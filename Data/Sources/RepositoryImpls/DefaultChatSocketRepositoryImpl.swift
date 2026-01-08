@@ -12,6 +12,8 @@ import SocketIO
 public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unchecked Sendable {
     private var manager: SocketManager?
     private var socket: SocketIOClient?
+    
+    private let tokenRepository: TokenRepository
 
     private let messageContinuation: AsyncStream<Chat>.Continuation
     private let messageStream: AsyncStream<Chat>
@@ -22,7 +24,9 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
     private let errorContinuation: AsyncStream<ChatSocketError>.Continuation
     private let errorStream: AsyncStream<ChatSocketError>
 
-    public init() {
+    public init(tokenRepository: TokenRepository) {
+        self.tokenRepository = tokenRepository
+        
         // 메시지 스트림 생성
         (self.messageStream, self.messageContinuation) = AsyncStream<Chat>.makeStream()
 
@@ -69,12 +73,12 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
         }
 
         // 새 메시지 수신 이벤트
-        socket.on("new_message") { [weak self] data, _ in
-            guard let self = self,
+        socket.on("chat") { [weak self] data, _ in
+            guard let self,
                   let jsonData = data.first as? [String: Any] else {
                 return
             }
-
+            
             do {
                 let json = try JSONSerialization.data(withJSONObject: jsonData)
                 let chatDTO = try JSONDecoder().decode(ChatDTO.self, from: json)
@@ -91,10 +95,16 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
 
         statusContinuation.yield(.connecting)
 
-        let socketURL = URL(string: "\(APIInfos.baseURL)/chats-\(roomId)")
+        let socketURL = URL(string: APIInfos.baseURL)
         guard let socketURL else {
             throw ChatSocketError.badURL
         }
+        
+        let accessToken = try await tokenRepository.getAccessToken()
+        let headers: [String: String] = [
+            "Authorization": accessToken,
+            "SeSACKey": APIInfos.key
+        ]
 
         // Socket.IO 매니저 설정
         self.manager = SocketManager(
@@ -102,10 +112,13 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
             config: [
                 .log(false),
                 .compress,
-                .forceWebsockets(true)
+                .forceWebsockets(true),
+                .extraHeaders(headers)
             ]
         )
-        self.socket = manager?.defaultSocket
+        
+        let namespace = "/chats-\(roomId)"
+        self.socket = manager?.socket(forNamespace: namespace)
 
         setupSocketHandlers()
         socket?.connect()
@@ -118,7 +131,6 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
                     return
                 }
             }
-            print("connect")
         } catch {
             // 타임아웃 또는 기타 오류를 에러 스트림으로 전달
             errorContinuation.yield(.timeout)
@@ -130,7 +142,6 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
         socket?.disconnect()
         socket = nil
         manager = nil
-        print("disconnect")
     }
 
     public func receiveMessages() -> AsyncStream<Chat> {

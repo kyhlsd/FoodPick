@@ -83,6 +83,8 @@ private struct ChatMessagesListView: View {
                                 }
                             }
                         }
+                        
+                        Spacer()
                     }
                     .padding(.horizontal, .xLarge)
                 }
