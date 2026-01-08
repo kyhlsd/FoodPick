@@ -13,68 +13,24 @@ import ComposableArchitecture
 
 struct ChatView: View {
     let store: StoreOf<ChatFeature>
-    
+
     var body: some View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
-            
+
             VStack(spacing: 0) {
                 ZStack {
                     Color.custom(.brand(.brightSprout))
                         .ignoresSafeArea()
 
-                    ScrollViewReader { proxy in
-                        WithPerceptionTracking {
-                            ScrollView {
-                                LazyVStack(spacing: AppPadding.large.value) {
-                                    if store.isLoadingMore {
-                                        HStack {
-                                            Spacer()
-                                            ProgressView()
-                                                .progressViewStyle(
-                                                    CircularProgressViewStyle(tint: .custom(.gray(.gray60)))
-                                                )
-                                            Spacer()
-                                        }
-                                        .padding(.vertical, .medium)
-                                    }
+                    ChatMessagesListView(store: store)
 
-                                    ForEach(Array(store.chats.enumerated()), id: \.element.chatId) { index, chat in
-                                        if shouldShowDateSeparator(at: index, chats: store.chats) {
-                                            DateSeperator(date: chat.createdAt)
-                                        }
-
-                                        ChatBubbleCell(
-                                            chat: chat,
-                                            isMine: chat.sender.userId == store.myUserId
-                                        )
-                                        .id(chat.chatId)
-                                        .onAppear {
-                                            if index == 0 && store.hasMoreMessages && !store.isLoadingMore {
-                                                store.send(.loadOlderMessages)
-                                            }
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, .xLarge)
-                            }
-                            .onAppear {
-                                if let lastId = store.chats.last?.chatId {
-                                    proxy.scrollTo(lastId, anchor: .bottom)
-                                }
-                            }
-                        }
-                    }
-
-                    if store.isLoading {
-                        ProgressView()
-                            .progressViewStyle(
-                                CircularProgressViewStyle(tint: .custom(.gray(.gray15)))
-                            )
-                            .zIndex(1)
-                    }
+                    ChatLoadingOverlay(
+                        isLoading: store.isLoading,
+                        uploadProgress: store.uploadProgress
+                    )
                 }
-                
+
                 ChatInputBar(store: store)
             }
             .hideKeyboardOnTap()
@@ -84,14 +40,118 @@ struct ChatView: View {
             .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
-    
-    private func shouldShowDateSeparator(at index: Int, chats: [Chat]) -> Bool {
-        if index == 0 { return true }
+}
 
-        let previousChat = chats[index - 1]
-        let currentChat = chats[index]
+// MARK: - Chat Messages List View
+private struct ChatMessagesListView: View {
+    @Perception.Bindable var store: StoreOf<ChatFeature>
 
+    var body: some View {
+        ScrollViewReader { proxy in
+            WithPerceptionTracking {
+                ScrollView {
+                    LazyVStack(spacing: AppPadding.large.value) {
+                        if store.isLoadingMore {
+                            PaginationLoadingIndicator()
+                        }
+                        
+                        ForEach(Array(store.chats.enumerated()), id: \.element.chatId) { index, chat in
+                            WithPerceptionTracking {
+                                if shouldShowDateSeparator(at: index) {
+                                    DateSeperator(date: chat.createdAt)
+                                }
+                                
+                                ChatBubbleCell(
+                                    chat: chat,
+                                    isMine: chat.sender.userId == store.myUserId
+                                )
+                                .id(chat.chatId)
+                                .onAppear {
+                                    if index == 0 && store.hasMoreMessages && !store.isLoadingMore {
+                                        store.send(.loadOlderMessages)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, .xLarge)
+                }
+                .onAppear {
+                    if let lastId = store.chats.last?.chatId {
+                        proxy.scrollTo(lastId, anchor: .bottom)
+                    }
+                }
+            }
+        }
+    }
+
+    private func shouldShowDateSeparator(at index: Int) -> Bool {
+        guard index > 0 else { return true }
+        guard index < store.chats.count else { return false }
+        
+        let previousChat = store.chats[index - 1]
+        let currentChat = store.chats[index]
+        
         return !previousChat.createdAt.isSameDay(as: currentChat.createdAt)
+    }
+}
+
+// MARK: - Pagination Loading Indicator
+private struct PaginationLoadingIndicator: View {
+    var body: some View {
+        HStack {
+            Spacer()
+            ProgressView()
+                .progressViewStyle(
+                    CircularProgressViewStyle(tint: .custom(.gray(.gray60)))
+                )
+            Spacer()
+        }
+        .padding(.vertical, .medium)
+    }
+}
+
+// MARK: - Chat Loading Overlay
+private struct ChatLoadingOverlay: View {
+    let isLoading: Bool
+    let uploadProgress: Double?
+
+    var body: some View {
+        Group {
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(
+                        CircularProgressViewStyle(tint: .custom(.gray(.gray15)))
+                    )
+                    .zIndex(1)
+            }
+
+            if let progress = uploadProgress {
+                UploadProgressView(progress: progress)
+                    .zIndex(2)
+            }
+        }
+    }
+}
+
+// MARK: - Upload Progress View
+private struct UploadProgressView: View {
+    let progress: Double
+
+    var body: some View {
+        VStack(spacing: AppPadding.medium.value) {
+            ProgressView(value: progress, total: 1.0)
+                .progressViewStyle(LinearProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+                .frame(width: 200)
+
+            Text("\(Int(progress * 100))%")
+                .font(.pretendard(size: .body2, weight: .medium))
+                .foregroundStyle(.custom(.gray(.gray75)))
+        }
+        .padding(.all, .large)
+        .background(.custom(.gray(.gray0)))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
 

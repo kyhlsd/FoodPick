@@ -24,6 +24,7 @@ struct ChatFeature: Sendable {
         var isFetchingNew = false
         var hasMoreMessages = true
         var isShowingMediaPicker = false
+        var uploadProgress: Double?
         let maxMedia = 5
         let pageSize = 30
 
@@ -68,6 +69,10 @@ struct ChatFeature: Sendable {
         case sendButtonTapped
         case mediaButtonTapped
         case mediaSelected([(Data, MediaType)])
+        case uploadProgressUpdated(Double)
+        case filesUploaded([String])
+        case messageSent(Chat)
+        case messageSavedLocally(Chat)
         case alert(PresentationAction<Alert>)
     }
 
@@ -76,6 +81,9 @@ struct ChatFeature: Sendable {
     @Dependency(\.fetchOlderChats) var fetchOlderChats
     @Dependency(\.fetchChatList) var fetchChatList
     @Dependency(\.saveLocalChats) var saveLocalChats
+    @Dependency(\.saveLocalChat) var saveLocalChat
+    @Dependency(\.uploadChatFiles) var uploadChatFiles
+    @Dependency(\.sendMessage) var sendMessage
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -199,6 +207,7 @@ struct ChatFeature: Sendable {
                 state.isLoading = false
                 state.isLoadingMore = false
                 state.isFetchingNew = false
+                state.uploadProgress = nil
                 state.alert = AlertState {
                     TextState("오류")
                 } actions: {
@@ -223,6 +232,68 @@ struct ChatFeature: Sendable {
 
             case let .mediaSelected(dataArray):
                 state.isShowingMediaPicker = false
+                guard !dataArray.isEmpty else { return .none }
+
+                let roomId = state.roomId
+                let chatFiles: [(Data, ChatFileType)] = dataArray.compactMap { data, mediaType in
+                    guard let chatFileType = mediaType.toChatFileType else { return nil }
+                    return (data, chatFileType)
+                }
+
+                guard !chatFiles.isEmpty else { return .none }
+
+                state.uploadProgress = 0.0
+
+                return .run { send in
+                    do {
+                        let filePaths = try await uploadChatFiles.execute(
+                            roomId: roomId,
+                            files: chatFiles
+                        ) { progress in
+                            Task { @MainActor in
+                                send(.uploadProgressUpdated(progress))
+                            }
+                        }
+                        
+                        await send(.filesUploaded(filePaths))
+                    } catch {
+                        await send(.loadingFailed(error))
+                    }
+                }
+
+            case let .uploadProgressUpdated(progress):
+                state.uploadProgress = progress
+                return .none
+
+            case let .filesUploaded(filePaths):
+                state.uploadProgress = nil
+                let roomId = state.roomId
+
+                return .run { send in
+                    do {
+                        let chat = try await sendMessage.execute(
+                            roomId: roomId,
+                            content: "Files",
+                            files: filePaths
+                        )
+                        await send(.messageSent(chat))
+                    } catch {
+                        await send(.loadingFailed(error))
+                    }
+                }
+
+            case let .messageSent(chat):
+                return .run { send in
+                    do {
+                        try await saveLocalChat.execute(chat)
+                        await send(.messageSavedLocally(chat))
+                    } catch {
+                        await send(.loadingFailed(error))
+                    }
+                }
+
+            case let .messageSavedLocally(chat):
+                state.chats.append(chat)
                 return .none
 
             case .alert:
