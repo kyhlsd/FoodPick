@@ -53,28 +53,31 @@ struct ChatView: View {
 // MARK: - Chat Messages List View
 private struct ChatMessagesListView: View {
     @Perception.Bindable var store: StoreOf<ChatFeature>
+    @State private var previousCount = 0
 
     var body: some View {
         ScrollViewReader { proxy in
             WithPerceptionTracking {
                 ScrollView {
-                    LazyVStack(spacing: AppPadding.large.value) {
+                    LazyVStack(spacing: AppPadding.small.value) {
                         if store.messageLoading.isLoadingMore {
                             PaginationLoadingIndicator()
                         }
-                        
+
                         ForEach(Array(store.messageLoading.chats.enumerated()), id: \.element.chatId) { index, chat in
                             WithPerceptionTracking {
                                 if shouldShowDateSeparator(at: index) {
                                     DateSeperator(date: chat.createdAt)
                                 }
-                                
+
                                 ChatBubbleCell(
                                     chat: chat,
-                                    isMine: chat.sender.userId == store.myUserId
+                                    isMine: chat.sender.userId == store.myUserId,
+                                    otherProfile: store.other
                                 )
                                 .id(chat.chatId)
                                 .onAppear {
+                                    // 페이지네이션
                                     if index == 0
                                         && store.messageLoading.hasMoreMessages
                                         && !store.messageLoading.isLoadingMore {
@@ -83,14 +86,25 @@ private struct ChatMessagesListView: View {
                                 }
                             }
                         }
-                        
-                        Spacer()
                     }
                     .padding(.horizontal, .xLarge)
                 }
+                .onChange(of: store.messageLoading.chats.count) { newCount in
+                    guard let lastId = store.messageLoading.chats.last?.chatId else { return }
+                    // 채팅이 추가된 경우에만 스크롤 (이전 채팅 로드 시 제외)
+                    if newCount > previousCount {
+                        withAnimation {
+                            proxy.scrollTo(lastId, anchor: .bottom)
+                        }
+                    }
+
+                    previousCount = newCount
+                }
                 .onAppear {
+                    // 초기 로드 시 스크롤
                     if let lastId = store.messageLoading.chats.last?.chatId {
-                        proxy.scrollTo(lastId, anchor: .bottom)
+                        previousCount = store.messageLoading.chats.count
+                            proxy.scrollTo(lastId, anchor: .bottom)
                     }
                 }
             }
@@ -101,7 +115,7 @@ private struct ChatMessagesListView: View {
         guard index > 0 else { return true }
         let chats = store.messageLoading.chats
         guard index < chats.count else { return false }
-        
+
         let previousChat = chats[index - 1]
         let currentChat = chats[index]
 
@@ -172,22 +186,23 @@ private struct UploadProgressView: View {
 private struct ChatBubbleCell: View {
     let chat: Chat
     let isMine: Bool
-    
+    let otherProfile: Profile?
+
     var body: some View {
         HStack(alignment: .top, spacing: AppPadding.small.value) {
             if !isMine {
-                AuthenticatedImage(imagePath: chat.sender.profileImage)
+                AuthenticatedImage(imagePath: otherProfile?.profileImage)
                     .frame(width: 40, height: 40)
                     .clipShape(Circle())
                     .overlay(Circle().stroke(.custom(.gray(.gray30)), lineWidth: 1))
             } else {
                 Spacer()
             }
-            
+
             VStack(alignment: isMine ? .trailing : .leading, spacing: AppPadding.tiny.value) {
                 if !isMine {
-                    Text(chat.sender.nickname)
-                        .font(.pretendard(size: .body3, weight: .medium))
+                    Text(otherProfile?.nickname ?? "알 수 없음")
+                        .font(.pretendard(size: .caption1, weight: .medium))
                         .foregroundStyle(.custom(.gray(.gray75)))
                 }
                 
@@ -228,11 +243,12 @@ private struct ChatBubbleCell: View {
                 Spacer()
             }
         }
+        .padding(.bottom, .small)
     }
     
     private var timeText: some View {
         Text(TimeFormatter.toKoreanAMPMFormat(from: chat.createdAt))
-            .font(.pretendard(size: .caption1, weight: .regular))
+            .font(.pretendard(size: .caption2, weight: .regular))
             .foregroundStyle(.custom(.gray(.gray60)))
             .padding(.bottom, 2)
     }
