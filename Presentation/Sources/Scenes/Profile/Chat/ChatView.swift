@@ -258,10 +258,11 @@ private struct ChatInputBar: View {
     @State private var selectedMedia: [PhotosPickerItem] = []
 
     var body: some View {
-        let sendingStore = store.scope(state: \.messageSending, action: \.messageSending)
-        
         WithPerceptionTracking {
-            @Perception.Bindable var sendingStore = sendingStore
+            @Perception.Bindable var sendingStore = store.scope(
+                state: \.messageSending,
+                action: \.messageSending
+            )
             
             VStack(spacing: 0) {
                 MyDivider()
