@@ -47,6 +47,27 @@ extension DependencyValues {
         get { self[UploadChatFilesKey.self] }
         set { self[UploadChatFilesKey.self] = newValue }
     }
+
+    // Local Chat UseCases
+    var fetchRecentChats: FetchRecentChatsUseCase {
+        get { self[FetchRecentChatsKey.self] }
+        set { self[FetchRecentChatsKey.self] = newValue }
+    }
+
+    var fetchOlderChats: FetchOlderChatsUseCase {
+        get { self[FetchOlderChatsKey.self] }
+        set { self[FetchOlderChatsKey.self] = newValue }
+    }
+
+    var saveLocalChat: SaveLocalChatUseCase {
+        get { self[SaveLocalChatKey.self] }
+        set { self[SaveLocalChatKey.self] = newValue }
+    }
+
+    var saveLocalChats: SaveLocalChatsUseCase {
+        get { self[SaveLocalChatsKey.self] }
+        set { self[SaveLocalChatsKey.self] = newValue }
+    }
 }
 
 // MARK: - Keys
@@ -96,4 +117,40 @@ private enum UploadChatFilesKey: DependencyKey {
         @Dependency(\.chatRepository) var chatRepository
         return UploadChatFilesUseCaseImpl(chatRepository: chatRepository)
     }()
+}
+
+private enum FetchRecentChatsKey: DependencyKey {
+    static var liveValue: FetchRecentChatsUseCase {
+        MainActor.assumeIsolated {
+            @Dependency(\.localChatRepository) var localChatRepository
+            return FetchRecentChatsUseCaseImpl(localChatRepository: localChatRepository)
+        }
+    }
+}
+
+private enum FetchOlderChatsKey: DependencyKey {
+    static var liveValue: FetchOlderChatsUseCase {
+        MainActor.assumeIsolated {
+            @Dependency(\.localChatRepository) var localChatRepository
+            return FetchOlderChatsUseCaseImpl(localChatRepository: localChatRepository)
+        }
+    }
+}
+
+private enum SaveLocalChatKey: DependencyKey {
+    static var liveValue: SaveLocalChatUseCase {
+        MainActor.assumeIsolated {
+            @Dependency(\.localChatRepository) var localChatRepository
+            return SaveLocalChatUseCaseImpl(localChatRepository: localChatRepository)
+        }
+    }
+}
+
+private enum SaveLocalChatsKey: DependencyKey {
+    static var liveValue: SaveLocalChatsUseCase {
+        MainActor.assumeIsolated {
+            @Dependency(\.localChatRepository) var localChatRepository
+            return SaveLocalChatsUseCaseImpl(localChatRepository: localChatRepository)
+        }
+    }
 }

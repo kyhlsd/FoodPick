@@ -22,20 +22,38 @@ struct ChatView: View {
                 ZStack {
                     Color.custom(.brand(.brightSprout))
                         .ignoresSafeArea()
-                    
+
                     ScrollViewReader { proxy in
                         WithPerceptionTracking {
                             ScrollView {
                                 LazyVStack(spacing: AppPadding.large.value) {
+                                    if store.isLoadingMore {
+                                        HStack {
+                                            Spacer()
+                                            ProgressView()
+                                                .progressViewStyle(
+                                                    CircularProgressViewStyle(tint: .custom(.gray(.gray60)))
+                                                )
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, .medium)
+                                    }
+
                                     ForEach(Array(store.chats.enumerated()), id: \.element.chatId) { index, chat in
                                         if shouldShowDateSeparator(at: index, chats: store.chats) {
                                             DateSeperator(date: chat.createdAt)
                                         }
-                                        
+
                                         ChatBubbleCell(
                                             chat: chat,
                                             isMine: chat.sender.userId == store.myUserId
                                         )
+                                        .id(chat.chatId)
+                                        .onAppear {
+                                            if index == 0 && store.hasMoreMessages && !store.isLoadingMore {
+                                                store.send(.loadOlderMessages)
+                                            }
+                                        }
                                     }
                                 }
                                 .padding(.horizontal, .xLarge)
@@ -47,7 +65,7 @@ struct ChatView: View {
                             }
                         }
                     }
-                    
+
                     if store.isLoading {
                         ProgressView()
                             .progressViewStyle(
@@ -63,6 +81,7 @@ struct ChatView: View {
             .navigationTitle(store.other?.nickname ?? "알 수 없음")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { store.send(.onAppear) }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
     
