@@ -23,11 +23,18 @@ struct ChatView: View {
                     Color.custom(.brand(.brightSprout))
                         .ignoresSafeArea()
 
-                    ChatMessagesListView(store: store)
+                    ChatMessagesListView(
+                        chats: store.messageLoading.chats,
+                        myUserId: store.myUserId,
+                        isLoadingMore: store.messageLoading.isLoadingMore,
+                        hasMoreMessages: store.messageLoading.hasMoreMessages
+                    ) {
+                        store.send(.messageLoading(.loadOlder))
+                    }
 
                     ChatLoadingOverlay(
-                        isLoading: store.isLoading,
-                        uploadProgress: store.uploadProgress
+                        isLoading: store.messageLoading.isLoading,
+                        uploadProgress: store.messageSending.uploadProgress
                     )
                 }
 
@@ -45,42 +52,42 @@ struct ChatView: View {
 
 // MARK: - Chat Messages List View
 private struct ChatMessagesListView: View {
-    @Perception.Bindable var store: StoreOf<ChatFeature>
+    let chats: [Chat]
+    let myUserId: String
+    let isLoadingMore: Bool
+    let hasMoreMessages: Bool
+    let onLoadOlder: () -> Void
 
     var body: some View {
         ScrollViewReader { proxy in
-            WithPerceptionTracking {
-                ScrollView {
-                    LazyVStack(spacing: AppPadding.large.value) {
-                        if store.isLoadingMore {
-                            PaginationLoadingIndicator()
+            ScrollView {
+                LazyVStack(spacing: AppPadding.large.value) {
+                    if isLoadingMore {
+                        PaginationLoadingIndicator()
+                    }
+
+                    ForEach(Array(chats.enumerated()), id: \.element.chatId) { index, chat in
+                        if shouldShowDateSeparator(at: index) {
+                            DateSeperator(date: chat.createdAt)
                         }
-                        
-                        ForEach(Array(store.chats.enumerated()), id: \.element.chatId) { index, chat in
-                            WithPerceptionTracking {
-                                if shouldShowDateSeparator(at: index) {
-                                    DateSeperator(date: chat.createdAt)
-                                }
-                                
-                                ChatBubbleCell(
-                                    chat: chat,
-                                    isMine: chat.sender.userId == store.myUserId
-                                )
-                                .id(chat.chatId)
-                                .onAppear {
-                                    if index == 0 && store.hasMoreMessages && !store.isLoadingMore {
-                                        store.send(.loadOlderMessages)
-                                    }
-                                }
+
+                        ChatBubbleCell(
+                            chat: chat,
+                            isMine: chat.sender.userId == myUserId
+                        )
+                        .id(chat.chatId)
+                        .onAppear {
+                            if index == 0 && hasMoreMessages && !isLoadingMore {
+                                onLoadOlder()
                             }
                         }
                     }
-                    .padding(.horizontal, .xLarge)
                 }
-                .onAppear {
-                    if let lastId = store.chats.last?.chatId {
-                        proxy.scrollTo(lastId, anchor: .bottom)
-                    }
+                .padding(.horizontal, .xLarge)
+            }
+            .onAppear {
+                if let lastId = chats.last?.chatId {
+                    proxy.scrollTo(lastId, anchor: .bottom)
                 }
             }
         }
@@ -88,11 +95,11 @@ private struct ChatMessagesListView: View {
 
     private func shouldShowDateSeparator(at index: Int) -> Bool {
         guard index > 0 else { return true }
-        guard index < store.chats.count else { return false }
-        
-        let previousChat = store.chats[index - 1]
-        let currentChat = store.chats[index]
-        
+        guard index < chats.count else { return false }
+
+        let previousChat = chats[index - 1]
+        let currentChat = chats[index]
+
         return !previousChat.createdAt.isSameDay(as: currentChat.createdAt)
     }
 }
@@ -253,55 +260,33 @@ private extension Date {
 private struct ChatInputBar: View {
     @Perception.Bindable var store: StoreOf<ChatFeature>
     @State private var selectedMedia: [PhotosPickerItem] = []
-    
+
     var body: some View {
         WithPerceptionTracking {
             VStack(spacing: 0) {
                 MyDivider()
-                
+
                 HStack(alignment: .top, spacing: AppPadding.medium.value) {
-                    Button {
-                        store.send(.mediaButtonTapped)
-                    } label: {
-                        AppIcon.photoPlus
-                            .font(.system(size: 20))
-                            .foregroundStyle(.custom(.gray(.gray60)))
+                    MediaButton {
+                        store.send(.messageSending(.mediaButtonTapped))
                     }
-                    .offset(y: 4)
                     
-                    TextField(
-                        "메시지를 입력하세요",
-                        text: $store.messageText.sending(\.textChanged),
-                        axis: .vertical
-                    )
-                    .font(.pretendard(size: .body2, weight: .regular))
-                    .padding(.horizontal, .large)
-                    .padding(.vertical, .small)
-                    .background(.custom(.gray(.gray15)))
-                    .cornerRadius(20)
-                    .lineLimit(1...6)
+                    MessageTextField(text: $store.messageSending.messageText)
                     
-                    Button {
-                        store.send(.sendButtonTapped)
-                    } label: {
-                        AppIcon.paperplane
-                            .font(.system(size: 20))
-                            .foregroundStyle(store.isMessageEmpty
-                                             ? .custom(.gray(.gray30))
-                                             : .custom(.brand(.blackSprout))
-                            )
+                    SendButton(
+                        isDisabled: store.messageSending.isMessageEmpty
+                    ) {
+                        store.send(.messageSending(.sendButtonTapped))
                     }
-                    .disabled(store.isMessageEmpty)
-                    .offset(y: 4)
                 }
                 .padding(.horizontal, .large)
                 .padding(.vertical, .small)
                 .background(.custom(.gray(.gray0)))
             }
             .photosPicker(
-                isPresented: $store.isShowingMediaPicker,
+                isPresented: $store.messageSending.isShowingMediaPicker,
                 selection: $selectedMedia,
-                maxSelectionCount: store.maxMedia,
+                maxSelectionCount: store.messageSending.maxMedia,
                 matching: .any(of: [.images, .videos])
             )
             .onChange(of: selectedMedia) {
@@ -309,7 +294,7 @@ private struct ChatInputBar: View {
             }
         }
     }
-    
+
     private func handleMediaSelection(_ items: [PhotosPickerItem]) {
         Task {
             var dataArray: [(Data, MediaType)] = []
@@ -323,9 +308,66 @@ private struct ChatInputBar: View {
                     }
                 }
             }
-            if !dataArray.isEmpty { store.send(.mediaSelected(dataArray)) }
+            if !dataArray.isEmpty {
+                store.send(.messageSending(.mediaSelected(dataArray)))
+            }
             selectedMedia = []
         }
+    }
+}
+
+// MARK: - Media Button
+private struct MediaButton: View {
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            AppIcon.photoPlus
+                .font(.system(size: 20))
+                .foregroundStyle(.custom(.gray(.gray60)))
+        }
+        .offset(y: 4)
+    }
+}
+
+// MARK: - Message TextField
+private struct MessageTextField: View {
+    @Binding var text: String
+
+    var body: some View {
+        TextField(
+            "메시지를 입력하세요",
+            text: $text,
+            axis: .vertical
+        )
+        .font(.pretendard(size: .body2, weight: .regular))
+        .padding(.horizontal, .large)
+        .padding(.vertical, .small)
+        .background(.custom(.gray(.gray15)))
+        .cornerRadius(20)
+        .lineLimit(1...6)
+    }
+}
+
+// MARK: - Send Button
+private struct SendButton: View {
+    let isDisabled: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            AppIcon.paperplane
+                .font(.system(size: 20))
+                .foregroundStyle(buttonColor)
+        }
+        .disabled(isDisabled)
+        .offset(y: 4)
+    }
+
+    private var buttonColor: Color {
+        isDisabled
+            ? .custom(.gray(.gray30))
+            : .custom(.brand(.blackSprout))
     }
 }
 
@@ -367,76 +409,7 @@ private struct ChatInputBar: View {
                         ]
                     )
                 ),
-                myUserId: myProfile.userId,
-                chats: [
-                    Chat(
-                        chatId: "chat_001",
-                        roomId: roomId,
-                        content: "안녕하세요!",
-                        createdAt: Date(timeIntervalSinceNow: -86400),
-                        updatedAt: Date(timeIntervalSinceNow: -86400),
-                        sender: otherProfile,
-                        files: nil
-                    ),
-                    Chat(
-                        chatId: "chat_002",
-                        roomId: roomId,
-                        content: "안녕하세요 🙂",
-                        createdAt: Date(timeIntervalSinceNow: -540),
-                        updatedAt: Date(timeIntervalSinceNow: -540),
-                        sender: myProfile,
-                        files: nil
-                    ),
-                    Chat(
-                        chatId: "chat_003",
-                        roomId: roomId,
-                        content: "채팅 기능 테스트 중이신가요? 채팅 기능 테스트 중이신가요? 채팅 기능 테스트 중이신가요?",
-                        createdAt: Date(timeIntervalSinceNow: -420),
-                        updatedAt: Date(timeIntervalSinceNow: -420),
-                        sender: otherProfile,
-                        files: nil
-                    ),
-                    Chat(
-                        chatId: "chat_004",
-                        roomId: roomId,
-                        content: "네! Socket.IO 연동 확인 중이에요 👍 네! Socket.IO 연동 확인 중이에요 👍 네! Socket.IO 연동 확인 중이에요 👍",
-                        createdAt: Date(timeIntervalSinceNow: -360),
-                        updatedAt: Date(timeIntervalSinceNow: -360),
-                        sender: myProfile,
-                        files: nil
-                    ),
-                    Chat(
-                        chatId: "chat_005",
-                        roomId: roomId,
-                        content: "실시간 수신은 문제 없어요?",
-                        createdAt: Date(timeIntervalSinceNow: -240),
-                        updatedAt: Date(timeIntervalSinceNow: -240),
-                        sender: otherProfile,
-                        files: nil
-                    ),
-                    Chat(
-                        chatId: "chat_006",
-                        roomId: roomId,
-                        content: "네, 백그라운드 복귀도 잘 됩니다!",
-                        createdAt: Date(timeIntervalSinceNow: -180),
-                        updatedAt: Date(timeIntervalSinceNow: -180),
-                        sender: myProfile,
-                        files: nil
-                    ),
-                    Chat(
-                        chatId: "chat_007",
-                        roomId: roomId,
-                        content: "Media",
-                        createdAt: Date(timeIntervalSinceNow: -180),
-                        updatedAt: Date(timeIntervalSinceNow: -180),
-                        sender: myProfile,
-                        files: [
-                            "file_1",
-                            "file_2",
-                            "file_3"
-                        ]
-                    )
-                ]
+                myUserId: myProfile.userId
             )) {
                 ChatFeature()
             }
