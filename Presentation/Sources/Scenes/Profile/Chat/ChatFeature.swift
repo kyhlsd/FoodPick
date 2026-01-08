@@ -25,6 +25,7 @@ struct ChatFeature: Sendable {
         var hasMoreMessages = true
         var isShowingMediaPicker = false
         var uploadProgress: Double?
+        var socketConnectedAt: Date?
         let maxMedia = 5
         let pageSize = 30
 
@@ -57,11 +58,14 @@ struct ChatFeature: Sendable {
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         case onAppear
+        case onDisappear
+        case socketConnected(Date)
+        case socketConnectionFailed
         case loadInitialMessages
         case loadOlderMessages
         case initialMessagesLoaded([Chat])
         case olderMessagesLoaded([Chat])
-        case fetchNewMessages
+        case fetchNewMessages(Date?)
         case newMessagesFetched([Chat])
         case newMessagesSaved([Chat])
         case loadingFailed(Error)
@@ -84,13 +88,40 @@ struct ChatFeature: Sendable {
     @Dependency(\.saveLocalChat) var saveLocalChat
     @Dependency(\.uploadChatFiles) var uploadChatFiles
     @Dependency(\.sendMessage) var sendMessage
+    @Dependency(\.connectChatSocket) var connectChatSocket
+    @Dependency(\.disconnectChatSocket) var disconnectChatSocket
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                // 1. 먼저 소켓 연결 시도
+                let roomId = state.roomId
+                return .run { send in
+                    do {
+                        let connectedAt = Date()
+                        try await connectChatSocket.execute(roomId: roomId)
+                        await send(.socketConnected(connectedAt))
+                    } catch {
+                        await send(.socketConnectionFailed)
+                    }
+                }
+
+            case let .socketConnected(connectedAt):
+                // 소켓 연결 성공 시 연결 시점 저장하고 CoreData 로드
+                state.socketConnectedAt = connectedAt
                 return .send(.loadInitialMessages)
+
+            case .socketConnectionFailed:
+                // 소켓 연결 실패해도 CoreData 로드
+                return .send(.loadInitialMessages)
+
+            case .onDisappear:
+                // 화면을 떠날 때 소켓 연결 해제
+                return .run { _ in
+                    await disconnectChatSocket.execute()
+                }
 
             case .loadInitialMessages:
                 guard !state.isLoading else { return .none }
@@ -115,12 +146,25 @@ struct ChatFeature: Sendable {
                 state.chats = chats
                 state.hasMoreMessages = chats.count >= state.pageSize
 
-                // CoreData의 마지막 메시지와 chatRoom의 lastChat을 비교
-                if let localLastMessage = chats.last,
-                   let serverLastMessage = state.chatRoom.lastChat,
-                   serverLastMessage.updatedAt > localLastMessage.updatedAt {
-                    // 서버에 더 최신 메시지가 있으면 fetch
-                    return .send(.fetchNewMessages)
+                // CoreData 마지막 채팅과 chatRoom의 lastChat 비교
+                let localLastMessage = chats.last
+                let serverLastMessage = state.chatRoom.lastChat
+
+                // 서버에 더 최신 메시지가 있는지 확인
+                let hasNewerServerMessage: Bool = {
+                    guard let local = localLastMessage, let server = serverLastMessage else {
+                        return false
+                    }
+                    return server.updatedAt > local.updatedAt
+                }()
+
+                if hasNewerServerMessage {
+                    // CoreData 마지막 채팅 시간 기준으로 fetchChatList
+                    let referenceDate = localLastMessage?.updatedAt
+                    return .send(.fetchNewMessages(referenceDate))
+                } else if state.socketConnectedAt != nil {
+                    // 소켓 연결 시작 시점 기준으로 fetchChatList
+                    return .send(.fetchNewMessages(state.socketConnectedAt))
                 }
 
                 return .none
@@ -159,15 +203,14 @@ struct ChatFeature: Sendable {
                 }
                 return .none
 
-            case .fetchNewMessages:
+            case let .fetchNewMessages(referenceDate):
                 guard !state.isFetchingNew else { return .none }
                 state.isFetchingNew = true
                 let roomId = state.roomId
-                let latestDate = state.latestMessageDate
 
                 return .run { send in
                     do {
-                        let newChats = try await fetchChatList.execute(roomId: roomId, time: latestDate)
+                        let newChats = try await fetchChatList.execute(roomId: roomId, time: referenceDate)
                         await send(.newMessagesFetched(newChats))
                     } catch {
                         await send(.loadingFailed(error))
@@ -215,7 +258,7 @@ struct ChatFeature: Sendable {
                         TextState("확인")
                     }
                 } message: {
-                    TextState("메시지를 불러오는 중 오류가 발생했습니다.\n\(error.localizedDescription)")
+                    TextState(error.localizedDescription)
                 }
                 return .none
 
