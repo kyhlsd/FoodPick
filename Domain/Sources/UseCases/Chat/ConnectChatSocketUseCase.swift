@@ -8,7 +8,6 @@
 import Foundation
 
 public protocol ConnectChatSocketUseCase: Sendable {
-    /// 채팅 소켓 연결
     func execute(roomId: String) async throws
 }
 

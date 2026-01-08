@@ -8,7 +8,6 @@
 import Foundation
 
 public protocol DisconnectChatSocketUseCase: Sendable {
-    /// 채팅 소켓 연결 해제
     func execute() async
 }
 

@@ -8,7 +8,6 @@
 import Foundation
 
 public protocol SaveLocalChatUseCase: Sendable {
-    /// 단일 채팅 메시지를 로컬에 저장합니다
     func execute(_ chat: Chat) async throws
 }
 

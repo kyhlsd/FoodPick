@@ -36,8 +36,10 @@ struct ChatView: View {
             }
             .navigationTitle(store.other?.nickname ?? "알 수 없음")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { store.send(.onAppear) }
-            .onDisappear { store.send(.onDisappear) }
+//            .onAppear { store.send(.onAppear) }
+            .task {
+                await store.send(.onAppear).finish()
+            }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
     }

@@ -118,6 +118,7 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
                     return
                 }
             }
+            print("connect")
         } catch {
             // 타임아웃 또는 기타 오류를 에러 스트림으로 전달
             errorContinuation.yield(.timeout)
@@ -129,6 +130,7 @@ public final class DefaultChatSocketRepositoryImpl: ChatSocketRepository, @unche
         socket?.disconnect()
         socket = nil
         manager = nil
+        print("disconnect")
     }
 
     public func receiveMessages() -> AsyncStream<Chat> {
