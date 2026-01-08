@@ -6,7 +6,7 @@
 //
 
 public protocol SendMessageUseCase: Sendable {
-    func execute(roomId: String, content: String, files: [String]) async throws -> Chat
+    func execute(roomId: String, content: String, files: [String]?) async throws -> Chat
 }
 
 public final class SendMessageUseCaseImpl: SendMessageUseCase, @unchecked Sendable {
@@ -16,7 +16,7 @@ public final class SendMessageUseCaseImpl: SendMessageUseCase, @unchecked Sendab
         self.chatRepository = chatRepository
     }
 
-    public func execute(roomId: String, content: String, files: [String]) async throws -> Chat {
+    public func execute(roomId: String, content: String, files: [String]?) async throws -> Chat {
         return try await chatRepository.sendMessage(roomId: roomId, content: content, files: files)
     }
 }

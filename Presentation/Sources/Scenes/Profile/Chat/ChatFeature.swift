@@ -96,7 +96,7 @@ struct ChatFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                // 1. 먼저 소켓 연결 시도
+                // 소켓 연결
                 let roomId = state.roomId
                 return .run { send in
                     do {
@@ -146,25 +146,11 @@ struct ChatFeature: Sendable {
                 state.chats = chats
                 state.hasMoreMessages = chats.count >= state.pageSize
 
-                // CoreData 마지막 채팅과 chatRoom의 lastChat 비교
-                let localLastMessage = chats.last
-                let serverLastMessage = state.chatRoom.lastChat
+                // CoreData 마지막 채팅 시간 또는 소켓 연결 시점 기준으로 fetchChatList
+                let referenceDate = chats.last?.updatedAt ?? state.socketConnectedAt
 
-                // 서버에 더 최신 메시지가 있는지 확인
-                let hasNewerServerMessage: Bool = {
-                    guard let local = localLastMessage, let server = serverLastMessage else {
-                        return false
-                    }
-                    return server.updatedAt > local.updatedAt
-                }()
-
-                if hasNewerServerMessage {
-                    // CoreData 마지막 채팅 시간 기준으로 fetchChatList
-                    let referenceDate = localLastMessage?.updatedAt
-                    return .send(.fetchNewMessages(referenceDate))
-                } else if state.socketConnectedAt != nil {
-                    // 소켓 연결 시작 시점 기준으로 fetchChatList
-                    return .send(.fetchNewMessages(state.socketConnectedAt))
+                if let date = referenceDate {
+                    return .send(.fetchNewMessages(date))
                 }
 
                 return .none
@@ -267,7 +253,23 @@ struct ChatFeature: Sendable {
                 return .none
 
             case .sendButtonTapped:
-                return .none
+                guard !state.isMessageEmpty else { return .none }
+
+                let roomId = state.roomId
+                let content = state.messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                return .run { send in
+                    do {
+                        let chat = try await sendMessage.execute(
+                            roomId: roomId,
+                            content: content,
+                            files: nil
+                        )
+                        await send(.messageSent(chat))
+                    } catch {
+                        await send(.loadingFailed(error))
+                    }
+                }
 
             case .mediaButtonTapped:
                 state.isShowingMediaPicker = true
@@ -336,7 +338,9 @@ struct ChatFeature: Sendable {
                 }
 
             case let .messageSavedLocally(chat):
+                // 4. UI에 반영하고 텍스트 필드 클리어
                 state.chats.append(chat)
+                state.messageText = ""
                 return .none
 
             case .alert:

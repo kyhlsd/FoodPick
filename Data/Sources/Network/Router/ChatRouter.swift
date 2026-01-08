@@ -12,7 +12,7 @@ import Core
 enum ChatRouter {
     case chatRoom(id: String)
     case chatRoomList
-    case chat(id: String, content: String, files: [String] = [])
+    case chat(id: String, content: String, files: [String]?)
     case chatList(id: String, time: Date?)
     case files(id: String, files: [(Data, MediaType)])
 }
@@ -46,10 +46,16 @@ extension ChatRouter: Router {
         case .chatRoomList, .chatList, .files:
             return .none
         case .chat(_, let content, let files):
-            return .plain([
-                "content": content,
-                "files": files
-            ])
+            if let files {
+                return .plain([
+                    "content": content,
+                    "files": files
+                ])
+            } else {
+                return .plain([
+                    "content": content
+                ])
+            }
         }
     }
     

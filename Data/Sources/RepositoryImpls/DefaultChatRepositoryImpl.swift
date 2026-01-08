@@ -34,7 +34,7 @@ public final class DefaultChatRepositoryImpl: ChatRepository, @unchecked Sendabl
         return response.toDomain
     }
 
-    public func sendMessage(roomId: String, content: String, files: [String]) async throws -> Chat {
+    public func sendMessage(roomId: String, content: String, files: [String]?) async throws -> Chat {
         guard let response = try await networkManager.request(
             ChatRouter.chat(id: roomId, content: content, files: files),
             responseType: ChatDTO.self
