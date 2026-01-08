@@ -23,14 +23,7 @@ struct ChatView: View {
                     Color.custom(.brand(.brightSprout))
                         .ignoresSafeArea()
 
-                    ChatMessagesListView(
-                        chats: store.messageLoading.chats,
-                        myUserId: store.myUserId,
-                        isLoadingMore: store.messageLoading.isLoadingMore,
-                        hasMoreMessages: store.messageLoading.hasMoreMessages
-                    ) {
-                        store.send(.messageLoading(.loadOlder))
-                    }
+                    ChatMessagesListView(store: store)
 
                     ChatLoadingOverlay(
                         isLoading: store.messageLoading.isLoading,
@@ -52,42 +45,44 @@ struct ChatView: View {
 
 // MARK: - Chat Messages List View
 private struct ChatMessagesListView: View {
-    let chats: [Chat]
-    let myUserId: String
-    let isLoadingMore: Bool
-    let hasMoreMessages: Bool
-    let onLoadOlder: () -> Void
+    @Perception.Bindable var store: StoreOf<ChatFeature>
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: AppPadding.large.value) {
-                    if isLoadingMore {
-                        PaginationLoadingIndicator()
-                    }
-
-                    ForEach(Array(chats.enumerated()), id: \.element.chatId) { index, chat in
-                        if shouldShowDateSeparator(at: index) {
-                            DateSeperator(date: chat.createdAt)
+            WithPerceptionTracking {
+                ScrollView {
+                    LazyVStack(spacing: AppPadding.large.value) {
+                        if store.messageLoading.isLoadingMore {
+                            PaginationLoadingIndicator()
                         }
-
-                        ChatBubbleCell(
-                            chat: chat,
-                            isMine: chat.sender.userId == myUserId
-                        )
-                        .id(chat.chatId)
-                        .onAppear {
-                            if index == 0 && hasMoreMessages && !isLoadingMore {
-                                onLoadOlder()
+                        
+                        ForEach(Array(store.messageLoading.chats.enumerated()), id: \.element.chatId) { index, chat in
+                            WithPerceptionTracking {
+                                if shouldShowDateSeparator(at: index) {
+                                    DateSeperator(date: chat.createdAt)
+                                }
+                                
+                                ChatBubbleCell(
+                                    chat: chat,
+                                    isMine: chat.sender.userId == store.myUserId
+                                )
+                                .id(chat.chatId)
+                                .onAppear {
+                                    if index == 0
+                                        && store.messageLoading.hasMoreMessages
+                                        && !store.messageLoading.isLoadingMore {
+                                        store.send(.messageLoading(.loadOlder))
+                                    }
+                                }
                             }
                         }
                     }
+                    .padding(.horizontal, .xLarge)
                 }
-                .padding(.horizontal, .xLarge)
-            }
-            .onAppear {
-                if let lastId = chats.last?.chatId {
-                    proxy.scrollTo(lastId, anchor: .bottom)
+                .onAppear {
+                    if let lastId = store.messageLoading.chats.last?.chatId {
+                        proxy.scrollTo(lastId, anchor: .bottom)
+                    }
                 }
             }
         }
@@ -95,8 +90,9 @@ private struct ChatMessagesListView: View {
 
     private func shouldShowDateSeparator(at index: Int) -> Bool {
         guard index > 0 else { return true }
+        let chats = store.messageLoading.chats
         guard index < chats.count else { return false }
-
+        
         let previousChat = chats[index - 1]
         let currentChat = chats[index]
 
