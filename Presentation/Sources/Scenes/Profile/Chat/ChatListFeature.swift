@@ -43,7 +43,7 @@ struct ChatListFeature: Sendable {
         case fetchChatRooms
         case chatRoomsLoaded([ChatRoom])
         case chatRoomsFailed(Error)
-        case chatRoomTapped(String, String)
+        case chatRoomTapped(ChatRoom)
         case searchTextChanged(String)
         
         case destination(PresentationAction<Destination.Action>)
@@ -89,12 +89,11 @@ struct ChatListFeature: Sendable {
                 }
                 return .none
 
-            case let .chatRoomTapped(roomId, otherId):
+            case let .chatRoomTapped(chatRoom):
                 state.destination = .chat(
                     ChatFeature.State(
-                        roomId: roomId,
-                        myUserId: state.myUserId,
-                        otherId: otherId
+                        chatRoom: chatRoom,
+                        myUserId: state.myUserId
                     )
                 )
                 return .none

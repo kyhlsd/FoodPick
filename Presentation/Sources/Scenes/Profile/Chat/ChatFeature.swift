@@ -15,14 +15,21 @@ struct ChatFeature: Sendable {
     // MARK: - State
     @ObservableState
     struct State: Sendable {
-        let roomId: String
+        let chatRoom: ChatRoom
         let myUserId: String
-        let otherId: String
         var chats: [Chat] = []
         var messageText = ""
         var isLoading = false
         var isShowingMediaPicker = false
         let maxMedia = 5
+        
+        var roomId: String {
+            chatRoom.roomId
+        }
+        
+        var other: Profile? {
+            chatRoom.participants.first { $0.userId != myUserId }
+        }
         
         var isMessageEmpty: Bool {
             messageText
@@ -43,6 +50,9 @@ struct ChatFeature: Sendable {
         case mediaSelected([(Data, MediaType)])
     }
 
+    // MARK: - Dependencies
+    
+    
     // MARK: - Body
     var body: some ReducerOf<Self> {
         Reduce { state, action in

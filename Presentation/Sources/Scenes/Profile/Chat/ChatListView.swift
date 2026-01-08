@@ -87,9 +87,7 @@ private struct ChatRoomCell: View {
     var body: some View {
         WithPerceptionTracking {
             Button {
-                if let otherId = otherParticipant?.userId {
-                    store.send(.chatRoomTapped(chatRoom.roomId, otherId))
-                }
+                store.send(.chatRoomTapped(chatRoom))
             } label: {
                 HStack(spacing: AppPadding.medium.value) {
                     // 프로필 이미지

@@ -60,7 +60,7 @@ struct ChatView: View {
                 ChatInputBar(store: store)
             }
             .hideKeyboardOnTap()
-            .navigationTitle(store.otherId)
+            .navigationTitle(store.other?.nickname ?? "알 수 없음")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { store.send(.onAppear) }
         }
@@ -265,9 +265,29 @@ private struct ChatInputBar: View {
     NavigationStack {
         ChatView(
             store: Store(initialState: ChatFeature.State(
-                roomId: roomId,
+                chatRoom: ChatRoom(
+                    roomId: "room_001",
+                    createdAt: Date(timeIntervalSinceNow: -86400),
+                    updatedAt: Date(timeIntervalSinceNow: -86400),
+                    participants: [
+                        myProfile,
+                        otherProfile
+                    ],
+                    lastChat: Chat(
+                        chatId: "chat_007",
+                        roomId: roomId,
+                        content: "Media",
+                        createdAt: Date(timeIntervalSinceNow: -180),
+                        updatedAt: Date(timeIntervalSinceNow: -180),
+                        sender: myProfile,
+                        files: [
+                            "file_1",
+                            "file_2",
+                            "file_3"
+                        ]
+                    )
+                ),
                 myUserId: myProfile.userId,
-                otherId: otherProfile.userId,
                 chats: [
                     Chat(
                         chatId: "chat_001",
