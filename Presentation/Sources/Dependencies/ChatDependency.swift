@@ -102,12 +102,7 @@ private enum ChatRepositoryKey: DependencyKey {
 }
 
 private enum LocalChatRepositoryKey: DependencyKey {
-    // Construct on the main actor to satisfy the @MainActor convenience init.
-    static var liveValue: LocalChatRepository {
-        MainActor.assumeIsolated {
-            DefaultLocalChatRepositoryImpl()
-        }
-    }
+    static let liveValue: LocalChatRepository = DefaultLocalChatRepositoryImpl(database: .shared)
 }
 
 private enum ChatSocketRepositoryKey: DependencyKey {
@@ -151,37 +146,29 @@ private enum UploadChatFilesKey: DependencyKey {
 
 private enum FetchRecentChatsKey: DependencyKey {
     static var liveValue: FetchRecentChatsUseCase {
-        MainActor.assumeIsolated {
-            @Dependency(\.localChatRepository) var localChatRepository
-            return FetchRecentChatsUseCaseImpl(localChatRepository: localChatRepository)
-        }
+        @Dependency(\.localChatRepository) var localChatRepository
+        return FetchRecentChatsUseCaseImpl(localChatRepository: localChatRepository)
     }
 }
 
 private enum FetchOlderChatsKey: DependencyKey {
     static var liveValue: FetchOlderChatsUseCase {
-        MainActor.assumeIsolated {
-            @Dependency(\.localChatRepository) var localChatRepository
-            return FetchOlderChatsUseCaseImpl(localChatRepository: localChatRepository)
-        }
+        @Dependency(\.localChatRepository) var localChatRepository
+        return FetchOlderChatsUseCaseImpl(localChatRepository: localChatRepository)
     }
 }
 
 private enum SaveLocalChatKey: DependencyKey {
     static var liveValue: SaveLocalChatUseCase {
-        MainActor.assumeIsolated {
-            @Dependency(\.localChatRepository) var localChatRepository
-            return SaveLocalChatUseCaseImpl(localChatRepository: localChatRepository)
-        }
+        @Dependency(\.localChatRepository) var localChatRepository
+        return SaveLocalChatUseCaseImpl(localChatRepository: localChatRepository)
     }
 }
 
 private enum SaveLocalChatsKey: DependencyKey {
     static var liveValue: SaveLocalChatsUseCase {
-        MainActor.assumeIsolated {
-            @Dependency(\.localChatRepository) var localChatRepository
-            return SaveLocalChatsUseCaseImpl(localChatRepository: localChatRepository)
-        }
+        @Dependency(\.localChatRepository) var localChatRepository
+        return SaveLocalChatsUseCaseImpl(localChatRepository: localChatRepository)
     }
 }
 

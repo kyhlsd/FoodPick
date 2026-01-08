@@ -17,6 +17,7 @@ struct OtherProfileFeature: Sendable {
         let profile: Profile
         var userPosts: [Post] = []
         var isLoadingPosts = false
+        var isFetchingChatRoom = false
         var myUserId: String?
 
         @Presents var destination: Destination.State?
@@ -30,12 +31,16 @@ struct OtherProfileFeature: Sendable {
         case userPostsLoaded([Post])
         case userPostsFailed(Error)
         case postTapped(postId: String)
+        case chatTapped
+        case fetchChatRoomFailed(Error)
+        case navigateToChat(ChatRoom)
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<OtherProfileFeature.Alert>)
     }
 
     // MARK: - Dependencies
     @Dependency(\.fetchUserPosts) var fetchUserPostsUseCase
+    @Dependency(\.fetchChatRoom) var fetchChatRoom
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -83,7 +88,46 @@ struct OtherProfileFeature: Sendable {
                     PostDetailFeature.State(postId: postId, myUserId: state.myUserId)
                 )
                 return .none
-
+                
+            case .chatTapped:
+                state.isFetchingChatRoom = true
+                let opponentId = state.profile.userId
+                
+                return .run { send in
+                    do {
+                        let response = try await fetchChatRoom.execute(opponentId: opponentId)
+                        await send(.navigateToChat(response))
+                    } catch {
+                        await send(.fetchChatRoomFailed(error))
+                    }
+                }
+                
+            case let .fetchChatRoomFailed(error):
+                state.isFetchingChatRoom = false
+                state.alert = AlertState {
+                    TextState("채팅 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+                
+            case let .navigateToChat(chatRoom):
+                state.isFetchingChatRoom = false
+                
+                if let myUserId = state.myUserId {
+                    state.destination = .chat(
+                        ChatFeature.State(
+                            chatRoom: chatRoom,
+                            myUserId: myUserId
+                        )
+                    )
+                }
+                return .none
+                
             case .destination, .alert:
                 return .none
             }
@@ -100,6 +144,7 @@ extension OtherProfileFeature {
     @Reducer
     enum Destination {
         case postDetail(PostDetailFeature)
+        case chat(ChatFeature)
     }
 }
 

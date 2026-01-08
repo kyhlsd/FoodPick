@@ -16,13 +16,7 @@ public final class DefaultLocalChatRepositoryImpl: LocalChatRepository, @uncheck
         self.database = database
     }
 
-    @MainActor
-    public convenience init() {
-        self.init(database: AppDatabase.shared)
-    }
-
     // MARK: - ChatRoom
-
     public func saveChatRoom(_ chatRoom: ChatRoom) async throws {
         try await performInBackground { context in
             let fetchRequest = ChatRoomEntity.fetchRequest(roomId: chatRoom.roomId)

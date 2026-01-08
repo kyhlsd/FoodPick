@@ -34,9 +34,10 @@ struct OtherProfileView: View {
                         PrimaryButton(
                             title: "채팅하기",
                             height: 40,
-                            fontSize: .body1
+                            fontSize: .body1,
+                            isLoading: store.isFetchingChatRoom
                         ) {
-                            
+                            store.send(.chatTapped)
                         }
                         
                         MyDivider()
@@ -56,6 +57,11 @@ struct OtherProfileView: View {
                 item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
             ) { postDetailStore in
                 PostDetailView(store: postDetailStore)
+            }
+            .navigationDestination(
+                item: $store.scope(state: \.destination?.chat, action: \.destination.chat)
+            ) { chatStore in
+                ChatView(store: chatStore)
             }
             .onAppear {
                 store.send(.onAppear)
