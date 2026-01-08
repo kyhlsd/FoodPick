@@ -87,8 +87,8 @@ private struct ChatRoomCell: View {
     var body: some View {
         WithPerceptionTracking {
             Button {
-                if let otherNickname = otherParticipant?.nickname {
-                    store.send(.chatRoomTapped(chatRoom.roomId, otherNickname))
+                if let otherId = otherParticipant?.userId {
+                    store.send(.chatRoomTapped(chatRoom.roomId, otherId))
                 }
             } label: {
                 HStack(spacing: AppPadding.medium.value) {

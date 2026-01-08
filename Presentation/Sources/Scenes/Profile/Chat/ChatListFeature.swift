@@ -89,12 +89,12 @@ struct ChatListFeature: Sendable {
                 }
                 return .none
 
-            case let .chatRoomTapped(roomId, otherNickname):
+            case let .chatRoomTapped(roomId, otherId):
                 state.destination = .chat(
                     ChatFeature.State(
                         roomId: roomId,
                         myUserId: state.myUserId,
-                        otherNickname: otherNickname
+                        otherId: otherId
                     )
                 )
                 return .none

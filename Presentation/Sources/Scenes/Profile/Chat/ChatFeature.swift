@@ -17,7 +17,7 @@ struct ChatFeature: Sendable {
     struct State: Sendable {
         let roomId: String
         let myUserId: String
-        let otherNickname: String
+        let otherId: String
         var chats: [Chat] = []
         var messageText = ""
         var isLoading = false

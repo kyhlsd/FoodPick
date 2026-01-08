@@ -17,6 +17,11 @@ extension DependencyValues {
         set { self[ChatRepositoryKey.self] = newValue }
     }
 
+    var localChatRepository: LocalChatRepository {
+        get { self[LocalChatRepositoryKey.self] }
+        set { self[LocalChatRepositoryKey.self] = newValue }
+    }
+
     // MARK: - UseCases
     var fetchChatRoom: FetchChatRoomUseCase {
         get { self[FetchChatRoomKey.self] }
@@ -47,6 +52,15 @@ extension DependencyValues {
 // MARK: - Keys
 private enum ChatRepositoryKey: DependencyKey {
     static let liveValue: ChatRepository = DefaultChatRepositoryImpl()
+}
+
+private enum LocalChatRepositoryKey: DependencyKey {
+    // Construct on the main actor to satisfy the @MainActor convenience init.
+    static var liveValue: LocalChatRepository {
+        MainActor.assumeIsolated {
+            DefaultLocalChatRepositoryImpl()
+        }
+    }
 }
 
 private enum FetchChatRoomKey: DependencyKey {

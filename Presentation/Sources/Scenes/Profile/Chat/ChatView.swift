@@ -60,7 +60,7 @@ struct ChatView: View {
                 ChatInputBar(store: store)
             }
             .hideKeyboardOnTap()
-            .navigationTitle(store.otherNickname)
+            .navigationTitle(store.otherId)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { store.send(.onAppear) }
         }
@@ -267,7 +267,7 @@ private struct ChatInputBar: View {
             store: Store(initialState: ChatFeature.State(
                 roomId: roomId,
                 myUserId: myProfile.userId,
-                otherNickname: otherProfile.nickname,
+                otherId: otherProfile.userId,
                 chats: [
                     Chat(
                         chatId: "chat_001",
