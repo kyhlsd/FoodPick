@@ -8,7 +8,6 @@
 import Foundation
 
 public protocol FetchRecentChatsUseCase: Sendable {
-    /// 최근 메시지를 지정된 개수만큼 가져옵니다 (초기 로드용)
     func execute(roomId: String, limit: Int) async throws -> [Chat]
 }
 

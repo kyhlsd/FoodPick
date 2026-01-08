@@ -166,6 +166,16 @@ struct ChatFeature: Sendable {
                 return .send(.socketConnect)
 
             case .messageLoading(.initialLoaded):
+                let isLocalDataEmpty = state.messageLoading.chats.isEmpty
+                let hasLastChatInRoom = state.chatRoom.lastChat != nil
+
+                // LocalData는 비어있지만 ChatRoom에는 채팅이 있는 경우
+                if isLocalDataEmpty && hasLastChatInRoom {
+                    // nil을 전달하여 모든 채팅 가져오기
+                    return .send(.messageLoading(.fetchNew(nil)))
+                }
+
+                // LocalData에 채팅이 있는 경우, 마지막 날짜 이후 새 메시지 가져오기
                 let referenceDate = state.messageLoading.latestMessageDate ?? state.socketConnectedAt
 
                 if let date = referenceDate {
