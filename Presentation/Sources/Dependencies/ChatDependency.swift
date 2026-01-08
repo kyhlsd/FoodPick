@@ -22,6 +22,11 @@ extension DependencyValues {
         set { self[LocalChatRepositoryKey.self] = newValue }
     }
 
+    var chatSocketRepository: ChatSocketRepository {
+        get { self[ChatSocketRepositoryKey.self] }
+        set { self[ChatSocketRepositoryKey.self] = newValue }
+    }
+
     // MARK: - UseCases
     var fetchChatRoom: FetchChatRoomUseCase {
         get { self[FetchChatRoomKey.self] }
@@ -68,6 +73,27 @@ extension DependencyValues {
         get { self[SaveLocalChatsKey.self] }
         set { self[SaveLocalChatsKey.self] = newValue }
     }
+
+    // Socket UseCases
+    var connectChatSocket: ConnectChatSocketUseCase {
+        get { self[ConnectChatSocketKey.self] }
+        set { self[ConnectChatSocketKey.self] = newValue }
+    }
+
+    var disconnectChatSocket: DisconnectChatSocketUseCase {
+        get { self[DisconnectChatSocketKey.self] }
+        set { self[DisconnectChatSocketKey.self] = newValue }
+    }
+
+    var receiveChatMessages: ReceiveChatMessagesUseCase {
+        get { self[ReceiveChatMessagesKey.self] }
+        set { self[ReceiveChatMessagesKey.self] = newValue }
+    }
+
+    var receiveChatErrors: ReceiveChatErrorsUseCase {
+        get { self[ReceiveChatErrorsKey.self] }
+        set { self[ReceiveChatErrorsKey.self] = newValue }
+    }
 }
 
 // MARK: - Keys
@@ -82,6 +108,10 @@ private enum LocalChatRepositoryKey: DependencyKey {
             DefaultLocalChatRepositoryImpl()
         }
     }
+}
+
+private enum ChatSocketRepositoryKey: DependencyKey {
+    static let liveValue: ChatSocketRepository = DefaultChatSocketRepositoryImpl()
 }
 
 private enum FetchChatRoomKey: DependencyKey {
@@ -153,4 +183,32 @@ private enum SaveLocalChatsKey: DependencyKey {
             return SaveLocalChatsUseCaseImpl(localChatRepository: localChatRepository)
         }
     }
+}
+
+private enum ConnectChatSocketKey: DependencyKey {
+    static let liveValue: ConnectChatSocketUseCase = {
+        @Dependency(\.chatSocketRepository) var chatSocketRepository
+        return ConnectChatSocketUseCaseImpl(chatSocketRepository: chatSocketRepository)
+    }()
+}
+
+private enum DisconnectChatSocketKey: DependencyKey {
+    static let liveValue: DisconnectChatSocketUseCase = {
+        @Dependency(\.chatSocketRepository) var chatSocketRepository
+        return DisconnectChatSocketUseCaseImpl(chatSocketRepository: chatSocketRepository)
+    }()
+}
+
+private enum ReceiveChatMessagesKey: DependencyKey {
+    static let liveValue: ReceiveChatMessagesUseCase = {
+        @Dependency(\.chatSocketRepository) var chatSocketRepository
+        return ReceiveChatMessagesUseCaseImpl(chatSocketRepository: chatSocketRepository)
+    }()
+}
+
+private enum ReceiveChatErrorsKey: DependencyKey {
+    static let liveValue: ReceiveChatErrorsUseCase = {
+        @Dependency(\.chatSocketRepository) var chatSocketRepository
+        return ReceiveChatErrorsUseCaseImpl(chatSocketRepository: chatSocketRepository)
+    }()
 }
