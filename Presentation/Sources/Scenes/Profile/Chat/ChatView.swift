@@ -30,10 +30,10 @@ struct ChatView: View {
                         uploadProgress: store.messageSending.uploadProgress
                     )
                 }
+                .hideKeyboardOnTap()
 
                 ChatInputBar(store: store)
             }
-            .hideKeyboardOnTap()
             .navigationTitle(store.other?.nickname ?? "알 수 없음")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { store.send(.onAppear) }
@@ -254,25 +254,29 @@ private extension Date {
 
 // MARK: - Chat Input Bar
 private struct ChatInputBar: View {
-    @Perception.Bindable var store: StoreOf<ChatFeature>
+    let store: StoreOf<ChatFeature>
     @State private var selectedMedia: [PhotosPickerItem] = []
 
     var body: some View {
+        let sendingStore = store.scope(state: \.messageSending, action: \.messageSending)
+        
         WithPerceptionTracking {
+            @Perception.Bindable var sendingStore = sendingStore
+            
             VStack(spacing: 0) {
                 MyDivider()
 
                 HStack(alignment: .top, spacing: AppPadding.medium.value) {
                     MediaButton {
-                        store.send(.messageSending(.mediaButtonTapped))
+                        sendingStore.send(.mediaButtonTapped)
                     }
                     
-                    MessageTextField(text: $store.messageSending.messageText)
+                    MessageTextField(text: $sendingStore.messageText)
                     
                     SendButton(
-                        isDisabled: store.messageSending.isMessageEmpty
+                        isDisabled: sendingStore.isMessageEmpty
                     ) {
-                        store.send(.messageSending(.sendButtonTapped))
+                        sendingStore.send(.sendButtonTapped)
                     }
                 }
                 .padding(.horizontal, .large)
@@ -280,18 +284,18 @@ private struct ChatInputBar: View {
                 .background(.custom(.gray(.gray0)))
             }
             .photosPicker(
-                isPresented: $store.messageSending.isShowingMediaPicker,
+                isPresented: $sendingStore.isShowingMediaPicker,
                 selection: $selectedMedia,
-                maxSelectionCount: store.messageSending.maxMedia,
+                maxSelectionCount: sendingStore.maxMedia,
                 matching: .any(of: [.images, .videos])
             )
             .onChange(of: selectedMedia) {
-                handleMediaSelection($0)
+                handleMediaSelection($0, store: sendingStore)
             }
         }
     }
 
-    private func handleMediaSelection(_ items: [PhotosPickerItem]) {
+    private func handleMediaSelection(_ items: [PhotosPickerItem], store: StoreOf<MessageSendingFeature>) {
         Task {
             var dataArray: [(Data, MediaType)] = []
             for item in items {
@@ -305,7 +309,7 @@ private struct ChatInputBar: View {
                 }
             }
             if !dataArray.isEmpty {
-                store.send(.messageSending(.mediaSelected(dataArray)))
+                store.send(.mediaSelected(dataArray))
             }
             selectedMedia = []
         }
