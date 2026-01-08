@@ -116,7 +116,7 @@ struct MessageSendingFeature: Sendable {
                     do {
                         let chat = try await sendMessage.execute(
                             roomId: roomId,
-                            content: "Files",
+                            content: "이미지",
                             files: filePaths
                         )
                         await send(.messageSent(chat))

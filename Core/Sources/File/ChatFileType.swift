@@ -11,7 +11,6 @@ public enum ChatFileType: Sendable {
     case png
     case gif
     case pdf
-    case mp4
 
     public var toMediaType: MediaType {
         switch self {
@@ -25,8 +24,6 @@ public enum ChatFileType: Sendable {
             return .gif
         case .pdf:
             return .pdf
-        case .mp4:
-            return .mp4
         }
     }
 }
@@ -44,9 +41,7 @@ extension MediaType {
             return .gif
         case .pdf:
             return .pdf
-        case .mp4:
-            return .mp4
-        case .webp, .mov, .avi, .mkv, .wmv:
+        default:
             return nil
         }
     }

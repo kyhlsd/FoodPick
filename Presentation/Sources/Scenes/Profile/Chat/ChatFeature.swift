@@ -60,12 +60,6 @@ struct ChatFeature: Sendable {
         case alert(PresentationAction<Alert>)
     }
 
-    // MARK: - Effect ID
-    enum CancelID {
-        case socketListener
-        case lifecycleListener
-    }
-
     // MARK: - Dependencies
     @Dependency(\.saveLocalChat) var saveLocalChat
     @Dependency(\.connectChatSocket) var connectChatSocket
@@ -81,56 +75,51 @@ struct ChatFeature: Sendable {
         Scope(state: \.messageSending, action: \.messageSending) {
             MessageSendingFeature()
         }
-
+        
         Reduce { state, action in
             switch action {
             case .onAppear:
                 return .merge(
                     .send(.socketConnect),
-                    // 앱이 백그라운드로 갈 때 감지
                     .run { send in
-                        for await _ in NotificationCenter.default.notifications(
-                            named: Notification.Name("UIApplicationWillResignActiveNotification")
-                        ) {
-                            await send(.appWillResignActive)
+                        await withTaskGroup(of: Void.self) { group in
+                            // 앱이 백그라운드로 갈 때 감지
+                            group.addTask {
+                                for await _ in NotificationCenter.default.notifications(
+                                    named: Notification.Name("UIApplicationWillResignActiveNotification")
+                                ) {
+                                    await send(.appWillResignActive)
+                                }
+                            }
+                            
+                            // 앱이 포그라운드로 돌아올 때 감지
+                            group.addTask {
+                                for await _ in NotificationCenter.default.notifications(
+                                    named: Notification.Name("UIApplicationDidBecomeActiveNotification")
+                                ) {
+                                    await send(.appDidBecomeActive)
+                                }
+                            }
                         }
                     }
-                    .cancellable(id: CancelID.lifecycleListener),
-
-                    // 앱이 포그라운드로 돌아올 때 감지
-                    .run { send in
-                        for await _ in NotificationCenter.default.notifications(
-                            named: Notification.Name("UIApplicationDidBecomeActiveNotification")
-                        ) {
-                            await send(.appDidBecomeActive)
-                        }
-                    }
-                    .cancellable(id: CancelID.lifecycleListener)
                 )
 
             case .socketConnect:
                 let roomId = state.roomId
                 return .run { send in
-                    await withTaskCancellationHandler {
-                        do {
-                            let connectedAt = Date()
-                            try await connectChatSocket.execute(roomId: roomId)
-                            await send(.socketConnected(connectedAt))
-                            
-                            for await chat in receiveChatMessages.execute() {
-                                await send(.socketMessageReceived(chat))
-                            }
-                        } catch is CancellationError {
-                        } catch {
-                            await send(.socketConnectionFailed)
+                    do {
+                        let connectedAt = Date()
+                        try await connectChatSocket.execute(roomId: roomId)
+                        await send(.socketConnected(connectedAt))
+
+                        for await chat in receiveChatMessages.execute() {
+                            await send(.socketMessageReceived(chat))
                         }
-                    } onCancel: {
-                        Task {
-                            await disconnectChatSocket.execute()
-                        }
+                    } catch is CancellationError {
+                    } catch {
+                        await send(.socketConnectionFailed)
                     }
                 }
-                .cancellable(id: CancelID.socketListener, cancelInFlight: true)
                 
             case let .socketConnected(connectedAt):
                 state.socketConnectedAt = connectedAt
@@ -165,7 +154,9 @@ struct ChatFeature: Sendable {
                 }
 
             case .socketDisconnect:
-                return .cancel(id: CancelID.socketListener)
+                return .run { _ in
+                    await disconnectChatSocket.execute()
+                }
 
             case .appWillResignActive:
                 state.disconnectedAt = Date()

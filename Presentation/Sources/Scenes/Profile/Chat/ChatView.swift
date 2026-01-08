@@ -13,6 +13,7 @@ import ComposableArchitecture
 
 struct ChatView: View {
     let store: StoreOf<ChatFeature>
+    @Dependency(\.disconnectChatSocket) var disconnectChatSocket
 
     var body: some View {
         WithPerceptionTracking {
@@ -36,9 +37,13 @@ struct ChatView: View {
             }
             .navigationTitle(store.other?.nickname ?? "알 수 없음")
             .navigationBarTitleDisplayMode(.inline)
-//            .onAppear { store.send(.onAppear) }
-            .task {
-                await store.send(.onAppear).finish()
+            .onAppear {
+                store.send(.onAppear)
+            }
+            .onDisappear {
+                Task {
+                    await disconnectChatSocket.execute()
+                }
             }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
@@ -290,7 +295,7 @@ private struct ChatInputBar: View {
                 isPresented: $sendingStore.isShowingMediaPicker,
                 selection: $selectedMedia,
                 maxSelectionCount: sendingStore.maxMedia,
-                matching: .any(of: [.images, .videos])
+                matching: .any(of: [.images])
             )
             .onChange(of: selectedMedia) {
                 handleMediaSelection($0, store: sendingStore)
