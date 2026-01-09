@@ -8,10 +8,10 @@
 public struct StreamResponse: Sendable {
     public let videoId: String
     public let streamURL: String
-    public let qualities: QualityURLResponse
+    public let qualities: [QualityURLResponse]
     public let subtitles: [Subtitle]
-    
-    public init(videoId: String, streamURL: String, qualities: QualityURLResponse, subtitles: [Subtitle]) {
+
+    public init(videoId: String, streamURL: String, qualities: [QualityURLResponse], subtitles: [Subtitle]) {
         self.videoId = videoId
         self.streamURL = streamURL
         self.qualities = qualities
@@ -29,7 +29,7 @@ public struct QualityURLResponse: Sendable {
     }
 }
 
-public struct Subtitle: Sendable {
+public struct Subtitle: Sendable, Equatable {
     public let language: String
     public let name: String
     public let isDefault: Bool

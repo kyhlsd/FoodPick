@@ -11,21 +11,21 @@ import Domain
 struct StreamResponseDTO: ResponseDTO {
     private let videoId: String
     private let streamURL: String
-    private let qualities: QualityURLResponseDTO
+    private let qualities: [QualityURLResponseDTO]
     private let subtitles: [SubtitleDTO]
-    
+
     enum CodingKeys: String, CodingKey {
         case videoId = "video_id"
         case streamURL = "stream_url"
         case qualities
         case subtitles
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.videoId = try container.decode(String.self, forKey: .videoId)
         self.streamURL = try container.decode(String.self, forKey: .streamURL)
-        self.qualities = try container.decode(QualityURLResponseDTO.self, forKey: .qualities)
+        self.qualities = try container.decode([QualityURLResponseDTO].self, forKey: .qualities)
         self.subtitles = try container.decode([SubtitleDTO].self, forKey: .subtitles)
     }
 }
@@ -34,7 +34,7 @@ extension StreamResponseDTO {
     var toDomain: StreamResponse {
         return .init(videoId: videoId,
                      streamURL: streamURL,
-                     qualities: qualities.toDomain,
+                     qualities: qualities.map { $0.toDomain },
                      subtitles: subtitles.map { $0.toDomain }
         )
     }

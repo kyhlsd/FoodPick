@@ -21,7 +21,7 @@ struct AuthenticatedVideo: View {
     @State private var loadingFailed: Bool = false
     @State private var isLoading: Bool = true
     @State private var isPlaying: Bool = false
-    @Dependency(\.imageService) var imageService
+    @Dependency(\.fileService) var fileService
 
     init(
         videoPath: String?,
@@ -65,7 +65,7 @@ struct AuthenticatedVideo: View {
         }
 
         do {
-            let request = try await imageService.makeAuthenticatedRequest(for: videoPath)
+            let request = try await fileService.makeAuthenticatedRequest(for: videoPath)
             if let url = request.url {
                 videoURL = url
                 headers = request.allHTTPHeaderFields

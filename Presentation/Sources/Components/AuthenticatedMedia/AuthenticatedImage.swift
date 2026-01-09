@@ -18,7 +18,7 @@ struct AuthenticatedImage: View {
     @State private var modifier: AnyModifier?
     @State private var loadingFailed: Bool = false
     @State private var imageURL: URL?
-    @Dependency(\.imageService) var imageService
+    @Dependency(\.fileService) var fileService
 
     init(
         imagePath: String?,
@@ -97,7 +97,7 @@ struct AuthenticatedImage: View {
         .task {
             if let imagePath {
                 do {
-                    let request = try await imageService.makeAuthenticatedRequest(for: imagePath)
+                    let request = try await fileService.makeAuthenticatedRequest(for: imagePath)
                     if let url = request.url {
                         imageURL = url
                         modifier = AnyModifier { _ in request }

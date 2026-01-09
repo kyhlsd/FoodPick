@@ -16,10 +16,10 @@ public struct VideoResponse: Sendable {
     public let thumbnailURL: String
     public let availableQualities: [String]
     public let viewCount: Int
-    public let likeCount: Int
-    public let isLiked: Bool
+    public var likeCount: Int
+    public var isLiked: Bool
     public let createdAt: Date
-    
+
     public init(id: String, fileName: String, title: String, description: String, duration: Float, thumbnailURL: String, availableQualities: [String], viewCount: Int, likeCount: Int, isLiked: Bool, createdAt: Date) {
         self.id = id
         self.fileName = fileName
