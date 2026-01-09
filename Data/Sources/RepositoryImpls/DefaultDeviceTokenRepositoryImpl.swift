@@ -8,54 +8,57 @@
 import UIKit
 import UserNotifications
 import Domain
+import FirebaseMessaging
 
 public actor DefaultDeviceTokenRepositoryImpl: DeviceTokenRepository {
     public static let shared = DefaultDeviceTokenRepositoryImpl()
 
     private var deviceToken: String?
-    private var continuation: CheckedContinuation<String, Error>?
+    private var continuation: AsyncStream<String>.Continuation?
+    private let tokenStream: AsyncStream<String>
 
-    private init() {}
+    private init() {
+        var streamContinuation: AsyncStream<String>.Continuation?
+        self.tokenStream = AsyncStream { continuation in
+            streamContinuation = continuation
+        }
+        self.continuation = streamContinuation
+    }
 
     public func getDeviceToken() async throws -> String {
         // 이미 토큰이 있으면 반환
         if let token = deviceToken {
             return token
         }
-
-        // 푸시 알림 권한 요청
-        let center = UNUserNotificationCenter.current()
-        let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-
-        guard granted else {
-            throw DeviceTokenError.permissionDenied
+        
+        let fetchedToken = try await Messaging.messaging().token()
+        guard !fetchedToken.isEmpty else {
+            throw DeviceTokenError.tokenNotAvailable
         }
 
-        // 메인 스레드에서 APNs 등록
-        return try await withCheckedThrowingContinuation { continuation in
-            self.continuation = continuation
-
-            Task { @MainActor in
-                UIApplication.shared.registerForRemoteNotifications()
-            }
-        }
+        await self.setDeviceToken(fetchedToken)
+        return fetchedToken
     }
 
-    // AppDelegate에서 토큰을 받았을 때 호출
-    public func setDeviceToken(_ token: String) {
+    // MessagingDelegate에서 FCM 토큰을 받았을 때 호출
+    public func setDeviceToken(_ token: String) async {
         deviceToken = token
-        continuation?.resume(returning: token)
-        continuation = nil
+        continuation?.yield(token)
     }
 
     // AppDelegate에서 토큰 등록 실패 시 호출
-    public func setDeviceTokenError(_ error: Error) {
-        continuation?.resume(throwing: error)
-        continuation = nil
+    public func setDeviceTokenError(_ error: Error) async {
+        // 에러 처리 (필요시 로깅)
+        print("❌ 토큰 등록 실패: \(error.localizedDescription)")
     }
 
     // 저장된 토큰을 반환
-    public func getCurrentToken() -> String? {
+    public func getCurrentToken() async -> String? {
         return deviceToken
+    }
+
+    // FCM 토큰 변경을 감지하는 스트림
+    nonisolated public func tokenUpdates() -> AsyncStream<String> {
+        return tokenStream
     }
 }

@@ -183,7 +183,8 @@ let project = Project(
                         .external(name: "KakaoSDKCommon"),
                         .external(name: "KakaoSDKUser"),
                         .external(name: "KakaoSDKAuth"),
-                        .external(name: "SocketIO")
+                        .external(name: "SocketIO"),
+                        .external(name: "FirebaseMessaging")
                     ],
                     settings: .settings(
                         base: [
