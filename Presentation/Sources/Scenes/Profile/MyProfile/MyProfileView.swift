@@ -108,25 +108,85 @@ private struct ProfileDestinationModifier: ViewModifier {
     func body(content: Content) -> some View {
         WithPerceptionTracking {
             content
+                .modifier(PostDetailDestination(store: store))
+                .modifier(RestaurantDetailDestination(store: store))
+                .modifier(SearchUserDestination(store: store))
+                .modifier(ChatListDestination(store: store))
+                .modifier(ChatDestination(store: store))
+        }
+    }
+}
+
+private struct PostDetailDestination: ViewModifier {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
                 .navigationDestination(
                     item: $store.scope(state: \.destination?.postDetail, action: \.destination.postDetail)
                 ) { postDetailStore in
                     PostDetailView(store: postDetailStore)
                 }
+        }
+    }
+}
+
+private struct RestaurantDetailDestination: ViewModifier {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
                 .navigationDestination(
                     item: $store.scope(state: \.destination?.restaurantDetail, action: \.destination.restaurantDetail)
                 ) { restaurantDetailStore in
                     RestaurantDetailView(store: restaurantDetailStore)
                 }
+        }
+    }
+}
+
+private struct SearchUserDestination: ViewModifier {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
                 .navigationDestination(
                     item: $store.scope(state: \.destination?.searchUser, action: \.destination.searchUser)
                 ) { searchUserStore in
                     SearchUserView(store: searchUserStore)
                 }
+        }
+    }
+}
+
+private struct ChatListDestination: ViewModifier {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
                 .navigationDestination(
                     item: $store.scope(state: \.destination?.chatList, action: \.destination.chatList)
                 ) { chatListStore in
                     ChatListView(store: chatListStore)
+                }
+        }
+    }
+}
+
+private struct ChatDestination: ViewModifier {
+    @Perception.Bindable var store: StoreOf<MyProfileFeature>
+
+    func body(content: Content) -> some View {
+        WithPerceptionTracking {
+            content
+                .navigationDestination(
+                    item: $store.scope(state: \.destination?.chat, action: \.destination.chat)
+                ) { chatStore in
+                    ChatView(store: chatStore)
                 }
         }
     }

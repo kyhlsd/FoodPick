@@ -152,8 +152,8 @@ struct TabBarFeature: Sendable {
                 return .none
                 
             case let .navigateToChat(chatRoom, myUserId):
-                print("success")
-                return .none
+                state.selectedTab = .profile
+                return .send(.profile(.navigateToChat(chatRoom, myUserId)))
 
             case .alert:
                 return .none
@@ -223,6 +223,9 @@ extension TabBarFeature.State {
                     return false
                 }
 
+            case .chat:
+                return false
+                
             case .postDetail, .restaurantDetail:
                 break
             }

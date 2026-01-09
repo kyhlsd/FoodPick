@@ -31,6 +31,7 @@ struct MyProfileFeature: Sendable {
         case chatListButtonTapped
         case postTapped(postId: String)
         case restaurantTapped(restaurantId: String)
+        case navigateToChat(ChatRoom, String)
         case destination(PresentationAction<Destination.Action>)
     }
 
@@ -93,6 +94,15 @@ struct MyProfileFeature: Sendable {
                     RestaurantDetailFeature.State(restaurantId: restaurantId)
                 )
                 return .none
+                
+            case let .navigateToChat(chatRoom, myUserId):
+                state.destination = .chat(
+                    ChatFeature.State(
+                        chatRoom: chatRoom,
+                        myUserId: myUserId
+                    )
+                )
+                return .none
 
             case .destination:
                 return .none
@@ -110,6 +120,7 @@ extension MyProfileFeature {
         case restaurantDetail(RestaurantDetailFeature)
         case searchUser(SearchUserFeature)
         case chatList(ChatListFeature)
+        case chat(ChatFeature)
     }
 }
 
