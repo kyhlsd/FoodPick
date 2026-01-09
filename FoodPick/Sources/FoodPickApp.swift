@@ -117,16 +117,19 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         let roomId = userInfo["room_id"] as? String
         let date = response.notification.date
         let wrappedCompletion = SendableVoidHandler(handler: completionHandler)
-        
+
         Task { @MainActor in
             if let roomId {
+                // PendingNotificationManager에 저장
+                await PendingNotificationManager.shared.setPendingChatNotification(
+                    roomId: roomId,
+                    date: date
+                )
+
+                // NotificationCenter로 알림을 보내서 TabBarFeature가 즉시 확인하도록 트리거
                 NotificationCenter.default.post(
-                    name: .navigateToChat,
-                    object: nil,
-                    userInfo: [
-                        "roomId": roomId,
-                        "date": date
-                    ]
+                    name: .checkPendingNotification,
+                    object: nil
                 )
             }
             wrappedCompletion()

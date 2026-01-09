@@ -7,6 +7,7 @@
 
 import Foundation
 import Domain
+import Data
 import ComposableArchitecture
 
 @Reducer
@@ -71,6 +72,14 @@ struct TabBarFeature: Sendable {
             case .onAppear:
                 return .run { send in
                     await withTaskGroup(of: Void.self) { group in
+                        // 앱 시작 시 대기 중인 알림 확인
+                        group.addTask {
+                            if let pending = await PendingNotificationManager.shared
+                                .consumePendingChatNotification() {
+                                await send(.chatPushTapped(pending.roomId, pending.date))
+                            }
+                        }
+
                         // Device Token 에러 구독
                         group.addTask {
                             for await notification in NotificationCenter.default.notifications(
@@ -81,15 +90,15 @@ struct TabBarFeature: Sendable {
                                 }
                             }
                         }
-                        
-                        // 채팅 푸시 알림 클릭 구독
+
+                        // Pending 알림 확인 트리거 구독
                         group.addTask {
-                            for await notification in NotificationCenter.default.notifications(
-                                named: .navigateToChat
+                            for await _ in NotificationCenter.default.notifications(
+                                named: .checkPendingNotification
                             ) {
-                                if let roomId = notification.userInfo?["roomId"] as? String,
-                                   let date = notification.userInfo?["date"] as? Date {
-                                    await send(.chatPushTapped(roomId, date))
+                                if let pending = await PendingNotificationManager.shared
+                                    .consumePendingChatNotification() {
+                                    await send(.chatPushTapped(pending.roomId, pending.date))
                                 }
                             }
                         }

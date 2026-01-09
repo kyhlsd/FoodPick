@@ -11,5 +11,5 @@ public extension Notification.Name {
     static let shouldNavigateToLogin = Notification.Name("shouldNavigateToLogin")
     static let loginCompleted = Notification.Name("loginCompleted")
     static let deviceTokenError = Notification.Name("deviceTokenError")
-    static let navigateToChat = Notification.Name("navigateToChat")
+    static let checkPendingNotification = Notification.Name("checkPendingNotification")
 }
