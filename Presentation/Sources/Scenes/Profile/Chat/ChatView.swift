@@ -9,6 +9,7 @@ import SwiftUI
 import PhotosUI
 import Domain
 import Core
+import Data
 import ComposableArchitecture
 
 struct ChatView: View {
@@ -43,6 +44,7 @@ struct ChatView: View {
             .onDisappear {
                 Task {
                     await disconnectChatSocket.execute()
+                    await ActiveChatRoomManager.shared.setActiveChatRoom(nil)
                 }
             }
             .alert($store.scope(state: \.alert, action: \.alert))

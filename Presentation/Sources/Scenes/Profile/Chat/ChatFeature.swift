@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Data
 import Domain
 import Core
 import ComposableArchitecture
@@ -81,7 +82,7 @@ struct ChatFeature: Sendable {
             case .onAppear:
                 return .merge(
                     .send(.socketConnect),
-                    .run { send in
+                    .run { [roomId = state.roomId] send in
                         await withTaskGroup(of: Void.self) { group in
                             // 앱이 백그라운드로 갈 때 감지
                             group.addTask {
@@ -100,6 +101,9 @@ struct ChatFeature: Sendable {
                                     await send(.appDidBecomeActive)
                                 }
                             }
+                            
+                            // 활성 채팅방 설정
+                            await ActiveChatRoomManager.shared.setActiveChatRoom(roomId)
                         }
                     }
                 )

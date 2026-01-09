@@ -83,7 +83,6 @@ extension AppDelegate: MessagingDelegate {
 }
 
 // MARK: - UNUserNotificationCenterDelegate
-@MainActor
 extension AppDelegate: UNUserNotificationCenterDelegate {
     // 앱이 foreground에 있을 때 푸시 알림 수신
     nonisolated func userNotificationCenter(
@@ -92,7 +91,19 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let userInfo = notification.request.content.userInfo
-        completionHandler([.banner, .sound, .badge])
+        let roomId = userInfo["room_id"] as? String
+        
+        let wrappedCompletion = SendableNotificationHandler(handler: completionHandler)
+        
+        Task {
+            let activeChatRoomId = await ActiveChatRoomManager.shared.getActiveChatRoom()
+            
+            let options: UNNotificationPresentationOptions = (activeChatRoomId == roomId) ? [] : [.banner, .sound, .badge]
+            
+            await MainActor.run {
+                wrappedCompletion(options)
+            }
+        }
     }
 
     // 사용자가 알림을 탭했을 때
@@ -102,12 +113,33 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
-        // TODO: 알림 타입에 따라 특정 화면으로 이동 처리
-        // 예: 채팅 알림이면 해당 채팅방으로 이동
-        // if let roomId = userInfo["roomId"] as? String {
-        //     // 채팅방으로 이동
-        // }
+        let roomId = userInfo["room_id"] as? String
+        
+        let wrappedCompletion = SendableVoidHandler(handler: completionHandler)
+        
+        Task { @MainActor in
+            if let roomId {
 
-        completionHandler()
+            }
+            
+            wrappedCompletion()
+        }
+    }
+}
+
+// completionHandler를 감싸서 Sendable로 위장시키는 래퍼 구조체
+private struct SendableNotificationHandler: @unchecked Sendable {
+    let handler: (UNNotificationPresentationOptions) -> Void
+    
+    func callAsFunction(_ options: UNNotificationPresentationOptions) {
+        handler(options)
+    }
+}
+
+private struct SendableVoidHandler: @unchecked Sendable {
+    let handler: () -> Void
+    
+    func callAsFunction() {
+        handler()
     }
 }
