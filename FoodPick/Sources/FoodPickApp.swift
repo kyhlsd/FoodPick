@@ -121,7 +121,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             if let roomId {
 
             }
-            
             wrappedCompletion()
         }
     }

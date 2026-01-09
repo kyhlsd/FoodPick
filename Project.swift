@@ -109,7 +109,8 @@ let project = Project(
             settings: .settings(
                 base: [
                     "DEVELOPMENT_TEAM": .string(teamID),
-                    "SWIFT_VERSION": .string(swiftVersion)
+                    "SWIFT_VERSION": .string(swiftVersion),
+                    "OTHER_LDFLAGS": ["$(inherited)", "-ObjC"]
                 ],
                 configurations: [
                     .debug(name: "Debug", xcconfig: "Config/Secrets/Secrets.xcconfig"),
@@ -189,7 +190,8 @@ let project = Project(
                     settings: .settings(
                         base: [
                             "DEVELOPMENT_TEAM": .string(teamID),
-                            "SWIFT_VERSION": .string(swiftVersion)
+                            "SWIFT_VERSION": .string(swiftVersion),
+                            "OTHER_LDFLAGS": ["$(inherited)", "-ObjC"]
                         ]
                     )
                    ),
