@@ -22,21 +22,6 @@ struct TabBarFeature: Sendable {
 
         @Presents var alert: AlertState<Alert>?
         @Presents var destination: Destination.State?
-
-        var isTabBarVisible: Bool {
-            // HomeFeature의 detail이나 search destination이 있으면 탭바 숨김
-            if home.destination != nil { return false }
-            
-            // Chat 화면에서 탭바 숨김
-            if let profileDestination = profile.destination,
-               case .chatList(let chatListState) = profileDestination {
-                if chatListState.destination?.chat != nil {
-                    return false
-                }
-            }
-            
-            return true
-        }
     }
 
     // MARK: - Action
@@ -149,3 +134,35 @@ extension TabBarFeature {
 }
 
 extension TabBarFeature.Destination.State: Sendable {}
+
+// MARK: - Tab Bar Visibility
+extension TabBarFeature.State {
+    var isTabBarVisible: Bool {
+        // HomeFeature의 detail이나 search destination이 있으면 탭바 숨김
+        if home.destination != nil { return false }
+
+        // ProfileFeature에서 ChatFeature로 이동한 경우 탭바 숨김
+        if let profileDestination = profile.destination {
+            switch profileDestination {
+            case .chatList(let chatListState):
+                // ChatListFeature → ChatFeature
+                if chatListState.destination != nil {
+                    return false
+                }
+
+            case .searchUser(let searchUserState):
+                // SearchUserFeature → OtherProfileFeature → ChatFeature
+                if let otherProfileDestination = searchUserState.destination,
+                   case .otherProfile(let otherProfileState) = otherProfileDestination,
+                   otherProfileState.destination?.chat != nil {
+                    return false
+                }
+
+            case .postDetail, .restaurantDetail:
+                break
+            }
+        }
+
+        return true
+    }
+}
