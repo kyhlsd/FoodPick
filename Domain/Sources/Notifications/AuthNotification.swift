@@ -10,4 +10,5 @@ import Foundation
 public extension Notification.Name {
     static let shouldNavigateToLogin = Notification.Name("shouldNavigateToLogin")
     static let loginCompleted = Notification.Name("loginCompleted")
+    static let deviceTokenError = Notification.Name("DeviceTokenError")
 }

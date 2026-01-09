@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Core
 import ComposableArchitecture
 
 @Reducer
@@ -19,6 +20,7 @@ struct TabBarFeature: Sendable {
         var community = CommunityFeature.State()
         var profile = MyProfileFeature.State()
 
+        @Presents var alert: AlertState<Alert>?
         @Presents var destination: Destination.State?
 
         var isTabBarVisible: Bool {
@@ -39,6 +41,7 @@ struct TabBarFeature: Sendable {
 
     // MARK: - Action
     enum Action {
+        case onAppear
         case tabSelected(Tab)
         case centerButtonTapped
         case destination(PresentationAction<Destination.Action>)
@@ -46,7 +49,11 @@ struct TabBarFeature: Sendable {
         case order(OrderFeature.Action)
         case community(CommunityFeature.Action)
         case profile(MyProfileFeature.Action)
+        case deviceTokenError(Error)
+        case alert(PresentationAction<Alert>)
     }
+
+    enum Alert: Sendable {}
     
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -68,12 +75,37 @@ struct TabBarFeature: Sendable {
 
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                return .run { send in
+                    // Device Token 에러 구독
+                    for await notification in NotificationCenter.default.notifications(named: .deviceTokenError) {
+                        if let error = notification.userInfo?["error"] as? Error {
+                            await send(.deviceTokenError(error))
+                        }
+                    }
+                }
+
             case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
 
             case .centerButtonTapped:
                 state.destination = .pick(PickFeature.State())
+                return .none
+
+            case let .deviceTokenError(error):
+                state.alert = AlertState {
+                    TextState("푸시 알림 등록 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+
+            case .alert:
                 return .none
 
             case .destination:
@@ -92,6 +124,7 @@ struct TabBarFeature: Sendable {
                 return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$destination, action: \.destination)
     }
 }

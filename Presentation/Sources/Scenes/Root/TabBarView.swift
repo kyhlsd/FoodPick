@@ -28,6 +28,9 @@ struct TabBarView: View {
                         .toolbar(.hidden, for: .tabBar)
                     }
                 }
+                .onAppear {
+                    store.send(.onAppear)
+                }
 
                 // TabBar UI
                 if isTabBarVisible {
@@ -80,6 +83,7 @@ struct TabBarView: View {
             ) { pickStore in
                 PickView(store: pickStore)
             }
+            .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
 }

@@ -35,7 +35,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         UNUserNotificationCenter.current().delegate = self
 
-        // 권한과 무관하게 APNS 등록 (권한 거부되어도 silent push는 받을 수 있음)
+        // 권한과 무관하게 APNS 등록
         application.registerForRemoteNotifications()
 
         return true
@@ -76,7 +76,7 @@ extension AppDelegate: MessagingDelegate {
                 let userRepository = DefaultUserRepositoryImpl()
                 try await userRepository.updateDeviceToken(deviceToken: fcmToken)
             } catch {
-                print("⚠️ FCM 토큰 서버 전송 실패 (나중에 재시도): \(error.localizedDescription)")
+                await DefaultDeviceTokenRepositoryImpl.shared.setDeviceTokenError(error)
             }
         }
     }

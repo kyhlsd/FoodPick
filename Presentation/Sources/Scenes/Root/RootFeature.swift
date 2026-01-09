@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import ComposableArchitecture
 import Domain
+import ComposableArchitecture
 
 @Reducer
 struct RootFeature: Sendable {
@@ -37,10 +37,10 @@ struct RootFeature: Sendable {
                 return .run { send in
                     // Font 등록
                     await FontRegistration.registerFonts()
-                    
+
                     // Kakao SDK 초기화
                     await authRepository.initializeKakaoSDK()
-                    
+
                     // 토큰 확인
                     let hasAccessToken = try? await tokenRepository.getAccessToken()
                     let hasRefreshToken = try? await tokenRepository.getRefreshToken()
@@ -82,10 +82,10 @@ struct RootFeature: Sendable {
             case .loggedOut(.loginCompleted):
                 state = .loggedIn(TabBarFeature.State())
                 return .none
-                
+
             case .loggedOut:
                 return .none
-                
+
             case .logout:
                 state = .loggedOut(LoginFeature.State())
                 return .none

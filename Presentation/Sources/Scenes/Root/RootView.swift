@@ -16,7 +16,7 @@ public struct RootView: View {
             RootFeature()
         }
     }
-    
+
     public var body: some View {
         WithPerceptionTracking {
             switch store.state {

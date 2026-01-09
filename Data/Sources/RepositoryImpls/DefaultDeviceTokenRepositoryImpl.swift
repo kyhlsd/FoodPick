@@ -8,6 +8,7 @@
 import UIKit
 import UserNotifications
 import Domain
+import Core
 import FirebaseMessaging
 
 public actor DefaultDeviceTokenRepositoryImpl: DeviceTokenRepository {
@@ -48,8 +49,13 @@ public actor DefaultDeviceTokenRepositoryImpl: DeviceTokenRepository {
 
     // AppDelegate에서 토큰 등록 실패 시 호출
     public func setDeviceTokenError(_ error: Error) async {
-        // 에러 처리 (필요시 로깅)
-        print("❌ 토큰 등록 실패: \(error.localizedDescription)")
+        await MainActor.run {
+            NotificationCenter.default.post(
+                name: NSNotification.Name.deviceTokenError,
+                object: nil,
+                userInfo: ["error": error]
+            )
+        }
     }
 
     // 저장된 토큰을 반환
