@@ -1,5 +1,5 @@
 //
-//  PickFeature.swift
+//  RelayVideoFeature.swift
 //  Presentation
 //
 //  Created by 김영훈 on 12/20/25.
@@ -9,7 +9,7 @@ import Foundation
 import ComposableArchitecture
 
 @Reducer
-struct PickFeature: Sendable {
+struct RelayVideoFeature: Sendable {
     // MARK: - State
     @ObservableState
     struct State: Sendable {

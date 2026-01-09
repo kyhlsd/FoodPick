@@ -110,7 +110,7 @@ struct TabBarFeature: Sendable {
                 return .none
 
             case .centerButtonTapped:
-                state.destination = .pick(PickFeature.State())
+                state.destination = .relayVideo(RelayVideoFeature.State())
                 return .none
 
             case let .deviceTokenError(error):
@@ -193,7 +193,7 @@ extension TabBarFeature {
     enum Tab: CaseIterable, Sendable {
         case home
         case order
-        case pick
+        case relayVideo
         case community
         case profile
     }
@@ -203,7 +203,7 @@ extension TabBarFeature {
 extension TabBarFeature {
     @Reducer
     enum Destination {
-        case pick(PickFeature)
+        case relayVideo(RelayVideoFeature)
     }
 }
 

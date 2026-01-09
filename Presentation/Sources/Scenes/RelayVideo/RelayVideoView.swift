@@ -1,5 +1,5 @@
 //
-//  PickView.swift
+//  RelayVideoView.swift
 //  Presentation
 //
 //  Created by 김영훈 on 12/20/25.
@@ -8,10 +8,10 @@
 import SwiftUI
 import ComposableArchitecture
 
-struct PickView: View {
-    let store: StoreOf<PickFeature>
+struct RelayVideoView: View {
+    let store: StoreOf<RelayVideoFeature>
 
-    init(store: StoreOf<PickFeature>) {
+    init(store: StoreOf<RelayVideoFeature>) {
         self.store = store
     }
 
@@ -24,9 +24,9 @@ struct PickView: View {
 }
 
 #Preview {
-    PickView(
-        store: Store(initialState: PickFeature.State()) {
-            PickFeature()
+    RelayVideoView(
+        store: Store(initialState: RelayVideoFeature.State()) {
+            RelayVideoFeature()
         }
     )
 }

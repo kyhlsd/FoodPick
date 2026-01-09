@@ -48,7 +48,7 @@ struct TabBarView: View {
                                 // TabBar Icon
                                 HStack(spacing: 0) {
                                     ForEach(TabBarFeature.Tab.allCases, id: \.self) { tab in
-                                        if tab == .pick {
+                                        if tab == .relayVideo {
                                             Spacer().frame(width: tabWidth)
                                         } else {
                                             TabBarButton(
@@ -79,9 +79,9 @@ struct TabBarView: View {
             }
             .ignoresSafeArea(.keyboard)
             .fullScreenCover(
-                item: $store.scope(state: \.destination?.pick, action: \.destination.pick)
-            ) { pickStore in
-                PickView(store: pickStore)
+                item: $store.scope(state: \.destination?.relayVideo, action: \.destination.relayVideo)
+            ) { relayVideoStore in
+                RelayVideoView(store: relayVideoStore)
             }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
@@ -178,7 +178,7 @@ private struct CenterButton: View {
                     .fill(Color.custom(.brand(.blackSprout)))
                     .shadow(color: .custom(.gray(.gray75)).opacity(0.3), radius: 12, x: 0, y: 0)
                 
-                TabBarFeature.Tab.pick.selectedIcon
+                TabBarFeature.Tab.relayVideo.selectedIcon
                     .font(.system(size: 24))
             }
             .frame(width: 60, height: 60)
@@ -196,7 +196,7 @@ extension TabBarFeature.Tab {
         case .order:
             return AppIcon.orderFill
                 .foregroundStyle(.custom(.brand(.blackSprout)))
-        case .pick:
+        case .relayVideo:
             return AppIcon.pickFill
                 .foregroundStyle(.custom(.gray(.gray0)))
         case .community:
@@ -215,7 +215,7 @@ extension TabBarFeature.Tab {
             icon = AppIcon.homeEmpty
         case .order:
             icon = AppIcon.orderEmpty
-        case .pick:
+        case .relayVideo:
             icon = AppIcon.pickEmpty
         case .community:
             icon = AppIcon.communityEmpty
@@ -233,7 +233,7 @@ extension TabBarFeature.Tab {
             HomeView(store: store.scope(state: \.home, action: \.home))
         case .order:
             OrderView(store: store.scope(state: \.order, action: \.order))
-        case .pick:
+        case .relayVideo:
             Color.clear
         case .community:
             CommunityView(store: store.scope(state: \.community, action: \.community))
