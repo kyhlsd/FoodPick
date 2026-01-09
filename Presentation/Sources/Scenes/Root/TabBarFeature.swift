@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Core
+import Domain
 import ComposableArchitecture
 
 @Reducer
@@ -35,10 +35,18 @@ struct TabBarFeature: Sendable {
         case community(CommunityFeature.Action)
         case profile(MyProfileFeature.Action)
         case deviceTokenError(Error)
+        case chatPushTapped(String, Date)
+        case fetchChatFailed(Error)
+        case navigateToChat(ChatRoom, String)
         case alert(PresentationAction<Alert>)
     }
 
     enum Alert: Sendable {}
+    
+    // MARK: - Dependencies
+    @Dependency(\.fetchChatList) var fetchChatList
+    @Dependency(\.fetchChatRoom) var fetchChatRoom
+    @Dependency(\.fetchMyProfile) var fetchMyProfile
     
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -62,10 +70,28 @@ struct TabBarFeature: Sendable {
             switch action {
             case .onAppear:
                 return .run { send in
-                    // Device Token 에러 구독
-                    for await notification in NotificationCenter.default.notifications(named: .deviceTokenError) {
-                        if let error = notification.userInfo?["error"] as? Error {
-                            await send(.deviceTokenError(error))
+                    await withTaskGroup(of: Void.self) { group in
+                        // Device Token 에러 구독
+                        group.addTask {
+                            for await notification in NotificationCenter.default.notifications(
+                                named: .deviceTokenError
+                            ) {
+                                if let error = notification.userInfo?["error"] as? Error {
+                                    await send(.deviceTokenError(error))
+                                }
+                            }
+                        }
+                        
+                        // 채팅 푸시 알림 클릭 구독
+                        group.addTask {
+                            for await notification in NotificationCenter.default.notifications(
+                                named: .navigateToChat
+                            ) {
+                                if let roomId = notification.userInfo?["roomId"] as? String,
+                                   let date = notification.userInfo?["date"] as? Date {
+                                    await send(.chatPushTapped(roomId, date))
+                                }
+                            }
                         }
                     }
                 }
@@ -88,6 +114,45 @@ struct TabBarFeature: Sendable {
                 } message: {
                     TextState(error.localizedDescription)
                 }
+                return .none
+                
+            case let .chatPushTapped(roomId, date):
+                return .run { send in
+                    do {
+                        let oneMinuteAgo = Calendar.current.date(byAdding: .minute, value: -1, to: date)
+                        async let chatListTask = fetchChatList.execute(
+                            roomId: roomId,
+                            time: oneMinuteAgo
+                        )
+                        async let myProfileTask = fetchMyProfile.execute()
+                        let (chatList, myProfile) = try await (chatListTask, myProfileTask)
+                        
+                        let opponentId = chatList.first {
+                            $0.sender.userId != myProfile.userId
+                        }?.sender.userId
+                        guard let opponentId else { return }
+                        
+                        let chatRoom = try await fetchChatRoom.execute(opponentId: opponentId)
+                        await send(.navigateToChat(chatRoom, myProfile.userId))
+                    } catch {
+                        await send(.fetchChatFailed(error))
+                    }
+                }
+                
+            case let .fetchChatFailed(error):
+                state.alert = AlertState {
+                    TextState("채팅으로 이동 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+                
+            case let .navigateToChat(chatRoom, myUserId):
+                print("success")
                 return .none
 
             case .alert:

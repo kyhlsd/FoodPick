@@ -2,7 +2,7 @@ import SwiftUI
 import UserNotifications
 import Presentation
 import Data
-import Core
+import Domain
 import iamport_ios
 import FirebaseCore
 import FirebaseMessaging
@@ -34,7 +34,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         Messaging.messaging().delegate = self
 
         UNUserNotificationCenter.current().delegate = self
-
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+        
         // 권한과 무관하게 APNS 등록
         application.registerForRemoteNotifications()
 
@@ -114,12 +115,19 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         let roomId = userInfo["room_id"] as? String
-        
+        let date = response.notification.date
         let wrappedCompletion = SendableVoidHandler(handler: completionHandler)
         
         Task { @MainActor in
             if let roomId {
-
+                NotificationCenter.default.post(
+                    name: .navigateToChat,
+                    object: nil,
+                    userInfo: [
+                        "roomId": roomId,
+                        "date": date
+                    ]
+                )
             }
             wrappedCompletion()
         }
