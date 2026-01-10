@@ -27,7 +27,6 @@ public final class FileServiceImpl: FileService {
 
     public func makeFullURL(from path: String) throws -> URL {
         let fullPath = "\(APIInfos.baseURL)/v1\(path)"
-        print(fullPath)
         guard let url = URL(string: fullPath) else {
             throw FileServiceError.invalidURL(fullPath)
         }

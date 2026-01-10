@@ -17,16 +17,21 @@ struct RelayVideoView: View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
 
-            ZStack {
+            ZStack(alignment: .center) {
                 Color.black.ignoresSafeArea()
 
                 if store.isLoading && store.videoList.isEmpty {
                     LoadingView()
                 } else if !store.videoList.isEmpty {
                     VideoContentView(store: store)
-                    ControlOverlayView(store: store)
+
+                    if let currentVideo = store.currentVideo,
+                       store.loadedStreams[currentVideo.id] != nil {
+                        ControlSection(store: store)
+                            .padding(.trailing, .large)
+                    }
                 } else {
-                    EmptyView()
+                    EmptyVideoView()
                 }
             }
             .onAppear {
@@ -41,16 +46,16 @@ struct RelayVideoView: View {
 private struct LoadingView: View {
     var body: some View {
         ProgressView()
-            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+            .progressViewStyle(CircularProgressViewStyle(tint: .custom(.gray(.gray0))))
     }
 }
 
 // MARK: - Empty View
-private struct EmptyView: View {
+private struct EmptyVideoView: View {
     var body: some View {
         Text("영상이 없습니다")
             .font(.pretendard(size: .body1, weight: .medium))
-            .foregroundStyle(.white)
+            .foregroundStyle(.custom(.gray(.gray0)))
     }
 }
 
@@ -62,87 +67,30 @@ private struct VideoContentView: View {
         WithPerceptionTracking {
             GeometryReader { geometry in
                 ScrollViewReader { proxy in
-                    VideoScrollView(store: store, geometry: geometry)
-                        .onChange(of: store.currentIndex) { newIndex in
-                            withAnimation {
-                                proxy.scrollTo(newIndex, anchor: .top)
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: 0) {
+                            ForEach(Array(store.videoList.enumerated()), id: \.element.id) { index, video in
+                                VideoPlayerCell(
+                                    store: store,
+                                    videoInfo: video,
+                                    stream: store.loadedStreams[video.id],
+                                    isPlaying: index == store.currentIndex
+                                )
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .id(index)
                             }
                         }
+                    }
+                    .ignoresSafeArea()
+                    .simultaneousGesture(SwipeGestureHandler(store: store))
+                    .onChange(of: store.currentIndex) { newIndex in
+                        withAnimation {
+                            proxy.scrollTo(newIndex, anchor: .top)
+                        }
+                    }
                 }
             }
-        }
-    }
-}
-
-// MARK: - Video Scroll View
-private struct VideoScrollView: View {
-    let store: StoreOf<RelayVideoFeature>
-    let geometry: GeometryProxy
-
-    var body: some View {
-        WithPerceptionTracking {
-            if #available(iOS 17.0, *) {
-                VideoScrollViewModern(store: store, geometry: geometry)
-            } else {
-                VideoScrollViewLegacy(store: store, geometry: geometry)
-            }
-        }
-    }
-}
-
-// MARK: - Video Scroll View Modern (iOS 17+)
-@available(iOS 17.0, *)
-private struct VideoScrollViewModern: View {
-    let store: StoreOf<RelayVideoFeature>
-    let geometry: GeometryProxy
-
-    var body: some View {
-        WithPerceptionTracking {
-            ScrollView(.vertical, showsIndicators: false) {
-                VideoListContent(store: store, geometry: geometry)
-            }
-            .scrollTargetBehavior(.paging)
-            .simultaneousGesture(SwipeGestureHandler(store: store))
-        }
-    }
-}
-
-// MARK: - Video Scroll View Legacy (iOS 16)
-private struct VideoScrollViewLegacy: View {
-    let store: StoreOf<RelayVideoFeature>
-    let geometry: GeometryProxy
-
-    var body: some View {
-        WithPerceptionTracking {
-            ScrollView(.vertical, showsIndicators: false) {
-                VideoListContent(store: store, geometry: geometry)
-            }
-            .simultaneousGesture(SwipeGestureHandler(store: store))
-        }
-    }
-}
-
-// MARK: - Video List Content
-private struct VideoListContent: View {
-    let store: StoreOf<RelayVideoFeature>
-    let geometry: GeometryProxy
-
-    var body: some View {
-        WithPerceptionTracking {
-            LazyVStack(spacing: 0) {
-                ForEach(Array(store.videoList.enumerated()), id: \.element.id) { index, video in
-                    VideoPlayerCell(
-                        videoInfo: video,
-                        stream: store.loadedStreams[video.id],
-                        isPlaying: index == store.currentIndex,
-                        selectedQuality: store.selectedQuality,
-                        isSubtitleEnabled: store.isSubtitleEnabled,
-                        selectedSubtitle: store.selectedSubtitle
-                    )
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .id(index)
-                }
-            }
+            .ignoresSafeArea()
         }
     }
 }
@@ -166,24 +114,22 @@ private struct SwipeGestureHandler: Gesture {
     }
 }
 
-// MARK: - Control Overlay View
-private struct ControlOverlayView: View {
-    let store: StoreOf<RelayVideoFeature>
+// MARK: - Control Section
+private struct ControlSection: View {
+    @Perception.Bindable var store: StoreOf<RelayVideoFeature>
 
     var body: some View {
         WithPerceptionTracking {
-            VStack {
+            HStack {
                 Spacer()
-                HStack(alignment: .bottom, spacing: AppPadding.large.value) {
-                    Spacer()
-                    VStack(spacing: AppPadding.large.value) {
-                        LikeButton(store: store)
-                        SubtitleButton(store: store)
-                        QualityButton(store: store)
-                    }
-                    .padding(.trailing, .large)
+                
+                VStack(spacing: 40) {
+                    LikeButton(store: store)
+                    
+                    SubtitleButton(store: store)
+                    
+                    QualityButton(store: store)
                 }
-                .padding(.bottom, .xLarge)
             }
         }
     }
@@ -195,17 +141,17 @@ private struct LikeButton: View {
 
     var body: some View {
         WithPerceptionTracking {
-            Button {
-                store.send(.toggleLike)
-            } label: {
-                VStack(spacing: AppPadding.tiny.value) {
-                    Image(systemName: store.isCurrentVideoLiked ? "heart.fill" : "heart")
-                        .font(.system(size: 32))
-                        .foregroundStyle(store.isCurrentVideoLiked ? .red : .white)
-                    Text("좋아요")
-                        .font(.pretendard(size: .caption1, weight: .regular))
-                        .foregroundStyle(.white)
+            VStack(spacing: AppPadding.tiny.value) {
+                HeartButton(
+                    isLike: store.isCurrentVideoLiked,
+                    nonLikeColor: .custom(.gray(.gray0)),
+                    size: 32
+                ) {
+                    store.send(.toggleLike)
                 }
+                Text("좋아요")
+                    .font(.pretendard(size: .caption1, weight: .regular))
+                    .foregroundStyle(.white)
             }
         }
     }
@@ -281,32 +227,49 @@ private struct QualityButton: View {
 
 // MARK: - Video Player Cell
 private struct VideoPlayerCell: View {
+    let store: StoreOf<RelayVideoFeature>
     let videoInfo: VideoResponse
     let stream: StreamResponse?
     let isPlaying: Bool
-    let selectedQuality: String
-    let isSubtitleEnabled: Bool
-    let selectedSubtitle: Subtitle?
 
     @State private var player: AVPlayer?
     @State private var subtitleText: String = ""
     @Dependency(\.fileService) var fileService
 
     var body: some View {
-        ZStack {
-            if let stream = stream {
-                StreamVideoPlayerView(
-                    stream: stream,
-                    selectedQuality: selectedQuality,
-                    isPlaying: isPlaying,
-                    player: $player
-                )
-
-                // 비디오 정보 오버레이 (왼쪽 하단)
-                VStack {
+        WithPerceptionTracking {
+            if let stream {
+                VStack(spacing: 0) {
                     Spacer()
+                        .frame(height: 60)
 
-                    HStack {
+                    ZStack {
+                        // 영상 플레이어
+                        StreamVideoPlayerView(
+                            stream: stream,
+                            selectedQuality: store.selectedQuality,
+                            isPlaying: isPlaying,
+                            player: $player
+                        )
+
+                        // 자막 오버레이
+                        if store.isSubtitleEnabled, !subtitleText.isEmpty {
+                            VStack {
+                                Spacer()
+                                Text(subtitleText)
+                                    .font(.pretendard(size: .body2, weight: .semiBold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, .medium)
+                                    .padding(.vertical, .small)
+                                    .background(Color.black.opacity(0.8))
+                                    .cornerRadius(8)
+                                    .padding(.bottom, .medium)
+                            }
+                        }
+                    }
+
+                    // 하단 비디오 정보 영역
+                    HStack(alignment: .bottom) {
                         VStack(alignment: .leading, spacing: AppPadding.small.value) {
                             Text(videoInfo.title)
                                 .font(.pretendard(size: .body1, weight: .semiBold))
@@ -334,33 +297,24 @@ private struct VideoPlayerCell: View {
                             }
                             .foregroundStyle(.white.opacity(0.8))
                         }
-                        .padding(.leading, .large)
-
-                        Spacer()
+                        .padding(.horizontal, .medium)
                     }
-                    .padding(.bottom, 120)
+                    .frame(height: 150)
+                    .padding(.bottom, .xLarge)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.black.opacity(0), Color.black.opacity(0.8)]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                 }
-
-                // 자막 오버레이
-                if isSubtitleEnabled, !subtitleText.isEmpty {
-                    VStack {
-                        Spacer()
-                        Text(subtitleText)
-                            .font(.pretendard(size: .body2, weight: .semiBold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, .medium)
-                            .padding(.vertical, .small)
-                            .background(Color.black.opacity(0.8))
-                            .cornerRadius(8)
-                            .padding(.bottom, 220)
-                    }
-                }
-            } else if stream == nil {
+            } else {
                 // 스트림 로딩 중
                 VStack(spacing: AppPadding.medium.value) {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
-
+                    
                     Text("영상 로딩 중...")
                         .font(.pretendard(size: .body2, weight: .medium))
                         .foregroundStyle(.white)
@@ -368,13 +322,12 @@ private struct VideoPlayerCell: View {
             }
         }
         .task {
-            // 자막 로드
-            if isSubtitleEnabled, let subtitle = selectedSubtitle {
+            if store.isSubtitleEnabled, let subtitle = store.selectedSubtitle {
                 await loadSubtitle(subtitle)
             }
         }
-        .onChange(of: isSubtitleEnabled) { newValue in
-            if newValue, let subtitle = selectedSubtitle {
+        .onChange(of: store.isSubtitleEnabled) { newValue in
+            if newValue, let subtitle = store.selectedSubtitle {
                 Task {
                     await loadSubtitle(subtitle)
                 }
@@ -382,8 +335,8 @@ private struct VideoPlayerCell: View {
                 subtitleText = ""
             }
         }
-        .onChange(of: selectedSubtitle) { newSubtitle in
-            if isSubtitleEnabled, let subtitle = newSubtitle {
+        .onChange(of: store.selectedSubtitle) { newSubtitle in
+            if store.isSubtitleEnabled, let subtitle = newSubtitle {
                 Task {
                     await loadSubtitle(subtitle)
                 }
@@ -393,13 +346,10 @@ private struct VideoPlayerCell: View {
 
     private func loadSubtitle(_ subtitle: Subtitle) async {
         do {
-            // FileService를 사용하여 자막 파일 다운로드 (Authorization, SeSACKey 헤더 필요)
             let request = try await fileService.makeAuthenticatedRequest(for: subtitle.url)
             let (data, _) = try await URLSession.shared.data(for: request)
 
             if let subtitleContent = String(data: data, encoding: .utf8) {
-                // TODO: 실시간 자막 동기화 구현
-                // 현재는 간단히 자막이 로드되었다는 표시만
                 await MainActor.run {
                     subtitleText = "[\(subtitle.name)]"
                 }
