@@ -20,13 +20,13 @@ struct RelayVideoView: View {
             ZStack(alignment: .center) {
                 Color.black.ignoresSafeArea()
                 
-                if store.isLoading && store.videoList.isEmpty {
+                if store.videoList.isLoading && store.videoList.videoList.isEmpty {
                     LoadingView()
-                } else if !store.videoList.isEmpty {
+                } else if !store.videoList.videoList.isEmpty {
                     VideoContentView(store: store)
-                    
-                    if let currentVideo = store.currentVideo,
-                       store.loadedStreams[currentVideo.id] != nil {
+
+                    if store.currentVideo != nil,
+                       store.currentStream != nil {
                         ControlSection(store: store)
                             .padding(.trailing, .large)
                     }
@@ -70,11 +70,11 @@ private struct VideoContentView: View {
                     WithPerceptionTracking {
                         ScrollView(.vertical, showsIndicators: false) {
                             LazyVStack(spacing: 0) {
-                                ForEach(Array(store.videoList.enumerated()), id: \.element.id) { index, video in
+                                ForEach(Array(store.videoList.videoList.enumerated()), id: \.element.id) { index, video in
                                     WithPerceptionTracking {
-                                        let stream = store.loadedStreams[video.id]
-                                        let isPlaying = index == store.currentIndex
-                                        
+                                        let stream = store.videoStream.stream(for: video.id)
+                                        let isPlaying = index == store.videoList.currentIndex
+
                                         VideoPlayerCell(
                                             store: store,
                                             videoInfo: video,
@@ -89,7 +89,7 @@ private struct VideoContentView: View {
                         }
                         .ignoresSafeArea()
                         .simultaneousGesture(SwipeGestureHandler(store: store))
-                        .onChange(of: store.currentIndex) { newIndex in
+                        .onChange(of: store.videoList.currentIndex) { newIndex in
                             withAnimation {
                                 proxy.scrollTo(newIndex, anchor: .top)
                             }
@@ -111,11 +111,11 @@ private struct SwipeGestureHandler: Gesture {
             .onEnded { value in
                 let threshold: CGFloat = 50
                 if value.translation.height < -threshold {
-                    let nextIndex = min(store.currentIndex + 1, store.videoList.count - 1)
-                    store.send(.scrollToIndex(nextIndex))
+                    let nextIndex = min(store.videoList.currentIndex + 1, store.videoList.videoList.count - 1)
+                    store.send(.videoList(.scrollToIndex(nextIndex)))
                 } else if value.translation.height > threshold {
-                    let prevIndex = max(store.currentIndex - 1, 0)
-                    store.send(.scrollToIndex(prevIndex))
+                    let prevIndex = max(store.videoList.currentIndex - 1, 0)
+                    store.send(.videoList(.scrollToIndex(prevIndex)))
                 }
             }
     }
@@ -173,7 +173,7 @@ private struct SubtitleButton: View {
             Menu {
                 WithPerceptionTracking {
                     Button {
-                        store.send(.selectSubtitle(nil))
+                        store.send(.subtitle(.selectSubtitle(nil)))
                     } label: {
                         HStack {
                             Text("자막 끄기")
@@ -186,7 +186,7 @@ private struct SubtitleButton: View {
                     if let currentStream = store.currentStream {
                         ForEach(currentStream.subtitles, id: \.language) { subtitle in
                             Button {
-                                store.send(.selectSubtitle(subtitle))
+                                store.send(.subtitle(.selectSubtitle(subtitle)))
                             } label: {
                                 HStack {
                                     Text(subtitle.name)
@@ -368,7 +368,7 @@ private struct VideoPlayerCell: View {
             }
 
             let currentTime = player.currentTime().seconds
-            store.send(.updateSubtitleForTime(currentTime))
+            store.send(.updatePlayerTime(currentTime))
 
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초마다 체크
         }
