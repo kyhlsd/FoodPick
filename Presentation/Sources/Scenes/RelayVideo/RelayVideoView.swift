@@ -170,29 +170,30 @@ private struct SubtitleButton: View {
 
     var body: some View {
         WithPerceptionTracking {
-            Menu {
-                WithPerceptionTracking {
-                    Button {
-                        store.send(.subtitle(.selectSubtitle(nil)))
-                    } label: {
-                        HStack {
-                            Text("자막 끄기")
-                            if store.selectedSubtitle == nil {
-                                Image(systemName: "checkmark")
-                            }
+            let selectedSubtitle = store.selectedSubtitle
+            let currentStream = store.currentStream
+
+            return Menu {
+                Button {
+                    store.send(.subtitle(.selectSubtitle(nil)))
+                } label: {
+                    HStack {
+                        Text("자막 끄기")
+                        if selectedSubtitle == nil {
+                            Image(systemName: "checkmark")
                         }
                     }
+                }
 
-                    if let currentStream = store.currentStream {
-                        ForEach(currentStream.subtitles, id: \.language) { subtitle in
-                            Button {
-                                store.send(.subtitle(.selectSubtitle(subtitle)))
-                            } label: {
-                                HStack {
-                                    Text(subtitle.name)
-                                    if store.selectedSubtitle?.language == subtitle.language {
-                                        Image(systemName: "checkmark")
-                                    }
+                if let currentStream {
+                    ForEach(currentStream.subtitles, id: \.language) { subtitle in
+                        Button {
+                            store.send(.subtitle(.selectSubtitle(subtitle)))
+                        } label: {
+                            HStack {
+                                Text(subtitle.name)
+                                if selectedSubtitle?.language == subtitle.language {
+                                    Image(systemName: "checkmark")
                                 }
                             }
                         }
@@ -200,10 +201,10 @@ private struct SubtitleButton: View {
                 }
             } label: {
                 VStack(spacing: AppPadding.tiny.value) {
-                    Image(systemName: store.selectedSubtitle != nil ? "captions.bubble.fill" : "captions.bubble")
+                    Image(systemName: selectedSubtitle != nil ? "captions.bubble.fill" : "captions.bubble")
                         .font(.system(size: 32))
-                        .foregroundStyle(store.selectedSubtitle != nil ? .custom(.brand(.blackSprout)) : .white)
-                    Text(store.selectedSubtitle?.name ?? "자막")
+                        .foregroundStyle(selectedSubtitle != nil ? .custom(.brand(.blackSprout)) : .white)
+                    Text(selectedSubtitle?.name ?? "자막")
                         .font(.pretendard(size: .caption1, weight: .regular))
                         .foregroundStyle(.white)
                 }
@@ -215,29 +216,32 @@ private struct SubtitleButton: View {
 // MARK: - Quality Button
 private struct QualityButton: View {
     let store: StoreOf<RelayVideoFeature>
-    
+
     var body: some View {
         WithPerceptionTracking {
-            Menu {
+            let selectedQuality = store.selectedQuality
+            let currentVideo = store.currentVideo
+
+            return Menu {
                 Button {
                     store.send(.selectQuality("auto"))
                 } label: {
                     HStack {
                         Text("자동")
-                        if store.selectedQuality == "auto" {
+                        if selectedQuality == "auto" {
                             Image(systemName: "checkmark")
                         }
                     }
                 }
-                
-                if let currentVideo = store.currentVideo {
+
+                if let currentVideo {
                     ForEach(currentVideo.availableQualities, id: \.self) { quality in
                         Button {
                             store.send(.selectQuality(quality))
                         } label: {
                             HStack {
                                 Text(quality)
-                                if store.selectedQuality == quality {
+                                if selectedQuality == quality {
                                     Image(systemName: "checkmark")
                                 }
                             }
@@ -249,7 +253,7 @@ private struct QualityButton: View {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 32))
                         .foregroundStyle(.white)
-                    Text(store.selectedQuality == "auto" ? "자동" : store.selectedQuality)
+                    Text(selectedQuality == "auto" ? "자동" : selectedQuality)
                         .font(.pretendard(size: .caption1, weight: .regular))
                         .foregroundStyle(.white)
                 }
