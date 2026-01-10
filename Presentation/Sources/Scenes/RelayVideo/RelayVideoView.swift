@@ -61,31 +61,38 @@ private struct EmptyVideoView: View {
 
 // MARK: - Video Content View
 private struct VideoContentView: View {
-    let store: StoreOf<RelayVideoFeature>
+    @Perception.Bindable var store: StoreOf<RelayVideoFeature>
 
     var body: some View {
         WithPerceptionTracking {
             GeometryReader { geometry in
                 ScrollViewReader { proxy in
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack(spacing: 0) {
-                            ForEach(Array(store.videoList.enumerated()), id: \.element.id) { index, video in
-                                VideoPlayerCell(
-                                    store: store,
-                                    videoInfo: video,
-                                    stream: store.loadedStreams[video.id],
-                                    isPlaying: index == store.currentIndex
-                                )
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .id(index)
+                    WithPerceptionTracking {
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: 0) {
+                                ForEach(Array(store.videoList.enumerated()), id: \.element.id) { index, video in
+                                    WithPerceptionTracking {
+                                        let stream = store.loadedStreams[video.id]
+                                        let isPlaying = index == store.currentIndex
+                                        
+                                        VideoPlayerCell(
+                                            store: store,
+                                            videoInfo: video,
+                                            stream: stream,
+                                            isPlaying: isPlaying
+                                        )
+                                        .frame(width: geometry.size.width, height: geometry.size.height)
+                                        .id(index)
+                                    }
+                                }
                             }
                         }
-                    }
-                    .ignoresSafeArea()
-                    .simultaneousGesture(SwipeGestureHandler(store: store))
-                    .onChange(of: store.currentIndex) { newIndex in
-                        withAnimation {
-                            proxy.scrollTo(newIndex, anchor: .top)
+                        .ignoresSafeArea()
+                        .simultaneousGesture(SwipeGestureHandler(store: store))
+                        .onChange(of: store.currentIndex) { newIndex in
+                            withAnimation {
+                                proxy.scrollTo(newIndex, anchor: .top)
+                            }
                         }
                     }
                 }
@@ -227,7 +234,7 @@ private struct QualityButton: View {
 
 // MARK: - Video Player Cell
 private struct VideoPlayerCell: View {
-    let store: StoreOf<RelayVideoFeature>
+    @Perception.Bindable var store: StoreOf<RelayVideoFeature>
     let videoInfo: VideoResponse
     let stream: StreamResponse?
     let isPlaying: Bool
@@ -238,107 +245,109 @@ private struct VideoPlayerCell: View {
 
     var body: some View {
         WithPerceptionTracking {
-            if let stream {
-                VStack(spacing: 0) {
-                    Spacer()
-                        .frame(height: 60)
-
-                    ZStack {
-                        // 영상 플레이어
-                        StreamVideoPlayerView(
-                            stream: stream,
-                            selectedQuality: store.selectedQuality,
-                            isPlaying: isPlaying,
-                            player: $player
-                        )
-
-                        // 자막 오버레이
-                        if store.isSubtitleEnabled, !subtitleText.isEmpty {
-                            VStack {
-                                Spacer()
-                                Text(subtitleText)
-                                    .font(.pretendard(size: .body2, weight: .semiBold))
+            Group {
+                if let stream {
+                    VStack(spacing: 0) {
+                        Spacer()
+                            .frame(height: 60)
+                        
+                        ZStack {
+                            // 영상 플레이어
+                            StreamVideoPlayerView(
+                                stream: stream,
+                                selectedQuality: store.selectedQuality,
+                                isPlaying: isPlaying,
+                                player: $player
+                            )
+                            
+                            // 자막 오버레이
+                            if store.isSubtitleEnabled, !subtitleText.isEmpty {
+                                VStack {
+                                    Spacer()
+                                    Text(subtitleText)
+                                        .font(.pretendard(size: .body2, weight: .semiBold))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, .medium)
+                                        .padding(.vertical, .small)
+                                        .background(Color.black.opacity(0.8))
+                                        .cornerRadius(8)
+                                        .padding(.bottom, .medium)
+                                }
+                            }
+                        }
+                        
+                        // 하단 비디오 정보 영역
+                        HStack(alignment: .bottom) {
+                            VStack(alignment: .leading, spacing: AppPadding.small.value) {
+                                Text(videoInfo.title)
+                                    .font(.pretendard(size: .body1, weight: .semiBold))
                                     .foregroundStyle(.white)
-                                    .padding(.horizontal, .medium)
-                                    .padding(.vertical, .small)
-                                    .background(Color.black.opacity(0.8))
-                                    .cornerRadius(8)
-                                    .padding(.bottom, .medium)
-                            }
-                        }
-                    }
-
-                    // 하단 비디오 정보 영역
-                    HStack(alignment: .bottom) {
-                        VStack(alignment: .leading, spacing: AppPadding.small.value) {
-                            Text(videoInfo.title)
-                                .font(.pretendard(size: .body1, weight: .semiBold))
-                                .foregroundStyle(.white)
-
-                            Text(videoInfo.description)
-                                .font(.pretendard(size: .body2, weight: .regular))
+                                
+                                Text(videoInfo.description)
+                                    .font(.pretendard(size: .body2, weight: .regular))
+                                    .foregroundStyle(.white.opacity(0.8))
+                                    .lineLimit(2)
+                                
+                                HStack(spacing: AppPadding.medium.value) {
+                                    HStack(spacing: AppPadding.tiny.value) {
+                                        Image(systemName: "heart.fill")
+                                            .font(.system(size: 14))
+                                        Text("\(videoInfo.likeCount)")
+                                            .font(.pretendard(size: .caption1, weight: .medium))
+                                    }
+                                    
+                                    HStack(spacing: AppPadding.tiny.value) {
+                                        Image(systemName: "eye.fill")
+                                            .font(.system(size: 14))
+                                        Text("\(videoInfo.viewCount)")
+                                            .font(.pretendard(size: .caption1, weight: .medium))
+                                    }
+                                }
                                 .foregroundStyle(.white.opacity(0.8))
-                                .lineLimit(2)
-
-                            HStack(spacing: AppPadding.medium.value) {
-                                HStack(spacing: AppPadding.tiny.value) {
-                                    Image(systemName: "heart.fill")
-                                        .font(.system(size: 14))
-                                    Text("\(videoInfo.likeCount)")
-                                        .font(.pretendard(size: .caption1, weight: .medium))
-                                }
-
-                                HStack(spacing: AppPadding.tiny.value) {
-                                    Image(systemName: "eye.fill")
-                                        .font(.system(size: 14))
-                                    Text("\(videoInfo.viewCount)")
-                                        .font(.pretendard(size: .caption1, weight: .medium))
-                                }
                             }
-                            .foregroundStyle(.white.opacity(0.8))
+                            .padding(.horizontal, .medium)
                         }
-                        .padding(.horizontal, .medium)
-                    }
-                    .frame(height: 150)
-                    .padding(.bottom, .xLarge)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.black.opacity(0), Color.black.opacity(0.8)]),
-                            startPoint: .top,
-                            endPoint: .bottom
+                        .frame(height: 150)
+                        .padding(.bottom, .xLarge)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.black.opacity(0), Color.black.opacity(0.8)]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
                         )
-                    )
-                }
-            } else {
-                // 스트림 로딩 중
-                VStack(spacing: AppPadding.medium.value) {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    
-                    Text("영상 로딩 중...")
-                        .font(.pretendard(size: .body2, weight: .medium))
-                        .foregroundStyle(.white)
+                    }
+                } else {
+                    // 스트림 로딩 중
+                    VStack(spacing: AppPadding.medium.value) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        
+                        Text("영상 로딩 중...")
+                            .font(.pretendard(size: .body2, weight: .medium))
+                            .foregroundStyle(.white)
+                    }
                 }
             }
-        }
-        .task {
-            if store.isSubtitleEnabled, let subtitle = store.selectedSubtitle {
-                await loadSubtitle(subtitle)
-            }
-        }
-        .onChange(of: store.isSubtitleEnabled) { newValue in
-            if newValue, let subtitle = store.selectedSubtitle {
-                Task {
+            .task {
+                if store.isSubtitleEnabled, let subtitle = store.selectedSubtitle {
                     await loadSubtitle(subtitle)
                 }
-            } else {
-                subtitleText = ""
             }
-        }
-        .onChange(of: store.selectedSubtitle) { newSubtitle in
-            if store.isSubtitleEnabled, let subtitle = newSubtitle {
-                Task {
-                    await loadSubtitle(subtitle)
+            .onChange(of: store.isSubtitleEnabled) { newValue in
+                if newValue, let subtitle = store.selectedSubtitle {
+                    Task {
+                        await loadSubtitle(subtitle)
+                    }
+                } else {
+                    subtitleText = ""
+                }
+            }
+            .onChange(of: store.selectedSubtitle) { newSubtitle in
+                if store.isSubtitleEnabled, let subtitle = newSubtitle {
+                    Task {
+                        await loadSubtitle(subtitle)
+                    }
                 }
             }
         }
