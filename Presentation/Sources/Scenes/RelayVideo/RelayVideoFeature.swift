@@ -65,6 +65,7 @@ struct RelayVideoFeature: Sendable {
         case likeFailed(Error)
         case selectQuality(String)
         case updatePlayerTime(TimeInterval)
+        case preloadNextVideo
         case alert(PresentationAction<Alert>)
     }
 
@@ -72,6 +73,7 @@ struct RelayVideoFeature: Sendable {
 
     // MARK: - Dependencies
     @Dependency(\.likeVideo) var likeVideo
+    @Dependency(\.fileService) var fileService
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -97,7 +99,17 @@ struct RelayVideoFeature: Sendable {
             case .videoList(.videoListLoaded):
                 // 첫 번째 비디오의 스트림 로드
                 if let videoId = state.currentVideo?.id {
-                    return .send(.videoStream(.loadStream(videoId)))
+                    var effects: [Effect<Action>] = [
+                        .send(.videoStream(.loadStream(videoId)))
+                    ]
+
+                    // 두 번째 비디오도 미리 로드 (preload를 위해)
+                    if state.videoList.videoList.count > 1 {
+                        let nextVideoId = state.videoList.videoList[1].id
+                        effects.append(.send(.videoStream(.loadStream(nextVideoId))))
+                    }
+
+                    return .merge(effects)
                 }
                 return .none
 
@@ -114,20 +126,31 @@ struct RelayVideoFeature: Sendable {
                 return .none
 
             case let .videoList(.scrollToIndex(index)):
+                let nextIndex = index + 1
+                var effects: [Effect<Action>] = []
+
                 // 다음 페이지 로드 (마지막에서 2번째 비디오일 때)
                 if index >= state.videoList.videoList.count - 2,
                    state.videoList.nextCursor != nil {
-                    return .merge(
-                        .send(.videoList(.fetchVideoList)),
-                        .send(.videoStream(.loadStream(state.videoList.videoList[index].id)))
-                    )
+                    effects.append(.send(.videoList(.fetchVideoList)))
                 }
 
                 // 현재 비디오의 스트림 로드
                 if let videoId = state.currentVideo?.id {
-                    return .send(.videoStream(.loadStream(videoId)))
+                    effects.append(.send(.videoStream(.loadStream(videoId))))
                 }
-                return .none
+
+                // 다음 비디오의 스트림 로드 (preload를 위해)
+                if nextIndex < state.videoList.videoList.count {
+                    let nextVideoId = state.videoList.videoList[nextIndex].id
+                    effects.append(.send(.videoStream(.loadStream(nextVideoId))))
+                }
+
+                if effects.isEmpty {
+                    return .none
+                }
+
+                return .merge(effects)
 
             case let .videoStream(.streamLoaded(videoId, stream)):
                 // 현재 비디오의 스트림이면 기본 자막 설정 및 로드
@@ -138,7 +161,17 @@ struct RelayVideoFeature: Sendable {
                             .send(.subtitle(.loadSubtitle(videoId, defaultSubtitle)))
                         )
                     }
+                    return .none
                 }
+
+                // 다음 비디오의 스트림이면 preload 실행
+                let currentIndex = state.videoList.currentIndex
+                let nextIndex = currentIndex + 1
+                if nextIndex < state.videoList.videoList.count,
+                   state.videoList.videoList[nextIndex].id == videoId {
+                    return .send(.preloadNextVideo)
+                }
+
                 return .none
 
             case let .subtitle(.selectSubtitle(subtitle)):
@@ -199,6 +232,40 @@ struct RelayVideoFeature: Sendable {
             case let .updatePlayerTime(currentTime):
                 guard let videoId = state.currentVideo?.id else { return .none }
                 return .send(.subtitle(.updateSubtitleForTime(videoId, currentTime)))
+
+            case .preloadNextVideo:
+                let currentIndex = state.videoList.currentIndex
+                let nextIndex = currentIndex + 1
+
+                // 다음 비디오가 있는지 확인
+                guard nextIndex < state.videoList.videoList.count else {
+                    return .none
+                }
+
+                let nextVideo = state.videoList.videoList[nextIndex]
+
+                // 다음 비디오의 스트림이 로드되어 있는지 확인
+                guard let nextStream = state.videoStream.stream(for: nextVideo.id) else {
+                    return .none
+                }
+
+                // 선택된 화질에 맞는 URL 가져오기
+                let path: String
+                if state.selectedQuality == "auto" {
+                    path = nextStream.streamURL
+                } else if let quality = nextStream.qualities.first(where: { $0.quality == state.selectedQuality }) {
+                    path = quality.url
+                } else {
+                    path = nextStream.streamURL
+                }
+
+                // URL 생성 및 미리 로드
+                return .run { _ in
+                    guard let url = try? fileService.makeFullURL(from: path) else {
+                        return
+                    }
+                    await PlayerPoolManager.shared.preloadPlayer(for: url)
+                }
 
             case .videoList, .videoStream, .subtitle, .alert, .binding:
                 return .none

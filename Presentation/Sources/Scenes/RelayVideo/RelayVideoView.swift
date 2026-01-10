@@ -39,6 +39,12 @@ struct RelayVideoView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onDisappear {
+                // 뷰가 사라질 때 플레이어 풀 정리
+                Task {
+                    await PlayerPoolManager.shared.cleanupAll()
+                }
+            }
             .alert($store.scope(state: \.alert, action: \.alert))
         }
     }
@@ -64,7 +70,7 @@ private struct EmptyVideoView: View {
 // MARK: - Video Content View
 private struct VideoContentView: View {
     @Perception.Bindable var store: StoreOf<RelayVideoFeature>
-    
+
     var body: some View {
         WithPerceptionTracking {
             GeometryReader { geometry in
@@ -258,7 +264,7 @@ private struct VideoPlayerCell: View {
     let isPlaying: Bool
 
     @State private var player: AVPlayer?
-    
+
     var body: some View {
         WithPerceptionTracking {
             Group {
@@ -266,7 +272,7 @@ private struct VideoPlayerCell: View {
                     VStack(spacing: 0) {
                         Spacer()
                             .frame(height: 60)
-                        
+
                         ZStack {
                             // 영상 플레이어
                             StreamVideoPlayerView(
@@ -275,7 +281,7 @@ private struct VideoPlayerCell: View {
                                 isPlaying: isPlaying,
                                 player: $player
                             )
-                            
+
                             // 자막 오버레이
                             if store.isSubtitleEnabled, !store.currentSubtitleText.isEmpty {
                                 VStack {
@@ -291,7 +297,7 @@ private struct VideoPlayerCell: View {
                                 }
                             }
                         }
-                        
+
                         // 하단 비디오 정보 영역
                         HStack(alignment: .bottom) {
                             VStack(alignment: .leading, spacing: AppPadding.small.value) {
@@ -358,15 +364,15 @@ private struct VideoPlayerCell: View {
 
     private func trackPlayerTime() async {
         while !Task.isCancelled {
-            guard let player = player else {
-                try? await Task.sleep(nanoseconds: 100_000_000)
+            guard isPlaying, let player else {
+                try? await Task.sleep(nanoseconds: 500_000_000)
                 continue
             }
 
             let currentTime = player.currentTime().seconds
             store.send(.updatePlayerTime(currentTime))
 
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초마다 체크
+            try? await Task.sleep(nanoseconds: 100_000_000)
         }
     }
 }

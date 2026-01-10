@@ -16,17 +16,17 @@ struct StreamVideoPlayerView: View {
     let isPlaying: Bool
     @Binding var player: AVPlayer?
     @Dependency(\.fileService) var fileService
-    
+
     var body: some View {
         if let url = videoURL {
-            PlayerViewControllerWrapper(
+            PooledPlayerView(
                 url: url,
                 isPlaying: isPlaying,
                 player: $player
             )
         }
     }
-    
+
     private var videoURL: URL? {
         let path: String
         if selectedQuality == "auto" {
@@ -41,8 +41,8 @@ struct StreamVideoPlayerView: View {
     }
 }
 
-// MARK: - UIKit Player Wrapper
-private struct PlayerViewControllerWrapper: UIViewRepresentable {
+// MARK: - Pooled Player View
+private struct PooledPlayerView: UIViewRepresentable {
     let url: URL
     let isPlaying: Bool
     @Binding var player: AVPlayer?
@@ -50,13 +50,16 @@ private struct PlayerViewControllerWrapper: UIViewRepresentable {
     func makeUIView(context: Context) -> PlayerUIView {
         let view = PlayerUIView()
 
-        // Coordinator에서 player 생성 및 캐싱
-        let newPlayer = context.coordinator.getOrCreatePlayer(for: url)
-        view.player = newPlayer
-
-        // 최초 생성 시 player 바인딩
+        // PlayerPoolManager에서 player 가져오기
         Task { @MainActor in
-            player = newPlayer
+            let pooledPlayer = await PlayerPoolManager.shared.getPlayer(for: url)
+            view.player = pooledPlayer
+            player = pooledPlayer
+
+            // 재생 상태 적용
+            if isPlaying {
+                pooledPlayer.play()
+            }
         }
 
         return view
@@ -64,31 +67,44 @@ private struct PlayerViewControllerWrapper: UIViewRepresentable {
 
     func updateUIView(_ uiView: PlayerUIView, context: Context) {
         let currentURL = (uiView.player?.currentItem?.asset as? AVURLAsset)?.url
-
-        // URL이 변경되면 새 player 생성
+        // URL이 변경되면 풀에서 새 player 가져오기
         if currentURL != url {
-            let newPlayer = context.coordinator.getOrCreatePlayer(for: url)
-            uiView.player = newPlayer
-
             Task { @MainActor in
-                player = newPlayer
+                // 기존 URL을 비활성화
+                if let oldURL = currentURL {
+                    await PlayerPoolManager.shared.deactivatePlayer(for: oldURL)
+                }
+
+                // 새 player 가져오기
+                let pooledPlayer = await PlayerPoolManager.shared.getPlayer(for: url)
+                uiView.player = pooledPlayer
+                player = pooledPlayer
+
+                if isPlaying {
+                    pooledPlayer.play()
+                }
+            }
+        } else {
+            // 같은 URL이면 재생 상태만 동기화
+            if isPlaying {
+                uiView.player?.play()
+            } else {
+                uiView.player?.pause()
             }
         }
-
-        // 재생 상태 동기화
-        if isPlaying {
-            uiView.player?.play()
-        } else {
-            uiView.player?.pause()
-        }
     }
 
-    func makeCoordinator() -> StreamPlayerCoordinator {
-        StreamPlayerCoordinator()
+    func makeCoordinator() -> PooledPlayerCoordinator {
+        PooledPlayerCoordinator(url: url)
     }
 
-    static func dismantleUIView(_ uiView: PlayerUIView, coordinator: StreamPlayerCoordinator) {
+    static func dismantleUIView(_ uiView: PlayerUIView, coordinator: PooledPlayerCoordinator) {
         uiView.player?.pause()
+
+        // 비활성화 (풀에 반환)
+        Task {
+            await PlayerPoolManager.shared.deactivatePlayer(for: coordinator.url)
+        }
     }
 }
 
@@ -131,46 +147,12 @@ private final class PlayerUIView: UIView {
     }
 }
 
-// MARK: - Stream Player Coordinator
-private final class StreamPlayerCoordinator: NSObject {
-    private var player: AVPlayer?
-    private var currentURL: URL?
-    
-    func getOrCreatePlayer(for url: URL) -> AVPlayer {
-        // 같은 URL이면 기존 player 재사용
-        if let player, currentURL == url {
-            return player
-        }
-        
-        // URL이 바뀌었거나 player가 없으면 새로 생성
-        cleanupPlayer()
-        
-        // 스트리밍 URL은 토큰이 포함되어 있어 별도 헤더 불필요
-        let playerItem = AVPlayerItem(url: url)
-        
-        // 버퍼 관리 최적화
-        playerItem.preferredForwardBufferDuration = 3.0
-        
-        let newPlayer = AVPlayer(playerItem: playerItem)
-        
-        // 최적화 설정
-        newPlayer.automaticallyWaitsToMinimizeStalling = true
-        newPlayer.preventsDisplaySleepDuringVideoPlayback = true
-        newPlayer.actionAtItemEnd = .pause
-        
-        self.player = newPlayer
-        self.currentURL = url
-        
-        return newPlayer
-    }
-    
-    private func cleanupPlayer() {
-        player?.pause()
-        player?.replaceCurrentItem(with: nil)
-        player = nil
-    }
-    
-    deinit {
-        cleanupPlayer()
+// MARK: - Pooled Player Coordinator
+private final class PooledPlayerCoordinator: NSObject {
+    let url: URL
+
+    init(url: URL) {
+        self.url = url
+        super.init()
     }
 }
