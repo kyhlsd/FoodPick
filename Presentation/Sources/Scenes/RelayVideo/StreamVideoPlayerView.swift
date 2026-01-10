@@ -42,55 +42,92 @@ struct StreamVideoPlayerView: View {
 }
 
 // MARK: - UIKit Player Wrapper
-private struct PlayerViewControllerWrapper: UIViewControllerRepresentable {
+private struct PlayerViewControllerWrapper: UIViewRepresentable {
     let url: URL
     let isPlaying: Bool
     @Binding var player: AVPlayer?
-    
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController()
-        controller.showsPlaybackControls = false
-        controller.videoGravity = .resizeAspectFill
-        
+
+    func makeUIView(context: Context) -> PlayerUIView {
+        let view = PlayerUIView()
+
         // Coordinator에서 player 생성 및 캐싱
         let newPlayer = context.coordinator.getOrCreatePlayer(for: url)
-        controller.player = newPlayer
-        
+        view.player = newPlayer
+
         // 최초 생성 시 player 바인딩
         Task { @MainActor in
             player = newPlayer
         }
-        
-        return controller
+
+        return view
     }
-    
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        let currentURL = (uiViewController.player?.currentItem?.asset as? AVURLAsset)?.url
-        
+
+    func updateUIView(_ uiView: PlayerUIView, context: Context) {
+        let currentURL = (uiView.player?.currentItem?.asset as? AVURLAsset)?.url
+
         // URL이 변경되면 새 player 생성
         if currentURL != url {
             let newPlayer = context.coordinator.getOrCreatePlayer(for: url)
-            uiViewController.player = newPlayer
-            
+            uiView.player = newPlayer
+
             Task { @MainActor in
                 player = newPlayer
             }
         }
-        
+
         // 재생 상태 동기화
         if isPlaying {
-            uiViewController.player?.play()
+            uiView.player?.play()
         } else {
-            uiViewController.player?.pause()
+            uiView.player?.pause()
         }
     }
-    
+
     func makeCoordinator() -> StreamPlayerCoordinator {
         StreamPlayerCoordinator()
     }
-    
-    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: StreamPlayerCoordinator) {
-        uiViewController.player?.pause()
+
+    static func dismantleUIView(_ uiView: PlayerUIView, coordinator: StreamPlayerCoordinator) {
+        uiView.player?.pause()
+    }
+}
+
+// MARK: - Player UIView
+private final class PlayerUIView: UIView {
+    private var playerLayer: AVPlayerLayer?
+
+    var player: AVPlayer? {
+        didSet {
+            if let playerLayer = playerLayer {
+                playerLayer.player = player
+            } else {
+                setupPlayerLayer()
+            }
+        }
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .black
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupPlayerLayer() {
+        guard let player = player else { return }
+
+        let layer = AVPlayerLayer(player: player)
+        layer.videoGravity = .resizeAspectFill
+        layer.frame = bounds
+        self.layer.addSublayer(layer)
+        self.playerLayer = layer
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        playerLayer?.frame = bounds
     }
 }
 

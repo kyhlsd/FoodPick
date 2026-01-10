@@ -17,21 +17,23 @@ struct RelayVideoView: View {
         WithPerceptionTracking {
             @Perception.Bindable var store = store
             
-            ZStack(alignment: .center) {
+            ZStack {
                 Color.black.ignoresSafeArea()
-                
+
                 if store.videoList.isLoading && store.videoList.videoList.isEmpty {
                     LoadingView()
                 } else if !store.videoList.videoList.isEmpty {
                     VideoContentView(store: store)
-
-                    if store.currentVideo != nil,
-                       store.currentStream != nil {
-                        ControlSection(store: store)
-                            .padding(.trailing, .large)
-                    }
                 } else {
                     EmptyVideoView()
+                }
+            }
+            .overlay(alignment: .trailing) {
+                if !store.videoList.videoList.isEmpty,
+                   store.currentVideo != nil,
+                   store.currentStream != nil {
+                    ControlSection(store: store)
+                        .padding(.trailing, .large)
                 }
             }
             .onAppear {
@@ -167,46 +169,42 @@ private struct LikeButton: View {
 // MARK: - Subtitle Button
 private struct SubtitleButton: View {
     let store: StoreOf<RelayVideoFeature>
+    @State private var showSubtitleMenu = false
 
     var body: some View {
         WithPerceptionTracking {
             let selectedSubtitle = store.selectedSubtitle
             let currentStream = store.currentStream
 
-            return Menu {
-                Button {
-                    store.send(.subtitle(.selectSubtitle(nil)))
-                } label: {
-                    HStack {
-                        Text("자막 끄기")
-                        if selectedSubtitle == nil {
-                            Image(systemName: "checkmark")
-                        }
+            Button {
+                showSubtitleMenu = true
+            } label: {
+                VStack(spacing: AppPadding.tiny.value) {
+                    if selectedSubtitle != nil {
+                        AppIcon.captionsBubbleFill
+                            .font(.system(size: 32))
+                            .foregroundStyle(.custom(.brand(.blackSprout)))
+                    } else { AppIcon.captionsBubbleEmpty
+                            .font(.system(size: 32))
+                            .foregroundStyle(.white)
                     }
+                    
+                    Text(selectedSubtitle?.name ?? "자막")
+                        .font(.pretendard(size: .caption1, weight: .regular))
+                        .foregroundStyle(.white)
+                }
+            }
+            .confirmationDialog("자막 선택", isPresented: $showSubtitleMenu, titleVisibility: .hidden) {
+                Button("자막 끄기") {
+                    store.send(.subtitle(.selectSubtitle(nil)))
                 }
 
                 if let currentStream {
                     ForEach(currentStream.subtitles, id: \.language) { subtitle in
-                        Button {
+                        Button(subtitle.name) {
                             store.send(.subtitle(.selectSubtitle(subtitle)))
-                        } label: {
-                            HStack {
-                                Text(subtitle.name)
-                                if selectedSubtitle?.language == subtitle.language {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
                         }
                     }
-                }
-            } label: {
-                VStack(spacing: AppPadding.tiny.value) {
-                    Image(systemName: selectedSubtitle != nil ? "captions.bubble.fill" : "captions.bubble")
-                        .font(.system(size: 32))
-                        .foregroundStyle(selectedSubtitle != nil ? .custom(.brand(.blackSprout)) : .white)
-                    Text(selectedSubtitle?.name ?? "자막")
-                        .font(.pretendard(size: .caption1, weight: .regular))
-                        .foregroundStyle(.white)
                 }
             }
         }
@@ -216,46 +214,36 @@ private struct SubtitleButton: View {
 // MARK: - Quality Button
 private struct QualityButton: View {
     let store: StoreOf<RelayVideoFeature>
+    @State private var showQualityMenu = false
 
     var body: some View {
         WithPerceptionTracking {
             let selectedQuality = store.selectedQuality
             let currentVideo = store.currentVideo
 
-            return Menu {
-                Button {
-                    store.send(.selectQuality("auto"))
-                } label: {
-                    HStack {
-                        Text("자동")
-                        if selectedQuality == "auto" {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-
-                if let currentVideo {
-                    ForEach(currentVideo.availableQualities, id: \.self) { quality in
-                        Button {
-                            store.send(.selectQuality(quality))
-                        } label: {
-                            HStack {
-                                Text(quality)
-                                if selectedQuality == quality {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                }
+            Button {
+                showQualityMenu = true
             } label: {
                 VStack(spacing: AppPadding.tiny.value) {
-                    Image(systemName: "gearshape.fill")
+                    AppIcon.gearshapeFill
                         .font(.system(size: 32))
                         .foregroundStyle(.white)
                     Text(selectedQuality == "auto" ? "자동" : selectedQuality)
                         .font(.pretendard(size: .caption1, weight: .regular))
                         .foregroundStyle(.white)
+                }
+            }
+            .confirmationDialog("화질 선택", isPresented: $showQualityMenu, titleVisibility: .hidden) {
+                Button("자동") {
+                    store.send(.selectQuality("auto"))
+                }
+
+                if let currentVideo {
+                    ForEach(currentVideo.availableQualities, id: \.self) { quality in
+                        Button(quality) {
+                            store.send(.selectQuality(quality))
+                        }
+                    }
                 }
             }
         }
@@ -318,15 +306,19 @@ private struct VideoPlayerCell: View {
                                 
                                 HStack(spacing: AppPadding.medium.value) {
                                     HStack(spacing: AppPadding.tiny.value) {
-                                        Image(systemName: "heart.fill")
-                                            .font(.system(size: 14))
+                                        AppIcon.likeFill
+                                            .resizable()
+                                            .frame(width: 20, height: 20)
+                                        
                                         Text("\(videoInfo.likeCount)")
                                             .font(.pretendard(size: .caption1, weight: .medium))
                                     }
                                     
                                     HStack(spacing: AppPadding.tiny.value) {
-                                        Image(systemName: "eye.fill")
-                                            .font(.system(size: 14))
+                                        AppIcon.views
+                                            .resizable()
+                                            .frame(width: 16, height: 12)
+                                        
                                         Text("\(videoInfo.viewCount)")
                                             .font(.pretendard(size: .caption1, weight: .medium))
                                     }

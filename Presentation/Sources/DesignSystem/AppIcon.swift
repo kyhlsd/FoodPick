@@ -46,6 +46,12 @@ enum AppIcon {
     static let profileFill = Image("profile_fill", bundle: .module).renderingMode(.template)
     static let profileEmpty = Image("profile_empty", bundle: .module).renderingMode(.template)
  
+    // Video
+    static let gearshapeFill = Image(systemName: "gearshape.fill")
+    static let views = Image(systemName: "eye.fill")
+    static let captionsBubbleFill = Image(systemName: "captions.bubble.fill")
+    static let captionsBubbleEmpty = Image(systemName: "captions.bubble")
+    
     // etc.
     static let kakao = Image("kakao", bundle: .module)
     static let xmarkCircle = Image(systemName: "xmark.circle.fill")
