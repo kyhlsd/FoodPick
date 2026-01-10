@@ -134,12 +134,12 @@ actor PlayerPoolManager {
 
     private func createNewPlayer(url: URL, isPreload: Bool = false) -> AVPlayer {
         let playerItem = AVPlayerItem(url: url)
-            configurePlayerItem(playerItem, isPreload: isPreload)
+        configurePlayerItem(playerItem, isPreload: isPreload)
 
-            let player = AVPlayer(playerItem: playerItem)
-            configurePlayer(player, isPreload: isPreload)
+        let player = AVPlayer(playerItem: playerItem)
+        configurePlayer(player, isPreload: isPreload)
 
-            return player
+        return player
     }
 
     private func replacePlayerItem(player: AVPlayer, url: URL, isPreload: Bool = false) {

@@ -22,8 +22,7 @@ struct StreamVideoPlayerView: View {
             PooledPlayerView(
                 url: url,
                 isPlaying: isPlaying,
-                player: $player,
-                videoId: stream.videoId
+                player: $player
             )
         }
     }
@@ -47,7 +46,6 @@ private struct PooledPlayerView: UIViewRepresentable {
     let url: URL
     let isPlaying: Bool
     @Binding var player: AVPlayer?
-    let videoId: String
 
     func makeUIView(context: Context) -> PlayerUIView {
         let view = PlayerUIView()
@@ -156,13 +154,12 @@ private final class PlayerUIView: UIView {
 }
 
 // MARK: - Pooled Player Coordinator
-private final class PooledPlayerCoordinator: NSObject {
+private final class PooledPlayerCoordinator {
     let url: URL
     var isPlaying: Bool
 
     init(url: URL, isPlaying: Bool) {
         self.url = url
         self.isPlaying = isPlaying
-        super.init()
     }
 }

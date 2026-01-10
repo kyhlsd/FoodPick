@@ -367,24 +367,18 @@ private struct VideoPlayerCell: View {
 
     private func trackPlayerTime() async {
         while !Task.isCancelled {
-            let currentVideoId = store.currentVideo?.id
-            let myVideoId = videoInfo.id
-            let isCurrent = currentVideoId == myVideoId
-
             // 현재 재생중인 비디오가 아니면 추적하지 않음
-            guard isCurrent else {
+            guard store.currentVideo?.id == videoInfo.id else {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 continue
             }
 
-            guard let currentPlayer = player else {
+            guard let player else {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 continue
             }
 
-            let currentTime = currentPlayer.currentTime().seconds
-            store.send(.updatePlayerTime(currentTime))
-
+            store.send(.updatePlayerTime(player.currentTime().seconds))
             try? await Task.sleep(nanoseconds: 100_000_000)
         }
     }

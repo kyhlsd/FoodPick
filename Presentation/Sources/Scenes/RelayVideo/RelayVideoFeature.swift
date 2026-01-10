@@ -162,10 +162,6 @@ struct RelayVideoFeature: Sendable {
                     effects.append(.send(.videoStream(.loadStream(nextVideoId))))
                 }
 
-                if effects.isEmpty {
-                    return .none
-                }
-
                 return .merge(effects)
 
             case let .videoStream(.streamLoaded(videoId, stream)):
