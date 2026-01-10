@@ -12,18 +12,19 @@ enum VideoRouter {
     case videoList(dto: VideoPageRequestDTO)
     case stream(id: String)
     case like(id: String, like: Bool)
+    case subtitle(path: String)
 }
 
 extension VideoRouter: Router {
     var method: HTTPMethod {
         switch self {
-        case .videoList, .stream:
+        case .videoList, .stream, .subtitle:
             return .get
         case .like:
             return .post
         }
     }
-    
+
     var path: String {
         let base = "/videos"
         switch self {
@@ -33,18 +34,20 @@ extension VideoRouter: Router {
             return base + "/\(id)/stream"
         case .like(let id, _):
             return base + "/\(id)/like"
+        case .subtitle(let path):
+            return path
         }
     }
-    
+
     var body: RequestBody {
         switch self {
-        case .videoList, .stream:
+        case .videoList, .stream, .subtitle:
             return .none
         case .like(_, let like):
             return .plain(["like_status": like])
         }
     }
-    
+
     var queryItems: [URLQueryItem] {
         switch self {
         case .videoList(let dto):
@@ -53,9 +56,15 @@ extension VideoRouter: Router {
             return []
         }
     }
-    
+
     var multipartFormData: ((Alamofire.MultipartFormData) -> Void)? {
         return nil
     }
-    
+
+    func asURL() throws -> URL {
+        var url = try baseURL.asURL()
+        url = url.appending(path: "\(version)\(path)")
+        url = url.appending(queryItems: queryItems)
+        return url
+    }
 }

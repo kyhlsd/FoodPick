@@ -48,6 +48,11 @@ final class NetworkManager: @unchecked Sendable {
         onProgress: (@Sendable (Double) -> Void)? = nil,
         onCancel: (@Sendable (() -> Void) -> Void)? = nil
     ) async throws -> T? {
+        // String 타입인 경우 특별 처리
+        if T.self == String.self {
+            return try await performStringRequest(router, onCancel: onCancel) as? T
+        }
+
         if router.multipartFormData != nil {
             return try await performUpload(
                 router,
@@ -65,6 +70,37 @@ final class NetworkManager: @unchecked Sendable {
     }
 
     // MARK: - Private Methods
+    private func performStringRequest(
+        _ router: Router,
+        onCancel: (@Sendable (() -> Void) -> Void)?
+    ) async throws -> String {
+        var dataRequest: DataRequest?
+
+        return try await withCheckedThrowingContinuation { continuation in
+            dataRequest = session.request(router)
+                .validate()
+                .responseString { [weak self] response in
+                    guard let self else {
+                        continuation.resume(throwing: APIError.unknown)
+                        return
+                    }
+                    switch response.result {
+                    case .success(let string):
+                        continuation.resume(returning: string)
+                    case .failure:
+                        let error = self.handleError(response: response.response, data: response.data)
+                        continuation.resume(throwing: error)
+                    }
+                }
+
+            if let onCancel {
+                onCancel {
+                    dataRequest?.cancel()
+                }
+            }
+        }
+    }
+
     private func performRequest<T: Decodable & Sendable>(
         _ router: Router,
         responseType: T.Type,
@@ -83,7 +119,7 @@ final class NetworkManager: @unchecked Sendable {
                     switch response.result {
                     case .success(let data):
                         continuation.resume(returning: data)
-                    case .failure(let error):
+                    case .failure:
                         let error = self.handleError(response: response.response, data: response.data)
                         continuation.resume(throwing: error)
                     }

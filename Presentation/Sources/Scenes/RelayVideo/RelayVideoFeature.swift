@@ -23,6 +23,7 @@ struct RelayVideoFeature: Sendable {
         var isLoading = false
         var selectedQuality: String = "auto"
         var selectedSubtitle: Subtitle?
+        var currentSubtitleText: String = ""
         var nextCursor: String?
 
         @Presents var alert: AlertState<Alert>?
@@ -70,6 +71,7 @@ struct RelayVideoFeature: Sendable {
         case loadSubtitle(String, Subtitle)
         case subtitleLoaded(String, [SubtitleCue])
         case subtitleFailed(String, Error)
+        case updateSubtitleForTime(TimeInterval)
         case alert(PresentationAction<Alert>)
     }
 
@@ -79,8 +81,7 @@ struct RelayVideoFeature: Sendable {
     @Dependency(\.fetchVideoList) var fetchVideoList
     @Dependency(\.fetchVideoStream) var fetchVideoStream
     @Dependency(\.likeVideo) var likeVideo
-    @Dependency(\.fileService) var fileService
-    @Dependency(\.subtitleParser) var subtitleParser
+    @Dependency(\.fetchSubtitle) var fetchSubtitle
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -250,7 +251,7 @@ struct RelayVideoFeature: Sendable {
                 state.selectedSubtitle = subtitle
 
                 // 자막이 선택되었으면 로드
-                if let subtitle = subtitle,
+                if let subtitle,
                    let videoId = state.currentVideo?.id {
                     return .send(.loadSubtitle(videoId, subtitle))
                 }
@@ -264,13 +265,8 @@ struct RelayVideoFeature: Sendable {
 
                 return .run { send in
                     do {
-                        let request = try await fileService.makeAuthenticatedRequest(for: subtitle.url)
-                        let (data, _) = try await URLSession.shared.data(for: request)
-
-                        if let subtitleContent = String(data: data, encoding: .utf8) {
-                            let cues = subtitleParser.parseWebVTT(subtitleContent)
-                            await send(.subtitleLoaded(videoId, cues))
-                        }
+                        let cues = try await fetchSubtitle.execute(subtitle: subtitle)
+                        await send(.subtitleLoaded(videoId, cues))
                     } catch {
                         await send(.subtitleFailed(videoId, error))
                     }
@@ -289,13 +285,8 @@ struct RelayVideoFeature: Sendable {
                     return .run { send in
                         try await Task.sleep(nanoseconds: 1_000_000_000)
                         do {
-                            let request = try await fileService.makeAuthenticatedRequest(for: subtitle.url)
-                            let (data, _) = try await URLSession.shared.data(for: request)
-
-                            if let subtitleContent = String(data: data, encoding: .utf8) {
-                                let cues = subtitleParser.parseWebVTT(subtitleContent)
-                                await send(.subtitleLoaded(videoId, cues))
-                            }
+                            let cues = try await fetchSubtitle.execute(subtitle: subtitle)
+                            await send(.subtitleLoaded(videoId, cues))
                         } catch {
                             await send(.subtitleFailed(videoId, error))
                         }
@@ -305,6 +296,28 @@ struct RelayVideoFeature: Sendable {
                     state.subtitleLoadAttempts[videoId] = 0
                     return .none
                 }
+
+            case let .updateSubtitleForTime(currentTime):
+                guard state.isSubtitleEnabled else {
+                    if !state.currentSubtitleText.isEmpty {
+                        state.currentSubtitleText = ""
+                    }
+                    return .none
+                }
+
+                let cues = state.currentSubtitleCues
+
+                // 현재 시간에 맞는 자막 찾기
+                if let currentCue = cues.first(where: { $0.start <= currentTime && currentTime < $0.end }) {
+                    if state.currentSubtitleText != currentCue.text {
+                        state.currentSubtitleText = currentCue.text
+                    }
+                } else {
+                    if !state.currentSubtitleText.isEmpty {
+                        state.currentSubtitleText = ""
+                    }
+                }
+                return .none
 
             case .alert:
                 return .none

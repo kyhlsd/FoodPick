@@ -42,4 +42,14 @@ public final class DefaultVideoRepositoryImpl: VideoRepository, @unchecked Senda
         }
         return response.toDomain
     }
+
+    public func fetchSubtitle(path: String) async throws -> String {
+        guard let response = try await networkManager.request(
+            VideoRouter.subtitle(path: path),
+            responseType: String.self
+        ) else {
+            throw APIError.empty
+        }
+        return response
+    }
 }

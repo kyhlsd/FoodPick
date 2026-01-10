@@ -264,9 +264,8 @@ private struct VideoPlayerCell: View {
     let videoInfo: VideoResponse
     let stream: StreamResponse?
     let isPlaying: Bool
-    
+
     @State private var player: AVPlayer?
-    @State private var currentSubtitleText: String = ""
     
     var body: some View {
         WithPerceptionTracking {
@@ -286,10 +285,10 @@ private struct VideoPlayerCell: View {
                             )
                             
                             // 자막 오버레이
-                            if store.isSubtitleEnabled, !currentSubtitleText.isEmpty {
+                            if store.isSubtitleEnabled, !store.currentSubtitleText.isEmpty {
                                 VStack {
                                     Spacer()
-                                    Text(currentSubtitleText)
+                                    Text(store.currentSubtitleText)
                                         .font(.pretendard(size: .body2, weight: .semiBold))
                                         .foregroundStyle(.white)
                                         .padding(.horizontal, .medium)
@@ -356,43 +355,21 @@ private struct VideoPlayerCell: View {
             }
             .task {
                 // 플레이어 시간 추적 시작
-                await startSubtitleTracking()
-            }
-            .onChange(of: store.selectedSubtitle?.language) { _ in
-                currentSubtitleText = ""
+                await trackPlayerTime()
             }
         }
     }
-    
-    private func startSubtitleTracking() async {
+
+    private func trackPlayerTime() async {
         while !Task.isCancelled {
             guard let player = player else {
                 try? await Task.sleep(nanoseconds: 100_000_000)
                 continue
             }
-            
-            // 자막이 활성화되어 있을 때만 추적
-            if store.isSubtitleEnabled {
-                let currentTime = player.currentTime().seconds
-                let cues = store.currentSubtitleCues
-                
-                // 현재 시간에 맞는 자막 찾기
-                if let currentCue = cues.first(where: { $0.start <= currentTime && currentTime < $0.end }) {
-                    if currentSubtitleText != currentCue.text {
-                        currentSubtitleText = currentCue.text
-                    }
-                } else {
-                    if !currentSubtitleText.isEmpty {
-                        currentSubtitleText = ""
-                    }
-                }
-            } else {
-                // 자막이 비활성화되어 있으면 텍스트 초기화
-                if !currentSubtitleText.isEmpty {
-                    currentSubtitleText = ""
-                }
-            }
-            
+
+            let currentTime = player.currentTime().seconds
+            store.send(.updateSubtitleForTime(currentTime))
+
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초마다 체크
         }
     }
