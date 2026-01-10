@@ -15,15 +15,15 @@ public final class SubtitleParserServiceImpl: SubtitleParserService {
         var cues: [SubtitleCue] = []
         let lines = content.components(separatedBy: .newlines)
 
-        var i = 0
-        while i < lines.count {
-            let line = lines[i].trimmingCharacters(in: .whitespaces)
+        var index = 0
+        while index < lines.count {
+            let line = lines[index].trimmingCharacters(in: .whitespaces)
 
             // 타임스탬프 라인 찾기 (00:00.000 --> 00:01.034 형식)
             if line.contains("-->") {
                 let parts = line.components(separatedBy: "-->")
                 guard parts.count == 2 else {
-                    i += 1
+                    index += 1
                     continue
                 }
 
@@ -31,10 +31,10 @@ public final class SubtitleParserServiceImpl: SubtitleParserService {
                 let endTime = parseTime(parts[1].trimmingCharacters(in: .whitespaces))
 
                 // 다음 라인부터 자막 텍스트 수집
-                i += 1
+                index += 1
                 var text = ""
-                while i < lines.count {
-                    let textLine = lines[i].trimmingCharacters(in: .whitespaces)
+                while index < lines.count {
+                    let textLine = lines[index].trimmingCharacters(in: .whitespaces)
                     if textLine.isEmpty {
                         break
                     }
@@ -42,13 +42,13 @@ public final class SubtitleParserServiceImpl: SubtitleParserService {
                         text += " "
                     }
                     text += textLine
-                    i += 1
+                    index += 1
                 }
 
                 cues.append(SubtitleCue(start: startTime, end: endTime, text: text))
             }
 
-            i += 1
+            index += 1
         }
 
         return cues

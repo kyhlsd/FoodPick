@@ -17,10 +17,11 @@ struct RelayVideoFeature: Sendable {
         var videoList: [VideoResponse] = []
         var loadedStreams: [String: StreamResponse] = [:] // videoId -> StreamResponse
         var loadedSubtitles: [String: [SubtitleCue]] = [:] // videoId -> SubtitleCues
+        var streamLoadAttempts: [String: Int] = [:] // videoId -> stream retry count
+        var subtitleLoadAttempts: [String: Int] = [:] // videoId -> subtitle retry count
         var currentIndex: Int = 0
         var isLoading = false
         var selectedQuality: String = "auto"
-        var isSubtitleEnabled = false
         var selectedSubtitle: Subtitle?
         var nextCursor: String?
 
@@ -38,6 +39,10 @@ struct RelayVideoFeature: Sendable {
 
         var isCurrentVideoLiked: Bool {
             currentVideo?.isLiked ?? false
+        }
+
+        var isSubtitleEnabled: Bool {
+            selectedSubtitle != nil
         }
 
         var currentSubtitleCues: [SubtitleCue] {
@@ -60,7 +65,6 @@ struct RelayVideoFeature: Sendable {
         case toggleLike
         case likeSuccess(String, LikeStatus)
         case likeFailed(Error)
-        case toggleSubtitle
         case selectQuality(String)
         case selectSubtitle(Subtitle?)
         case loadSubtitle(String, Subtitle)
@@ -163,24 +167,36 @@ struct RelayVideoFeature: Sendable {
 
             case let .streamLoaded(videoId, stream):
                 state.loadedStreams[videoId] = stream
+                state.streamLoadAttempts[videoId] = 0 // 성공 시 재시도 카운트 리셋
 
                 // 현재 비디오의 스트림이면 기본 자막 설정 및 로드
                 if state.currentVideo?.id == videoId {
                     if let defaultSubtitle = stream.subtitles.first(where: { $0.isDefault }) {
                         state.selectedSubtitle = defaultSubtitle
-
-                        // 자막이 활성화되어 있으면 로드
-                        if state.isSubtitleEnabled {
-                            return .send(.loadSubtitle(videoId, defaultSubtitle))
-                        }
+                        return .send(.loadSubtitle(videoId, defaultSubtitle))
                     }
                 }
                 return .none
 
-            case let .streamFailed(videoId, error):
-                // 스트림 로드 실패는 조용히 처리 (다음 비디오로 넘어갈 수 있도록)
-                print("Failed to load stream for video \(videoId): \(error)")
-                return .none
+            case let .streamFailed(videoId, _):
+                let attempts = state.streamLoadAttempts[videoId] ?? 0
+
+                if attempts < 2 {
+                    state.streamLoadAttempts[videoId] = attempts + 1
+                    return .run { send in
+                        try await Task.sleep(nanoseconds: 1_000_000_000)
+                        do {
+                            let stream = try await fetchVideoStream.execute(id: videoId)
+                            await send(.streamLoaded(videoId, stream))
+                        } catch {
+                            await send(.streamFailed(videoId, error))
+                        }
+                    }
+                } else {
+                    // 재시도 실패 시 카운트 리셋
+                    state.streamLoadAttempts[videoId] = 0
+                    return .none
+                }
 
             case .toggleLike:
                 guard let currentVideo = state.currentVideo else { return .none }
@@ -214,7 +230,7 @@ struct RelayVideoFeature: Sendable {
                 return .none
 
             case let .likeFailed(error):
-                // 좋아요 실패 시 원래 상태로 롤백 (optimistic update 취소)
+                // 좋아요 실패 시 원래 상태로 롤백
                 state.alert = AlertState {
                     TextState("좋아요 실패")
                 } actions: {
@@ -226,17 +242,6 @@ struct RelayVideoFeature: Sendable {
                 }
                 return .none
 
-            case .toggleSubtitle:
-                state.isSubtitleEnabled.toggle()
-
-                // 자막을 켰고, 선택된 자막이 있으면 로드
-                if state.isSubtitleEnabled,
-                   let subtitle = state.selectedSubtitle,
-                   let videoId = state.currentVideo?.id {
-                    return .send(.loadSubtitle(videoId, subtitle))
-                }
-                return .none
-
             case let .selectQuality(quality):
                 state.selectedQuality = quality
                 return .none
@@ -244,9 +249,8 @@ struct RelayVideoFeature: Sendable {
             case let .selectSubtitle(subtitle):
                 state.selectedSubtitle = subtitle
 
-                // 자막이 선택되고 활성화되어 있으면 로드
-                if state.isSubtitleEnabled,
-                   let subtitle = subtitle,
+                // 자막이 선택되었으면 로드
+                if let subtitle = subtitle,
                    let videoId = state.currentVideo?.id {
                     return .send(.loadSubtitle(videoId, subtitle))
                 }
@@ -274,11 +278,33 @@ struct RelayVideoFeature: Sendable {
 
             case let .subtitleLoaded(videoId, cues):
                 state.loadedSubtitles[videoId] = cues
+                state.subtitleLoadAttempts[videoId] = 0
                 return .none
 
-            case let .subtitleFailed(videoId, error):
-                print("Failed to load subtitle for video \(videoId): \(error)")
-                return .none
+            case let .subtitleFailed(videoId, _):
+                let attempts = state.subtitleLoadAttempts[videoId] ?? 0
+
+                if attempts < 2, let subtitle = state.selectedSubtitle {
+                    state.subtitleLoadAttempts[videoId] = attempts + 1
+                    return .run { send in
+                        try await Task.sleep(nanoseconds: 1_000_000_000)
+                        do {
+                            let request = try await fileService.makeAuthenticatedRequest(for: subtitle.url)
+                            let (data, _) = try await URLSession.shared.data(for: request)
+
+                            if let subtitleContent = String(data: data, encoding: .utf8) {
+                                let cues = subtitleParser.parseWebVTT(subtitleContent)
+                                await send(.subtitleLoaded(videoId, cues))
+                            }
+                        } catch {
+                            await send(.subtitleFailed(videoId, error))
+                        }
+                    }
+                } else {
+                    // 재시도 실패 시 카운트 리셋
+                    state.subtitleLoadAttempts[videoId] = 0
+                    return .none
+                }
 
             case .alert:
                 return .none

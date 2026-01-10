@@ -167,17 +167,43 @@ private struct LikeButton: View {
 // MARK: - Subtitle Button
 private struct SubtitleButton: View {
     let store: StoreOf<RelayVideoFeature>
-    
+
     var body: some View {
         WithPerceptionTracking {
-            Button {
-                store.send(.toggleSubtitle)
+            Menu {
+                WithPerceptionTracking {
+                    Button {
+                        store.send(.selectSubtitle(nil))
+                    } label: {
+                        HStack {
+                            Text("자막 끄기")
+                            if store.selectedSubtitle == nil {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+
+                    if let currentStream = store.currentStream {
+                        ForEach(currentStream.subtitles, id: \.language) { subtitle in
+                            Button {
+                                store.send(.selectSubtitle(subtitle))
+                            } label: {
+                                HStack {
+                                    Text(subtitle.name)
+                                    if store.selectedSubtitle?.language == subtitle.language {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             } label: {
                 VStack(spacing: AppPadding.tiny.value) {
-                    Image(systemName: store.isSubtitleEnabled ? "captions.bubble.fill" : "captions.bubble")
+                    Image(systemName: store.selectedSubtitle != nil ? "captions.bubble.fill" : "captions.bubble")
                         .font(.system(size: 32))
-                        .foregroundStyle(store.isSubtitleEnabled ? .custom(.brand(.blackSprout)) : .white)
-                    Text("자막")
+                        .foregroundStyle(store.selectedSubtitle != nil ? .custom(.brand(.blackSprout)) : .white)
+                    Text(store.selectedSubtitle?.name ?? "자막")
                         .font(.pretendard(size: .caption1, weight: .regular))
                         .foregroundStyle(.white)
                 }
@@ -332,11 +358,8 @@ private struct VideoPlayerCell: View {
                 // 플레이어 시간 추적 시작
                 await startSubtitleTracking()
             }
-            .onChange(of: store.isSubtitleEnabled) { _ in
-                // 자막 활성화 상태가 변경되면 자막 텍스트 초기화
-                if !store.isSubtitleEnabled {
-                    currentSubtitleText = ""
-                }
+            .onChange(of: store.selectedSubtitle?.language) { _ in
+                currentSubtitleText = ""
             }
         }
     }
