@@ -36,11 +36,14 @@ struct RelayVideoView: View {
                         .padding(.trailing, .large)
                 }
             }
+            .overlay(alignment: .topLeading) {
+                CloseButton(store: store)
+                    .padding([.leading, .top], .large)
+            }
             .onAppear {
                 store.send(.onAppear)
             }
             .onDisappear {
-                // 뷰가 사라질 때 플레이어 풀 정리
                 Task {
                     await PlayerPoolManager.shared.cleanupAll()
                 }
@@ -373,6 +376,30 @@ private struct VideoPlayerCell: View {
             store.send(.updatePlayerTime(currentTime))
 
             try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+    }
+}
+
+// MARK: - Close Button
+private struct CloseButton: View {
+    let store: StoreOf<RelayVideoFeature>
+    
+    var body: some View {
+        WithPerceptionTracking {
+            Button {
+                store.send(.closeButtonTapped)
+            } label: {
+                AppIcon.xmark
+                    .resizable()
+                    .fontWeight(.bold)
+                    .frame(width: 12, height: 12)
+                    .foregroundStyle(.custom(.gray(.gray0)))
+                    .padding(.all, .small)
+                    .background {
+                        Circle()
+                            .fill(.custom(.gray(.gray75)).opacity(0.8))
+                    }
+            }
         }
     }
 }

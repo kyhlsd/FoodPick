@@ -66,6 +66,7 @@ struct RelayVideoFeature: Sendable {
         case selectQuality(String)
         case updatePlayerTime(TimeInterval)
         case preloadNextVideo
+        case closeButtonTapped
         case alert(PresentationAction<Alert>)
     }
 
@@ -74,6 +75,7 @@ struct RelayVideoFeature: Sendable {
     // MARK: - Dependencies
     @Dependency(\.likeVideo) var likeVideo
     @Dependency(\.fileService) var fileService
+    @Dependency(\.dismiss) var dismiss
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -266,6 +268,9 @@ struct RelayVideoFeature: Sendable {
                     }
                     await PlayerPoolManager.shared.preloadPlayer(for: url)
                 }
+                
+            case .closeButtonTapped:
+                return .run { _ in await self.dismiss() }
 
             case .videoList, .videoStream, .subtitle, .alert, .binding:
                 return .none

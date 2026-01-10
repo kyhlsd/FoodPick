@@ -14,10 +14,10 @@ struct SubtitleReducer: Sendable {
     // MARK: - State
     @ObservableState
     struct State: Sendable {
-        var loadedSubtitles: [String: [SubtitleCue]] = [:] // videoId -> SubtitleCues
-        var subtitleLoadAttempts: [String: Int] = [:] // videoId -> subtitle retry count
+        var loadedSubtitles: [String: [SubtitleCue]] = [:]
+        var subtitleLoadAttempts: [String: Int] = [:]
         var selectedSubtitle: Subtitle?
-        var currentSubtitleText: String = ""
+        var currentSubtitleText = ""
 
         var isSubtitleEnabled: Bool {
             selectedSubtitle != nil

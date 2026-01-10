@@ -51,6 +51,7 @@ enum AppIcon {
     static let views = Image(systemName: "eye.fill")
     static let captionsBubbleFill = Image(systemName: "captions.bubble.fill")
     static let captionsBubbleEmpty = Image(systemName: "captions.bubble")
+    static let xmark = Image(systemName: "xmark")
     
     // etc.
     static let kakao = Image("kakao", bundle: .module)
