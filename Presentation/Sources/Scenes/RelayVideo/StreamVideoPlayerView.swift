@@ -22,7 +22,8 @@ struct StreamVideoPlayerView: View {
             PooledPlayerView(
                 url: url,
                 isPlaying: isPlaying,
-                player: $player
+                player: $player,
+                videoId: stream.videoId
             )
         }
     }
@@ -46,18 +47,20 @@ private struct PooledPlayerView: UIViewRepresentable {
     let url: URL
     let isPlaying: Bool
     @Binding var player: AVPlayer?
+    let videoId: String
 
     func makeUIView(context: Context) -> PlayerUIView {
         let view = PlayerUIView()
 
         // PlayerPoolManager에서 player 가져오기
+        let currentIsPlaying = isPlaying  // 캡처
         Task { @MainActor in
             let pooledPlayer = await PlayerPoolManager.shared.getPlayer(for: url)
             view.player = pooledPlayer
             player = pooledPlayer
 
             // 재생 상태 적용
-            if isPlaying {
+            if currentIsPlaying {
                 pooledPlayer.play()
             }
         }
@@ -67,8 +70,11 @@ private struct PooledPlayerView: UIViewRepresentable {
 
     func updateUIView(_ uiView: PlayerUIView, context: Context) {
         let currentURL = (uiView.player?.currentItem?.asset as? AVURLAsset)?.url
+        let previousIsPlaying = context.coordinator.isPlaying
+
         // URL이 변경되면 풀에서 새 player 가져오기
         if currentURL != url {
+            let currentIsPlaying = isPlaying
             Task { @MainActor in
                 // 기존 URL을 비활성화
                 if let oldURL = currentURL {
@@ -80,22 +86,24 @@ private struct PooledPlayerView: UIViewRepresentable {
                 uiView.player = pooledPlayer
                 player = pooledPlayer
 
-                if isPlaying {
+                if currentIsPlaying {
                     pooledPlayer.play()
                 }
             }
-        } else {
-            // 같은 URL이면 재생 상태만 동기화
+            context.coordinator.isPlaying = isPlaying
+        } else if previousIsPlaying != isPlaying {
+            // 같은 URL이지만 재생 상태가 변경된 경우만 동기화
             if isPlaying {
                 uiView.player?.play()
             } else {
                 uiView.player?.pause()
             }
+            context.coordinator.isPlaying = isPlaying
         }
     }
 
     func makeCoordinator() -> PooledPlayerCoordinator {
-        PooledPlayerCoordinator(url: url)
+        PooledPlayerCoordinator(url: url, isPlaying: isPlaying)
     }
 
     static func dismantleUIView(_ uiView: PlayerUIView, coordinator: PooledPlayerCoordinator) {
@@ -150,9 +158,11 @@ private final class PlayerUIView: UIView {
 // MARK: - Pooled Player Coordinator
 private final class PooledPlayerCoordinator: NSObject {
     let url: URL
+    var isPlaying: Bool
 
-    init(url: URL) {
+    init(url: URL, isPlaying: Bool) {
         self.url = url
+        self.isPlaying = isPlaying
         super.init()
     }
 }

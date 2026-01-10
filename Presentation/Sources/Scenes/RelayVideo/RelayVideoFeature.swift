@@ -128,6 +128,9 @@ struct RelayVideoFeature: Sendable {
                 return .none
 
             case let .videoList(.scrollToIndex(index)):
+                // 비디오가 바뀌면 자막 텍스트 및 선택 초기화
+                state.subtitle.currentSubtitleText = ""
+
                 let nextIndex = index + 1
                 var effects: [Effect<Action>] = []
 
@@ -140,6 +143,17 @@ struct RelayVideoFeature: Sendable {
                 // 현재 비디오의 스트림 로드
                 if let videoId = state.currentVideo?.id {
                     effects.append(.send(.videoStream(.loadStream(videoId))))
+
+                    // 현재 비디오의 스트림이 이미 로드되어 있으면 기본 자막 설정
+                    if let stream = state.videoStream.stream(for: videoId) {
+                        if let defaultSubtitle = stream.subtitles.first(where: { $0.isDefault }) {
+                            effects.append(.send(.subtitle(.selectSubtitle(defaultSubtitle))))
+                            effects.append(.send(.subtitle(.loadSubtitle(videoId, defaultSubtitle))))
+                        } else {
+                            // 기본 자막이 없으면 자막 끄기
+                            effects.append(.send(.subtitle(.selectSubtitle(nil))))
+                        }
+                    }
                 }
 
                 // 다음 비디오의 스트림 로드 (preload를 위해)

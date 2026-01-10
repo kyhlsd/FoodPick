@@ -24,7 +24,9 @@ struct SubtitleReducer: Sendable {
         }
 
         func currentSubtitleCues(for videoId: String) -> [SubtitleCue] {
-            return loadedSubtitles[videoId] ?? []
+            guard let language = selectedSubtitle?.language else { return [] }
+            let key = "\(videoId)-\(language)"
+            return loadedSubtitles[key] ?? []
         }
     }
 
@@ -32,7 +34,7 @@ struct SubtitleReducer: Sendable {
     enum Action: Sendable {
         case selectSubtitle(Subtitle?)
         case loadSubtitle(String, Subtitle)
-        case subtitleLoaded(String, [SubtitleCue])
+        case subtitleLoaded(String, String, [SubtitleCue]) // videoId, language, cues
         case subtitleFailed(String, Error)
         case updateSubtitleForTime(String, TimeInterval) // videoId, currentTime
     }
@@ -49,22 +51,25 @@ struct SubtitleReducer: Sendable {
                 return .none
 
             case let .loadSubtitle(videoId, subtitle):
+                let key = "\(videoId)-\(subtitle.language)"
+
                 // 이미 로드된 자막이면 스킵
-                if state.loadedSubtitles[videoId] != nil {
+                if state.loadedSubtitles[key] != nil {
                     return .none
                 }
 
                 return .run { send in
                     do {
                         let cues = try await fetchSubtitle.execute(subtitle: subtitle)
-                        await send(.subtitleLoaded(videoId, cues))
+                        await send(.subtitleLoaded(videoId, subtitle.language, cues))
                     } catch {
                         await send(.subtitleFailed(videoId, error))
                     }
                 }
 
-            case let .subtitleLoaded(videoId, cues):
-                state.loadedSubtitles[videoId] = cues
+            case let .subtitleLoaded(videoId, language, cues):
+                let key = "\(videoId)-\(language)"
+                state.loadedSubtitles[key] = cues
                 state.subtitleLoadAttempts[videoId] = 0
                 return .none
 
@@ -77,7 +82,7 @@ struct SubtitleReducer: Sendable {
                         try await Task.sleep(nanoseconds: 1_000_000_000)
                         do {
                             let cues = try await fetchSubtitle.execute(subtitle: subtitle)
-                            await send(.subtitleLoaded(videoId, cues))
+                            await send(.subtitleLoaded(videoId, subtitle.language, cues))
                         } catch {
                             await send(.subtitleFailed(videoId, error))
                         }
