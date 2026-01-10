@@ -16,6 +16,7 @@ struct RelayVideoFeature: Sendable {
     struct State: Sendable {
         var videoList: [VideoResponse] = []
         var loadedStreams: [String: StreamResponse] = [:] // videoId -> StreamResponse
+        var loadedSubtitles: [String: [SubtitleCue]] = [:] // videoId -> SubtitleCues
         var currentIndex: Int = 0
         var isLoading = false
         var selectedQuality: String = "auto"
@@ -38,10 +39,15 @@ struct RelayVideoFeature: Sendable {
         var isCurrentVideoLiked: Bool {
             currentVideo?.isLiked ?? false
         }
+
+        var currentSubtitleCues: [SubtitleCue] {
+            guard let videoId = currentVideo?.id else { return [] }
+            return loadedSubtitles[videoId] ?? []
+        }
     }
 
     // MARK: - Action
-    enum Action: BindableAction {
+    enum Action: BindableAction, Sendable {
         case binding(BindingAction<State>)
         case onAppear
         case fetchVideoList
@@ -57,6 +63,9 @@ struct RelayVideoFeature: Sendable {
         case toggleSubtitle
         case selectQuality(String)
         case selectSubtitle(Subtitle?)
+        case loadSubtitle(String, Subtitle)
+        case subtitleLoaded(String, [SubtitleCue])
+        case subtitleFailed(String, Error)
         case alert(PresentationAction<Alert>)
     }
 
@@ -66,6 +75,8 @@ struct RelayVideoFeature: Sendable {
     @Dependency(\.fetchVideoList) var fetchVideoList
     @Dependency(\.fetchVideoStream) var fetchVideoStream
     @Dependency(\.likeVideo) var likeVideo
+    @Dependency(\.fileService) var fileService
+    @Dependency(\.subtitleParser) var subtitleParser
 
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -153,10 +164,15 @@ struct RelayVideoFeature: Sendable {
             case let .streamLoaded(videoId, stream):
                 state.loadedStreams[videoId] = stream
 
-                // 현재 비디오의 스트림이면 기본 자막 설정
+                // 현재 비디오의 스트림이면 기본 자막 설정 및 로드
                 if state.currentVideo?.id == videoId {
                     if let defaultSubtitle = stream.subtitles.first(where: { $0.isDefault }) {
                         state.selectedSubtitle = defaultSubtitle
+
+                        // 자막이 활성화되어 있으면 로드
+                        if state.isSubtitleEnabled {
+                            return .send(.loadSubtitle(videoId, defaultSubtitle))
+                        }
                     }
                 }
                 return .none
@@ -212,6 +228,13 @@ struct RelayVideoFeature: Sendable {
 
             case .toggleSubtitle:
                 state.isSubtitleEnabled.toggle()
+
+                // 자막을 켰고, 선택된 자막이 있으면 로드
+                if state.isSubtitleEnabled,
+                   let subtitle = state.selectedSubtitle,
+                   let videoId = state.currentVideo?.id {
+                    return .send(.loadSubtitle(videoId, subtitle))
+                }
                 return .none
 
             case let .selectQuality(quality):
@@ -220,6 +243,41 @@ struct RelayVideoFeature: Sendable {
 
             case let .selectSubtitle(subtitle):
                 state.selectedSubtitle = subtitle
+
+                // 자막이 선택되고 활성화되어 있으면 로드
+                if state.isSubtitleEnabled,
+                   let subtitle = subtitle,
+                   let videoId = state.currentVideo?.id {
+                    return .send(.loadSubtitle(videoId, subtitle))
+                }
+                return .none
+
+            case let .loadSubtitle(videoId, subtitle):
+                // 이미 로드된 자막이면 스킵
+                if state.loadedSubtitles[videoId] != nil {
+                    return .none
+                }
+
+                return .run { send in
+                    do {
+                        let request = try await fileService.makeAuthenticatedRequest(for: subtitle.url)
+                        let (data, _) = try await URLSession.shared.data(for: request)
+
+                        if let subtitleContent = String(data: data, encoding: .utf8) {
+                            let cues = subtitleParser.parseWebVTT(subtitleContent)
+                            await send(.subtitleLoaded(videoId, cues))
+                        }
+                    } catch {
+                        await send(.subtitleFailed(videoId, error))
+                    }
+                }
+
+            case let .subtitleLoaded(videoId, cues):
+                state.loadedSubtitles[videoId] = cues
+                return .none
+
+            case let .subtitleFailed(videoId, error):
+                print("Failed to load subtitle for video \(videoId): \(error)")
                 return .none
 
             case .alert:
