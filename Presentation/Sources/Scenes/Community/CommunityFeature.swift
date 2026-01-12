@@ -169,7 +169,7 @@ struct CommunityFeature: Sendable {
                     category: nil,
                     longitude: nil,
                     latitude: nil,
-                    maxDistance: nil,
+                    maxDistance: Float(state.maxDistance),
                     next: cursor,
                     limit: 20,
                     orderBy: state.orderBy

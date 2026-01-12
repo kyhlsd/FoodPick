@@ -37,7 +37,8 @@ struct MyProfileView: View {
                             PrimaryButton(
                                 title: "채팅 목록 보기",
                                 height: 40,
-                                fontSize: .body1
+                                fontSize: .body1,
+                                badge: store.unreadMessageCount > 0 ? store.unreadMessageCount : nil
                             ) {
                                 store.send(.chatListButtonTapped)
                             }

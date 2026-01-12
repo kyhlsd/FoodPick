@@ -51,6 +51,7 @@ struct PostDetailView: View {
                                 .lineSpacing(6)
 
                             // 좋아요 카운트 및 거리
+                            // TODO: 거리 계산 로직
                             PostMetricsSection(
                                 likeCount: post.likeCount,
                                 distance: post.restaurant.distance

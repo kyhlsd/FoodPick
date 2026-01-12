@@ -133,6 +133,7 @@ private struct RestaurantInfoView: View {
             HStack(spacing: AppPadding.large.value) {
                 InfoItemView(
                     icon: AppIcon.distance,
+                    // TODO: 거리 계산 로직
                     text: DistanceFormatter.format(restaurant.distance)
                 )
                 InfoItemView(

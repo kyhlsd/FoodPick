@@ -121,7 +121,7 @@ private struct ChatRoomCell: View {
                             }
                         }
 
-                        HStack {
+                        HStack(alignment: .top) {
                             if let lastChat = chatRoom.lastChat {
                                 Text(lastChat.content)
                                     .font(.pretendard(size: .body3, weight: .regular))
@@ -137,13 +137,13 @@ private struct ChatRoomCell: View {
 
                             // 읽지 않은 메시지 뱃지
                             if let unreadCount = store.unreadCounts[chatRoom.roomId], unreadCount > 0 {
-                                Text("\(unreadCount)")
+                                Text(unreadCount >= 100 ? "99+" : "\(unreadCount)")
                                     .font(.pretendard(size: .caption1, weight: .bold))
                                     .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, .small)
+                                    .padding(.vertical, .small)
                                     .background(
-                                        Capsule()
+                                        Circle()
                                             .fill(.custom(.brand(.blackSprout)))
                                     )
                                     .frame(minWidth: 20)

@@ -7,6 +7,7 @@
 
 import Foundation
 import Domain
+import Data
 import ComposableArchitecture
 
 @Reducer
@@ -17,6 +18,7 @@ struct MyProfileFeature: Sendable {
         var profileEditor = ProfileEditorFeature.State()
         var content = ProfileContentFeature.State()
         var settings = ProfileSettingsFeature.State()
+        var unreadMessageCount: Int = 0
 
         @Presents var destination: Destination.State?
     }
@@ -33,6 +35,8 @@ struct MyProfileFeature: Sendable {
         case restaurantTapped(restaurantId: String)
         case navigateToChat(ChatRoom, String)
         case destination(PresentationAction<Destination.Action>)
+        case updateUnreadCount
+        case updateUnreadCountResponse(Int)
     }
 
     // MARK: - Body
@@ -54,7 +58,8 @@ struct MyProfileFeature: Sendable {
             case .onAppear:
                 return .merge(
                     .send(.profileEditor(.fetchMyProfile)),
-                    .send(.content(.fetchMyLikes))
+                    .send(.content(.fetchMyLikes)),
+                    .send(.updateUnreadCount)
                 )
 
             case .profileEditor(.myProfileLoaded(let profile)):
@@ -102,6 +107,16 @@ struct MyProfileFeature: Sendable {
                         myUserId: myUserId
                     )
                 )
+                return .none
+
+            case .updateUnreadCount:
+                return .run { send in
+                    let count = await UnreadMessageBadgeManager.shared.getTotalUnreadCount()
+                    await send(.updateUnreadCountResponse(count))
+                }
+
+            case let .updateUnreadCountResponse(count):
+                state.unreadMessageCount = count
                 return .none
 
             case .destination:
