@@ -93,14 +93,19 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = notification.request.content.userInfo
         let roomId = userInfo["room_id"] as? String
-        
+
         let wrappedCompletion = SendableNotificationHandler(handler: completionHandler)
-        
+
         Task {
             let activeChatRoomId = await ActiveChatRoomManager.shared.getActiveChatRoom()
-            
+
+            // 활성 채팅방이 아니면 읽지 않은 메시지 수 증가
+            if let roomId, activeChatRoomId != roomId {
+                await UnreadMessageBadgeManager.shared.incrementUnreadCount(for: roomId)
+            }
+
             let options: UNNotificationPresentationOptions = (activeChatRoomId == roomId) ? [] : [.banner, .sound, .badge]
-            
+
             await MainActor.run {
                 wrappedCompletion(options)
             }

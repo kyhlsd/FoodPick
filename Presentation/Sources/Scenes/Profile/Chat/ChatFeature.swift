@@ -92,7 +92,7 @@ struct ChatFeature: Sendable {
                                     await send(.appWillResignActive)
                                 }
                             }
-                            
+
                             // 앱이 포그라운드로 돌아올 때 감지
                             group.addTask {
                                 for await _ in NotificationCenter.default.notifications(
@@ -101,9 +101,12 @@ struct ChatFeature: Sendable {
                                     await send(.appDidBecomeActive)
                                 }
                             }
-                            
+
                             // 활성 채팅방 설정
                             await ActiveChatRoomManager.shared.setActiveChatRoom(roomId)
+
+                            // 읽지 않은 메시지 수 초기화
+                            await UnreadMessageBadgeManager.shared.clearUnreadCount(for: roomId)
                         }
                     }
                 )

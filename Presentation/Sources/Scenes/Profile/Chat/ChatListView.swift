@@ -111,25 +111,43 @@ private struct ChatRoomCell: View {
                             Text(otherParticipant?.nickname ?? "알 수 없음")
                                 .font(.pretendard(size: .body2, weight: .semiBold))
                                 .foregroundStyle(.custom(.gray(.gray90)))
-                            
+
                             Spacer()
-                            
+
                             if let lastChat = chatRoom.lastChat {
                                 Text(TimeFormatter.toRelativeTimeString(from: lastChat.createdAt))
                                     .font(.pretendard(size: .body3, weight: .regular))
                                     .foregroundStyle(.custom(.gray(.gray60)))
                             }
                         }
-                        
-                        if let lastChat = chatRoom.lastChat {
-                            Text(lastChat.content)
-                                .font(.pretendard(size: .body3, weight: .regular))
-                                .foregroundStyle(.custom(.gray(.gray60)))
-                                .lineLimit(1)
-                        } else {
-                            Text("메시지가 없습니다")
-                                .font(.pretendard(size: .body3, weight: .regular))
-                                .foregroundStyle(.custom(.gray(.gray45)))
+
+                        HStack {
+                            if let lastChat = chatRoom.lastChat {
+                                Text(lastChat.content)
+                                    .font(.pretendard(size: .body3, weight: .regular))
+                                    .foregroundStyle(.custom(.gray(.gray60)))
+                                    .lineLimit(1)
+                            } else {
+                                Text("메시지가 없습니다")
+                                    .font(.pretendard(size: .body3, weight: .regular))
+                                    .foregroundStyle(.custom(.gray(.gray45)))
+                            }
+
+                            Spacer()
+
+                            // 읽지 않은 메시지 뱃지
+                            if let unreadCount = store.unreadCounts[chatRoom.roomId], unreadCount > 0 {
+                                Text("\(unreadCount)")
+                                    .font(.pretendard(size: .caption1, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        Capsule()
+                                            .fill(.custom(.brand(.blackSprout)))
+                                    )
+                                    .frame(minWidth: 20)
+                            }
                         }
                     }
                 }

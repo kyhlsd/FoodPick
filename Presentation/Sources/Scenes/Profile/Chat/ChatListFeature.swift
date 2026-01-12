@@ -7,6 +7,7 @@
 
 import Foundation
 import Domain
+import Data
 import ComposableArchitecture
 
 @Reducer
@@ -18,7 +19,8 @@ struct ChatListFeature: Sendable {
         var chatRooms: [ChatRoom] = []
         var searchText = ""
         var isLoading = false
-        
+        var unreadCounts: [String: Int] = [:]  // roomId: unreadCount
+
         var filteredChatRooms: [ChatRoom] {
             if searchText.isEmpty { return chatRooms }
             return chatRooms.filter { room in
@@ -28,11 +30,11 @@ struct ChatListFeature: Sendable {
                 lastMessage.localizedCaseInsensitiveContains(searchText)
             }
         }
-        
+
         var isSearchEmpty: Bool {
             !searchText.isEmpty && filteredChatRooms.isEmpty
         }
-        
+
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<ChatListFeature.Alert>?
     }
@@ -45,7 +47,9 @@ struct ChatListFeature: Sendable {
         case chatRoomsFailed(Error)
         case chatRoomTapped(ChatRoom)
         case searchTextChanged(String)
-        
+        case loadUnreadCounts
+        case unreadCountsLoaded([String: Int])
+
         case destination(PresentationAction<Destination.Action>)
         case alert(PresentationAction<ChatListFeature.Alert>)
     }
@@ -58,7 +62,10 @@ struct ChatListFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.fetchChatRooms)
+                return .merge(
+                    .send(.fetchChatRooms),
+                    .send(.loadUnreadCounts)
+                )
 
             case .fetchChatRooms:
                 state.isLoading = true
@@ -97,9 +104,25 @@ struct ChatListFeature: Sendable {
                     )
                 )
                 return .none
-                
+
             case let .searchTextChanged(text):
                 state.searchText = text
+                return .none
+
+            case .loadUnreadCounts:
+                return .run { send in
+                    var counts: [String: Int] = [:]
+                    for roomId in await UnreadMessageBadgeManager.shared.getAllRoomIds() {
+                        let count = await UnreadMessageBadgeManager.shared.getUnreadCount(for: roomId)
+                        if count > 0 {
+                            counts[roomId] = count
+                        }
+                    }
+                    await send(.unreadCountsLoaded(counts))
+                }
+
+            case let .unreadCountsLoaded(counts):
+                state.unreadCounts = counts
                 return .none
 
             case .destination, .alert:
