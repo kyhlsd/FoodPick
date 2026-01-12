@@ -7,37 +7,41 @@
 
 import SwiftUI
 import Domain
+import ComposableArchitecture
 
 struct CategorySelectionView: View {
-    let isShowingAllCategories: Bool
-    let selectedCategory: RestaurantCategory?
-    let onCategorySelected: (RestaurantCategory?) -> Void
-    let onToggleExpansion: () -> Void
-    
-    private var displayedCategories: [CategoryItem] {
+    let store: StoreOf<HomeFeature>
+
+    private func displayedCategories(isShowingAll: Bool) -> [CategoryItem] {
         let restaurantCategories = RestaurantCategory.allCases.map { CategoryItem.restaurant($0) }
-        
-        if isShowingAllCategories {
+
+        if isShowingAll {
             return [.all] + restaurantCategories + [.collapse]
         } else {
             return [.all] + Array(restaurantCategories.prefix(3)) + [.more]
         }
     }
-    
+
     var body: some View {
-        LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible()), count: 5),
-            spacing: AppPadding.large.value
-        ) {
-            ForEach(displayedCategories, id: \.self) { item in
-                CategoryItemView(
-                    item: item,
-                    isSelected: item.category == selectedCategory && !item.isMoreButton
-                ) {
-                    if item.isMoreButton {
-                        onToggleExpansion()
-                    } else {
-                        onCategorySelected(item.category)
+        WithPerceptionTracking {
+            let isShowingAllCategories = store.isShowingAllCategories
+            let selectedCategory = store.selectedCategory
+            let displayedCategories = displayedCategories(isShowingAll: isShowingAllCategories)
+
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible()), count: 5),
+                spacing: AppPadding.large.value
+            ) {
+                ForEach(displayedCategories, id: \.self) { item in
+                    CategoryItemView(
+                        item: item,
+                        isSelected: item.category == selectedCategory && !item.isMoreButton
+                    ) {
+                        if item.isMoreButton {
+                            store.send(.toggleCategoryExpansion)
+                        } else {
+                            store.send(.categorySelected(item.category))
+                        }
                     }
                 }
             }

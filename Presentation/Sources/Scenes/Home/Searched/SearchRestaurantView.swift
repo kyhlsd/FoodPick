@@ -51,8 +51,7 @@ struct SearchRestaurantView: View {
                                 onRestaurantTap: { id in
                                     store.send(.restaurantTapped(id))
                                 },
-                                onLoadMore: {},
-                                emptyMessage: "검색 결과가 없습니다."
+                                onLoadMore: {}
                             )
                             
                             // 탭바가 가리지 않도록 추가

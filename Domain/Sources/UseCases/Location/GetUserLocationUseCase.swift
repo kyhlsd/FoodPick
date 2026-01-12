@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol GetUserLocationUseCase: Sendable {
-    func execute() throws -> UserLocation
+    func execute() -> UserLocation
 }
 
 public final class GetUserLocationUseCaseImpl: GetUserLocationUseCase {

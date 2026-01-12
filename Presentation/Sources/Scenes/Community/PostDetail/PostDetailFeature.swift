@@ -17,6 +17,7 @@ struct PostDetailFeature: Sendable {
         let postId: String
         let myUserId: String?
         var postDetail: PostDetail?
+        var distance: Float?
         var isLoading = false
         var currentImageIndex = 0
         var selectedPostId: String?
@@ -86,6 +87,7 @@ struct PostDetailFeature: Sendable {
 
     // MARK: - Dependencies
     @Dependency(\.fetchPostDetail) var fetchPostDetailUseCase
+    @Dependency(\.calculateDistanceFromCurrent) var calculateDistanceFromCurrent
     @Dependency(\.likePost) var likePostUseCase
     @Dependency(\.deletePost) var deletePostUseCase
     @Dependency(\.createComment) var createCommentUseCase
@@ -119,6 +121,7 @@ struct PostDetailFeature: Sendable {
             case let .postDetailLoaded(postDetail):
                 state.isLoading = false
                 state.postDetail = postDetail
+                state.distance = calculateDistanceFromCurrent.execute(geoLocation: postDetail.geolocation)
                 return .none
 
             case let .postDetailFailed(error):

@@ -201,7 +201,7 @@ private struct DistanceSelector: View {
 
     var body: some View {
         let displayIndex = tempIndex ?? selectedIndex
-        let displayDistance = distances[displayIndex]
+        let displayDistance = Float(distances[displayIndex])
         let totalCount = distances.count
 
         HStack(spacing: 0) {
@@ -235,7 +235,7 @@ private struct DistanceSelector: View {
                         }
                     }
                     
-                    Text("\(displayDistance)m")
+                    Text(DistanceFormatter.format(displayDistance))
                         .font(.pretendard(size: .caption2, weight: .semiBold))
                         .foregroundStyle(.custom(.gray(.gray0)))
                         .padding(.vertical, .tiny)

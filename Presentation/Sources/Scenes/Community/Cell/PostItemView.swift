@@ -7,12 +7,15 @@
 
 import SwiftUI
 import Domain
+import ComposableArchitecture
 
 struct PostItemView: View {
     let post: Post
     let isMyPost: Bool
     let onLikePostTapped: (String) -> Void
     let onMoreTapped: (() -> Void)?
+    
+    @Dependency(\.calculateDistanceFromCurrent) var calculateDistanceFromCurrent
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppPadding.medium.value) {
@@ -76,17 +79,16 @@ struct PostItemView: View {
                 }
 
                 // 거리
-                // TODO: 거리 계산 로직 구현
-                if let distance = post.restaurant.distance {
-                    HStack(spacing: 2) {
-                        AppIcon.distance
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(.custom(.brand(.blackSprout)))
-                        Text("\(String(format: "%.1f", distance))km")
-                            .font(.pretendard(size: .body1, weight: .bold))
-                            .foregroundStyle(.custom(.gray(.gray90)))
-                    }
+                let distance = calculateDistanceFromCurrent.execute(geoLocation: post.geolocation)
+                HStack(spacing: 2) {
+                    AppIcon.distance
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundStyle(.custom(.brand(.blackSprout)))
+                    
+                    Text(DistanceFormatter.format(distance))
+                        .font(.pretendard(size: .body1, weight: .bold))
+                        .foregroundStyle(.custom(.gray(.gray90)))
                 }
             }
 

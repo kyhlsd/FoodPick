@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Domain
+import ComposableArchitecture
 
 struct PopularRestaurantItemView: View {
     let restaurant: Restaurant
@@ -121,6 +122,8 @@ private struct RoundedStepShape: Shape {
 // MARK: - Restaurant Info View
 private struct RestaurantInfoView: View {
     let restaurant: Restaurant
+    
+    @Dependency(\.calculateDistanceFromCurrent) var calculateDistanceFromCurrent
 
     var body: some View {
         VStack(spacing: 6) {
@@ -144,10 +147,10 @@ private struct RestaurantInfoView: View {
             }
 
             HStack(spacing: AppPadding.large.value) {
+                let distance = calculateDistanceFromCurrent.execute(geoLocation: restaurant.geolocation)
                 InfoItemView(
                     icon: AppIcon.distance,
-                    // TODO: 거리 계산 로직
-                    text: DistanceFormatter.format(restaurant.distance)
+                    text: DistanceFormatter.format(distance)
                 )
                 InfoItemView(
                     icon: AppIcon.time,

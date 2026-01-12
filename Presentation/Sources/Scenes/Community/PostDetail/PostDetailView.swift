@@ -51,10 +51,9 @@ struct PostDetailView: View {
                                 .lineSpacing(6)
 
                             // 좋아요 카운트 및 거리
-                            // TODO: 거리 계산 로직
                             PostMetricsSection(
                                 likeCount: post.likeCount,
-                                distance: post.restaurant.distance
+                                distance: store.distance
                             )
 
                             MyDivider()
@@ -256,7 +255,7 @@ private struct PostMetricsSection: View {
                         .frame(width: 20, height: 20)
                         .foregroundStyle(.custom(.brand(.blackSprout)))
 
-                    Text("\(String(format: "%.1f", distance))km")
+                    Text(DistanceFormatter.format(distance))
                         .font(.pretendard(size: .body2, weight: .bold))
                         .foregroundStyle(.custom(.gray(.gray90)))
                 }

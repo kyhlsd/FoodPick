@@ -14,6 +14,7 @@ struct HomeFeature: Sendable {
     // MARK: - State
     @ObservableState
     struct State: Sendable {
+        var address = ""
         var searchText = ""
         var trendingSearches: [String] = []
         var currentTrendingIndex = 0
@@ -32,6 +33,7 @@ struct HomeFeature: Sendable {
         case searchTextChanged(String)
         case searchSubmitted
         case onAppear
+        case fetchAddress
         case trendingTimerTick
         case setTrendingSearches([String])
         case trendingSearchTapped(String)
@@ -86,11 +88,17 @@ struct HomeFeature: Sendable {
 
             case .onAppear:
                 return .merge(
+                    .send(.fetchAddress),
                     .send(.fetchPopularSearches),
                     .send(.popularRestaurant(.fetch(category: nil))),
                     .send(.nearbyRestaurant(.fetch(category: nil)))
                 )
 
+            case .fetchAddress:
+                let userLocation = getUserLocation.execute()
+                state.address = userLocation.address
+                return .none
+                
             case let .setTrendingSearches(searches):
                 state.trendingSearches = searches
                 state.currentTrendingIndex = 0
@@ -260,6 +268,7 @@ struct HomeFeature: Sendable {
 
     // MARK: - Dependencies
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.getUserLocation) var getUserLocation
     @Dependency(\.fetchPopularSearches) var fetchPopularSearchesUseCase
     @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
 

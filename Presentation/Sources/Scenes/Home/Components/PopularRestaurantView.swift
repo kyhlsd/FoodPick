@@ -7,63 +7,70 @@
 
 import SwiftUI
 import Domain
+import ComposableArchitecture
 
 struct PopularRestaurantView: View {
-    let restaurants: [Restaurant]
-    let selectedCategory: RestaurantCategory?
-    let isLoading: Bool
-    let onLikeToggle: (String, Bool) -> Void
-    let onRestaurantTap: (String) -> Void
-    
+    let store: StoreOf<HomeFeature>
+
     var body: some View {
-        VStack(alignment: .leading, spacing: AppPadding.medium.value) {
-            Text("실시간 인기 가게")
-                .font(.pretendard(size: .body2, weight: .bold))
-                .foregroundStyle(.custom(.gray(.gray90)))
-                .padding(.horizontal, .xLarge)
-            
-            if isLoading {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+        WithPerceptionTracking {
+            let restaurants = store.popularRestaurant.restaurants
+            let selectedCategory = store.selectedCategory
+            let isLoading = store.popularRestaurant.isLoading
+
+            VStack(alignment: .leading, spacing: AppPadding.medium.value) {
+                Text("실시간 인기 가게")
+                    .font(.pretendard(size: .body2, weight: .bold))
+                    .foregroundStyle(.custom(.gray(.gray90)))
                     .padding(.horizontal, .xLarge)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 176)
-            } else if restaurants.isEmpty {
-                Text("인기 가게가 없습니다")
-                    .font(.pretendard(size: .body2, weight: .medium))
-                    .foregroundStyle(.custom(.gray(.gray60)))
-                    .padding(.horizontal, .xLarge)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 176)
-            } else {
-                ScrollViewReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(spacing: AppPadding.large.value) {
-                            Spacer()
-                                .frame(width: AppPadding.xLarge.value - AppPadding.large.value)
-                            
-                            ForEach(restaurants, id: \.restaurantId) { restaurant in
-                                PopularRestaurantItemView(
-                                    restaurant: restaurant,
-                                    onLikeToggle: onLikeToggle,
-                                    onRestaurantTap: onRestaurantTap
-                                )
-                                .id(restaurant.restaurantId)
+
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .custom(.brand(.blackSprout))))
+                        .padding(.horizontal, .xLarge)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 176)
+                } else if restaurants.isEmpty {
+                    Text("인기 가게가 없습니다")
+                        .font(.pretendard(size: .body2, weight: .medium))
+                        .foregroundStyle(.custom(.gray(.gray60)))
+                        .padding(.horizontal, .xLarge)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 176)
+                } else {
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: AppPadding.large.value) {
+                                Spacer()
+                                    .frame(width: AppPadding.xLarge.value - AppPadding.large.value)
+
+                                ForEach(restaurants, id: \.restaurantId) { restaurant in
+                                    PopularRestaurantItemView(
+                                        restaurant: restaurant,
+                                        onLikeToggle: { id, like in
+                                            store.send(.toggleRestaurantLike(id, like))
+                                        },
+                                        onRestaurantTap: { id in
+                                            store.send(.restaurantTapped(id))
+                                        }
+                                    )
+                                    .id(restaurant.restaurantId)
+                                }
+
+                                Spacer()
+                                    .frame(width: AppPadding.xLarge.value - AppPadding.large.value)
                             }
-                            
-                            Spacer()
-                                .frame(width: AppPadding.xLarge.value - AppPadding.large.value)
                         }
-                    }
-                    .frame(height: 176)
-                    .onChange(of: selectedCategory) { _ in
-                        if let firstRestaurant = restaurants.first {
-                            proxy.scrollTo(firstRestaurant.restaurantId, anchor: .leading)
+                        .frame(height: 176)
+                        .onChange(of: selectedCategory) { _ in
+                            if let firstRestaurant = restaurants.first {
+                                proxy.scrollTo(firstRestaurant.restaurantId, anchor: .leading)
+                            }
                         }
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
