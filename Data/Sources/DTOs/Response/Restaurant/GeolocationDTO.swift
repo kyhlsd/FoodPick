@@ -8,12 +8,17 @@
 import Domain
 
 struct GeolocationDTO: ResponseDTO {
-    private let longitude: Float
-    private let latitude: Float
+    let longitude: Float
+    let latitude: Float
 }
 
 extension GeolocationDTO {
     var toDomain: Geolocation {
         return .init(longitude: longitude, latitude: latitude)
+    }
+    
+    init(from geolocation: Geolocation) {
+        longitude = geolocation.longitude
+        latitude = geolocation.latitude
     }
 }

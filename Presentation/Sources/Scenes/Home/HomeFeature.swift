@@ -34,6 +34,9 @@ struct HomeFeature: Sendable {
         case searchSubmitted
         case onAppear
         case fetchAddress
+        case updateLocation
+        case updateLocationSuccess
+        case updateLocationFailed(Error)
         case trendingTimerTick
         case setTrendingSearches([String])
         case trendingSearchTapped(String)
@@ -97,6 +100,35 @@ struct HomeFeature: Sendable {
             case .fetchAddress:
                 let userLocation = getUserLocation.execute()
                 state.address = userLocation.address
+                return .none
+                
+            case .updateLocation:
+                return .run { send in
+                    do {
+                        _ = try await updateLocation.execute()
+                        await send(.updateLocationSuccess)
+                    } catch {
+                        await send(.updateLocationFailed(error))
+                    }
+                }
+
+            case .updateLocationSuccess:
+                return .merge(
+                    .send(.fetchAddress),
+                    .send(.popularRestaurant(.fetch(category: nil))),
+                    .send(.nearbyRestaurant(.fetch(category: nil)))
+                )
+
+            case let .updateLocationFailed(error):
+                state.alert = AlertState {
+                    TextState("위치 업데이트 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
                 return .none
                 
             case let .setTrendingSearches(searches):
@@ -269,6 +301,7 @@ struct HomeFeature: Sendable {
     // MARK: - Dependencies
     @Dependency(\.continuousClock) var clock
     @Dependency(\.getUserLocation) var getUserLocation
+    @Dependency(\.updateLocation) var updateLocation
     @Dependency(\.fetchPopularSearches) var fetchPopularSearchesUseCase
     @Dependency(\.toggleRestaurantLike) var toggleRestaurantLikeUseCase
 

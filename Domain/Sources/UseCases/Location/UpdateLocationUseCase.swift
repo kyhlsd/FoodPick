@@ -20,7 +20,7 @@ public final class UpdateLocationUseCaseImpl: UpdateUserLocationUseCase {
     
     public func execute() async throws -> UserLocation {
         let geolocation = try await locationRepository.fetchCurrentGeolocation()
-        let address = try await locationRepository.reverseGeocode(geoLocation: geolocation)
+        let address = try await locationRepository.reverseGeocode(geolocation: geolocation)
         let userLocation = UserLocation(address: address, geolocation: geolocation)
         try locationRepository.saveUserLocation(userLocation: userLocation)
         return userLocation

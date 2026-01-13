@@ -44,10 +44,16 @@ final class AuthInterceptor: RequestInterceptor {
 
         Task {
             do {
-                // 인증이 필요 없는 엔드포인트 제외
-                if urlRequest.url?.path.contains("/validation/email") == false
-                    && urlRequest.url?.path.contains("/join") == false
-                    && urlRequest.url?.path.contains("/login") == false {
+                let path = urlRequest.url?.path
+                guard let path else {
+                    completion(.failure(APIError.some(message: "잘못된 URL입니다.")))
+                    return
+                }
+                
+                if urlRequest.url?.absoluteString.contains("pickup") == true
+                    && !path.contains("/validation/email")
+                    && !path.contains("/join")
+                    && !path.contains("/login") {
                     let accessToken = try await tokenRepository.getAccessToken()
                     urlRequest.setValue(accessToken, forHTTPHeaderField: "Authorization")
                 }

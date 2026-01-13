@@ -12,6 +12,8 @@ import Domain
 public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, @unchecked Sendable {
     public static let shared = DefaultLocationRepositoryImpl()
     
+    private let networkManager = NetworkManager.shared
+    
     private let userLocationKey = "userLocation"
     private let locationManager = CLLocationManager()
     private let lock = NSLock()
@@ -44,9 +46,15 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
         }
     }
     
-    public func reverseGeocode(geoLocation: Geolocation) async throws -> String {
-        // TODO: Geocoder
-        return "문래역, 영등포구"
+    public func reverseGeocode(geolocation: Geolocation) async throws -> String {
+        let dto = GeolocationDTO(from: geolocation)
+        guard let response = try await networkManager.request(
+            LocationRouter.address(geolocation: dto),
+            responseType: AddressResponseDTO.self
+        ) else {
+            throw APIError.empty
+        }
+        return response.toDomain
     }
     
     public func saveUserLocation(userLocation: UserLocation) throws {

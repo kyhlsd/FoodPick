@@ -112,7 +112,7 @@ private struct LocationView: View {
                     .font(.pretendard(size: .body1, weight: .bold))
                 
                 Button {
-                    
+                    store.send(.updateLocation)
                 } label: {
                     AppIcon.detail
                 }

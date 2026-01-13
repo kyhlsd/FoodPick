@@ -9,7 +9,7 @@ import Foundation
 
 public protocol LocationRepository: Sendable {
     func fetchCurrentGeolocation() async throws -> Geolocation
-    func reverseGeocode(geoLocation: Geolocation) async throws -> String
+    func reverseGeocode(geolocation: Geolocation) async throws -> String
     func saveUserLocation(userLocation: UserLocation) throws
     func getUserLocation() -> UserLocation?
     func clearUserLocation()
