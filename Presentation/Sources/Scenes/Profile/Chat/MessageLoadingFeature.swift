@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Data
 import Domain
 import ComposableArchitecture
 
@@ -150,7 +151,11 @@ struct MessageLoadingFeature: Sendable {
                     state.chats.append(contentsOf: uniqueNewChats)
                 }
 
-                return .none
+                // 읽지 않은 메시지 수 초기화
+                let roomId = state.roomId
+                return .run { _ in
+                    await UnreadMessageBadgeManager.shared.clearUnreadCount(for: roomId)
+                }
 
             case .loadingFailed:
                 state.isLoading = false

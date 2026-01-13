@@ -104,9 +104,6 @@ struct ChatFeature: Sendable {
 
                             // 활성 채팅방 설정
                             await ActiveChatRoomManager.shared.setActiveChatRoom(roomId)
-
-                            // 읽지 않은 메시지 수 초기화
-                            await UnreadMessageBadgeManager.shared.clearUnreadCount(for: roomId)
                         }
                     }
                 )
