@@ -37,6 +37,7 @@ struct RestaurantDetailFeature: Sendable {
         case restaurantLikeToggled(LikeStatus)
         case restaurantLikeToggleFailed(Error)
         case reviewTapped
+        case directionTapped
         case menuSection(MenuSectionFeature.Action)
         case cartSection(CartSectionFeature.Action)
         case alert(PresentationAction<RestaurantDetailFeature.Alert>)
@@ -127,6 +128,12 @@ struct RestaurantDetailFeature: Sendable {
 
             case .reviewTapped:
                 state.destination = .review(ReviewFeature.State(restaurantId: state.restaurantId))
+                return .none
+                
+            case .directionTapped:
+                if let geolocation = state.restaurantInfo?.geolocation {
+                    state.destination = .direction(DirectionFeature.State(restaurantLocation: geolocation))
+                }
                 return .none
 
             case let .menuSection(.menuTapped(menu)):
@@ -239,6 +246,7 @@ extension RestaurantDetailFeature {
         case menuDetail(MenuDetailFeature)
         case cart(CartFeature)
         case review(ReviewFeature)
+        case direction(DirectionFeature)
     }
 }
 

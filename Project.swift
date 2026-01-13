@@ -207,7 +207,8 @@ let project = Project(
                         .target(name: "Core"),
                         .external(name: "ComposableArchitecture"),
                         .external(name: "Kingfisher"),
-                        .external(name: "iamport-ios")
+                        .external(name: "iamport-ios"),
+                        .external(name: "KakaoMapsSDK-SPM")
                     ],
                     settings: .settings(
                         base: [

@@ -79,7 +79,7 @@ struct RestaurantDetailView: View {
                                         PrimaryButton(title: "길찾기",
                                                       height: 44
                                         ) {
-                                            
+                                            store.send(.directionTapped)
                                         }
                                     }
                                     .padding(.horizontal, .xLarge)
@@ -144,6 +144,11 @@ struct RestaurantDetailView: View {
                 item: $store.scope(state: \.destination?.review, action: \.destination.review)
             ) { store in
                 ReviewView(store: store)
+            }
+            .fullScreenCover(
+                item: $store.scope(state: \.destination?.direction, action: \.destination.direction)
+            ) { directionStore in
+                DirectionView(store: directionStore)
             }
             .onAppear {
                 store.send(.onAppear)

@@ -23,10 +23,6 @@ public final class DefaultAuthRepositoryImpl: NSObject, AuthRepository, @uncheck
     }
 
     // MARK: - Kakao SDK Setup
-    public func initializeKakaoSDK() async {
-        KakaoSDK.initSDK(appKey: APIInfos.kakaoKey)
-    }
-
     @MainActor
     public func handleKakaoOpenURL(_ url: URL) async -> Bool {
         if AuthApi.isKakaoTalkLoginUrl(url) {

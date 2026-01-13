@@ -29,7 +29,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        FirebaseApp.configure()
+        DataConfigurator.configure()
+        PresentationConfigurator.configure(appKey: APIInfos.kakaoNativeKey)
 
         Messaging.messaging().delegate = self
 

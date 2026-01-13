@@ -38,9 +38,6 @@ struct RootFeature: Sendable {
                     // Font 등록
                     await FontRegistration.registerFonts()
 
-                    // Kakao SDK 초기화
-                    await authRepository.initializeKakaoSDK()
-
                     // 토큰 확인
                     let hasAccessToken = try? await tokenRepository.getAccessToken()
                     let hasRefreshToken = try? await tokenRepository.getRefreshToken()

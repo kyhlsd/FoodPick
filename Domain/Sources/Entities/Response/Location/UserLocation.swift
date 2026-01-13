@@ -16,7 +16,7 @@ public struct UserLocation: Sendable, Codable {
         self.geolocation = geolocation
     }
     
-    static let basic = UserLocation(
+    public static let basic = UserLocation(
         address: "문래역, 영등포구",
         geolocation: .init(
             longitude: 126.8837,
