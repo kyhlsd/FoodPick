@@ -13,8 +13,9 @@ struct DirectionFeature: Sendable {
     // MARK: - State
     @ObservableState
     struct State: Sendable {
-        var isLoading = false
+        var isLoading = true
         let restaurantLocation: Geolocation
+        var myLocation: Geolocation?
         
         var centerCoordinate: (longitude: Double, latitude: Double) {
             return (Double(restaurantLocation.longitude), Double(restaurantLocation.latitude))
@@ -37,6 +38,7 @@ struct DirectionFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                state.myLocation = getUserLocation.execute().geolocation
                 return .none
                 
             case .mapInitialized:

@@ -53,6 +53,10 @@ enum AppIcon {
     static let captionsBubbleEmpty = Image(systemName: "captions.bubble")
     static let xmark = Image(systemName: "xmark")
     
+    // Map
+    static let startPin = UIImage(named: "StartPin", in: .module, with: nil)
+    static let endPin = UIImage(named: "EndPin", in: .module, with: nil)
+    
     // etc.
     static let kakao = Image("kakao", bundle: .module)
     static let xmarkCircle = Image(systemName: "xmark.circle.fill")

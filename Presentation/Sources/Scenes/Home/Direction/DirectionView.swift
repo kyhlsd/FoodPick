@@ -15,16 +15,18 @@ struct DirectionView: View {
     var body: some View {
         WithPerceptionTracking {
             ZStack {
-                KakaoMapView(store: store)
+                Color.custom(.brand(.brightSprout))
                     .ignoresSafeArea()
                 
+                if store.myLocation != nil {
+                    KakaoMapView(store: store)
+                        .ignoresSafeArea()
+                } else {
+                    LoadingView(title: "도보 길찾기 중...")
+                }
+                
                 if store.isLoading {
-                    ProgressView("지도를 불러오는 중...")
-                        .padding()
-                        .background(.custom(.brand(.blackSprout)))
-                        .clipShape(
-                            RoundedRectangle(cornerRadius: 10)
-                        )
+                    LoadingView(title: "지도를 불러오는 중...")
                 }
             }
             .overlay(alignment: .topTrailing) {
@@ -37,6 +39,9 @@ struct DirectionView: View {
                         .foregroundStyle(.custom(.gray(.gray60)))
                 }
                 .padding([.trailing, .top], .large)
+            }
+            .onAppear {
+                store.send(.onAppear)
             }
         }
     }
@@ -116,10 +121,21 @@ private struct KakaoMapView: UIViewRepresentable {
             store.send(.mapInitialized)
             
             guard let view = controller?.getView(viewName) as? KakaoMap else { return }
+            
+            // 레이어 및 스타일 초기 설정
+            setupLayersAndStyles(view)
+            
+            // POI(핀) 표시
+            displayMarkers(view)
+        }
+
+        // MARK: - Helper Methods
+        private func setupLayersAndStyles(_ view: KakaoMap) {
             let labelManager = view.getLabelManager()
             
+            // 레이어 생성
             let layerOptions = LabelLayerOptions(
-                layerID: "restaurantLayer",
+                layerID: "directionLayer",
                 competitionType: .none,
                 competitionUnit: .poi,
                 orderType: .rank,
@@ -127,29 +143,92 @@ private struct KakaoMapView: UIViewRepresentable {
             )
             _ = labelManager.addLabelLayer(option: layerOptions)
             
+            // 스타일 리사이징 및 등록
+            let pinSize = CGSize(width: 40, height: 40)
+            
+            addPoiStyle(
+                labelManager,
+                styleID: "restaurantStyle",
+                image: AppIcon.endPin?.resized(to: pinSize)
+            )
+            
+            addPoiStyle(
+                labelManager,
+                styleID: "myLocationStyle",
+                image: AppIcon.startPin?.resized(to: pinSize)
+            )
+        }
+
+        private func addPoiStyle(_ manager: LabelManager, styleID: String, image: UIImage?) {
             let iconStyle = PoiIconStyle(
-                symbol: UIImage(systemName: "mappin.and.ellipse"),
+                symbol: image,
                 anchorPoint: CGPoint(x: 0.5, y: 1.0)
             )
             let poiStyle = PoiStyle(
-                styleID: "restaurantStyle",
+                styleID: styleID,
                 styles: [PerLevelPoiStyle(iconStyle: iconStyle, level: 0)]
             )
-            labelManager.addPoiStyle(poiStyle)
+            manager.addPoiStyle(poiStyle)
+        }
+
+        private func displayMarkers(_ view: KakaoMap) {
+            guard let layer = view.getLabelManager().getLabelLayer(layerID: "directionLayer") else { return }
+            guard let myLocation = store.myLocation else { return }
             
-            if let layer = labelManager.getLabelLayer(layerID: "restaurantLayer") {
-                let poiOptions = PoiOptions(styleID: "restaurantStyle")
-                poiOptions.rank = 0
-                
-                let mapPoint = MapPoint(
-                    longitude: Double(store.restaurantLocation.longitude),
-                    latitude: Double(store.restaurantLocation.latitude)
-                )
-                
-                if let poi = layer.addPoi(option: poiOptions, at: mapPoint) {
-                    poi.show()
-                }
-            }
+            let restaurantPoint = MapPoint(
+                longitude: Double(store.restaurantLocation.longitude),
+                latitude: Double(store.restaurantLocation.latitude)
+            )
+            let myPoint = MapPoint(
+                longitude: Double(myLocation.longitude),
+                latitude: Double(myLocation.latitude)
+            )
+            
+            // 핀 표시
+            layer.addPoi(option: PoiOptions(styleID: "restaurantStyle"), at: restaurantPoint)?.show()
+            layer.addPoi(option: PoiOptions(styleID: "myLocationStyle"), at: myPoint)?.show()
+
+            let latDiff = abs(restaurantPoint.wgsCoord.latitude - myPoint.wgsCoord.latitude)
+            let lonDiff = abs(restaurantPoint.wgsCoord.longitude - myPoint.wgsCoord.longitude)
+            
+            // 여백을 상하좌우에 추가
+            let margin = 0.2
+            let minLatitude = min(restaurantPoint.wgsCoord.latitude, myPoint.wgsCoord.latitude) - (latDiff * margin)
+            let maxLattitude = max(restaurantPoint.wgsCoord.latitude, myPoint.wgsCoord.latitude) + (latDiff * margin)
+            let minLongitude = min(restaurantPoint.wgsCoord.longitude, myPoint.wgsCoord.longitude) - (lonDiff * margin)
+            let maxLongitude = max(restaurantPoint.wgsCoord.longitude, myPoint.wgsCoord.longitude) + (lonDiff * margin)
+            
+            // 가상의 외곽 지점들로 영역 생성
+            let p1 = MapPoint(longitude: minLongitude, latitude: minLatitude)
+            let p2 = MapPoint(longitude: maxLongitude, latitude: maxLattitude)
+            
+            let paddedArea = AreaRect(points: [p1, p2])
+            view.moveCamera(CameraUpdate.make(area: paddedArea))
+        }
+    }
+}
+
+// MARK: - Loading View {
+private struct LoadingView: View {
+    let title: String
+    
+    var body: some View {
+        ProgressView(title)
+            .font(.pretendard(size: .body1, weight: .semiBold))
+            .foregroundStyle(.custom(.gray(.gray0)))
+            .padding()
+            .background(.custom(.brand(.blackSprout)))
+            .clipShape(
+                RoundedRectangle(cornerRadius: 10)
+            )
+    }
+}
+
+// MARK: - Extension
+private extension UIImage {
+    func resized(to size: CGSize) -> UIImage {
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
         }
     }
 }
