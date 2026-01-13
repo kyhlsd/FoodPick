@@ -16,16 +16,14 @@ struct DirectionFeature: Sendable {
         var isLoading = true
         let restaurantLocation: Geolocation
         var myLocation: Geolocation?
-        
-        var centerCoordinate: (longitude: Double, latitude: Double) {
-            return (Double(restaurantLocation.longitude), Double(restaurantLocation.latitude))
-        }
+        var isTracking = false
     }
     
     // MARK: - Action
     enum Action {
         case onAppear
         case mapInitialized
+        case trackingTapped
         case dismiss
     }
     
@@ -43,6 +41,10 @@ struct DirectionFeature: Sendable {
                 
             case .mapInitialized:
                 state.isLoading = false
+                return .none
+                
+            case .trackingTapped:
+                state.isTracking.toggle()
                 return .none
                 
             case .dismiss:

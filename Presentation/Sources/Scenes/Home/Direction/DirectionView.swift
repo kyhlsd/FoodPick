@@ -21,6 +21,10 @@ struct DirectionView: View {
                 if store.myLocation != nil {
                     KakaoMapView(store: store)
                         .ignoresSafeArea()
+                        .overlay(alignment: .bottomTrailing) {
+                            TrackingButton(store: store)
+                                .padding([.trailing, .bottom], .large)
+                        }
                 } else {
                     LoadingView(title: "도보 길찾기 중...")
                 }
@@ -104,13 +108,13 @@ private struct KakaoMapView: UIViewRepresentable {
         }
         
         func addViews() {
-            let coordinate = store.centerCoordinate
+            let coordinate = store.restaurantLocation
             let mapviewInfo = MapviewInfo(
                 viewName: "mapview",
                 viewInfoName: "map",
                 defaultPosition: MapPoint(
-                    longitude: coordinate.longitude,
-                    latitude: coordinate.latitude
+                    longitude: Double(coordinate.longitude),
+                    latitude: Double(coordinate.latitude)
                 )
             )
             
@@ -173,25 +177,27 @@ private struct KakaoMapView: UIViewRepresentable {
 
         private func displayMarkers(_ view: KakaoMap) {
             guard let layer = view.getLabelManager().getLabelLayer(layerID: "directionLayer") else { return }
-            guard let myLocation = store.myLocation else { return }
             
+            // 식당 핀
             let restaurantPoint = MapPoint(
                 longitude: Double(store.restaurantLocation.longitude),
                 latitude: Double(store.restaurantLocation.latitude)
             )
+            layer.addPoi(option: PoiOptions(styleID: "restaurantStyle"), at: restaurantPoint)?.show()
+
+            // 내 위치 핀
+            guard let myLocation = store.myLocation else { return }
+            
             let myPoint = MapPoint(
                 longitude: Double(myLocation.longitude),
                 latitude: Double(myLocation.latitude)
             )
-            
-            // 핀 표시
-            layer.addPoi(option: PoiOptions(styleID: "restaurantStyle"), at: restaurantPoint)?.show()
             layer.addPoi(option: PoiOptions(styleID: "myLocationStyle"), at: myPoint)?.show()
-
+            
+            // 여백을 상하좌우에 추가
             let latDiff = abs(restaurantPoint.wgsCoord.latitude - myPoint.wgsCoord.latitude)
             let lonDiff = abs(restaurantPoint.wgsCoord.longitude - myPoint.wgsCoord.longitude)
             
-            // 여백을 상하좌우에 추가
             let margin = 0.2
             let minLatitude = min(restaurantPoint.wgsCoord.latitude, myPoint.wgsCoord.latitude) - (latDiff * margin)
             let maxLattitude = max(restaurantPoint.wgsCoord.latitude, myPoint.wgsCoord.latitude) + (latDiff * margin)
@@ -221,6 +227,36 @@ private struct LoadingView: View {
             .clipShape(
                 RoundedRectangle(cornerRadius: 10)
             )
+    }
+}
+
+// MARK: - Tracking Button
+private struct TrackingButton: View {
+    @Perception.Bindable var store: StoreOf<DirectionFeature>
+    
+    var body: some View {
+        WithPerceptionTracking {
+            Button {
+                store.send(.trackingTapped)
+            } label: {
+                AppIcon.distance
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .foregroundStyle(store.isTracking
+                                     ? .custom(.brand(.blackSprout))
+                                     : .custom(.gray(.gray0))
+                    )
+                    .padding(.all, .small)
+                    .background(
+                        Circle()
+                            .fill(.custom(.brand(.brightSprout)))
+                    )
+                    .overlay {
+                        Circle()
+                            .stroke(.custom(.gray(.gray45)))
+                    }
+            }
+        }
     }
 }
 
