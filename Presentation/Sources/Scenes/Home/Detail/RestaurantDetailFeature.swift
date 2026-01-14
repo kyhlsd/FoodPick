@@ -131,8 +131,8 @@ struct RestaurantDetailFeature: Sendable {
                 return .none
                 
             case .directionTapped:
-                if let geolocation = state.restaurantInfo?.geolocation {
-                    state.destination = .direction(DirectionFeature.State(restaurantLocation: geolocation))
+                if let restaurantInfo = state.restaurantInfo {
+                    state.destination = .direction(DirectionFeature.State(restaurantInfo: restaurantInfo))
                 }
                 return .none
 

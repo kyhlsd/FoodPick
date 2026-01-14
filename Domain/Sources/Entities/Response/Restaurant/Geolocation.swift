@@ -6,10 +6,10 @@
 //
 
 public struct Geolocation: Sendable, Codable {
-    public let longitude: Float
-    public let latitude: Float
+    public let longitude: Double
+    public let latitude: Double
     
-    public init(longitude: Float, latitude: Float) {
+    public init(longitude: Double, latitude: Double) {
         self.longitude = longitude
         self.latitude = latitude
     }

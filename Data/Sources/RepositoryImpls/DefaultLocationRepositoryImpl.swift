@@ -80,14 +80,25 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
     
     public func calculateDistance(from start: Geolocation, to end: Geolocation) -> Float {
         let startLocation = CLLocation(
-            latitude: Double(start.latitude),
-            longitude: Double(start.longitude)
+            latitude: start.latitude,
+            longitude: start.longitude
         )
         let endLocation = CLLocation(
-            latitude: Double(end.latitude),
-            longitude: Double(end.longitude)
+            latitude: end.latitude,
+            longitude: end.longitude
         )
         return Float(startLocation.distance(from: endLocation))
+    }
+    
+    public func fetchDirections(_ directionRequest: DirectionRequest) async throws -> DirectionResponse {
+        let dto = DirectionRequestDTO(from: directionRequest)
+        guard let response = try await networkManager.request(
+            LocationRouter.direction(dto: dto),
+            responseType: DirectionResponseDTO.self
+        ) else {
+            throw APIError.empty
+        }
+        return response.toDomain
     }
 }
 
@@ -97,8 +108,8 @@ extension DefaultLocationRepositoryImpl: CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
         
         let geolocation = Geolocation(
-            longitude: Float(location.coordinate.longitude),
-            latitude: Float(location.coordinate.latitude)
+            longitude: location.coordinate.longitude,
+            latitude: location.coordinate.latitude
         )
         resumeWithLocation(geolocation)
     }

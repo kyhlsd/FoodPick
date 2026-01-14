@@ -12,8 +12,8 @@ struct EditPostRequestDTO: Encodable {
     private let title: String?
     private let content: String?
     private let restaurantId: String?
-    private let latitude: Float?
-    private let longitude: Float?
+    private let latitude: Double?
+    private let longitude: Double?
     private let files: [String]?
     
     enum CodingKeys: String, CodingKey {

@@ -7,14 +7,14 @@
 
 public struct PostByLocationRequest: Sendable {
     public let category: RestaurantCategory?
-    public let longitude: Float?
-    public let latitude: Float?
+    public let longitude: Double?
+    public let latitude: Double?
     public let maxDistance: Float?
     public let next: String?
     public let limit: Int?
     public let orderBy: PostOrderBy
     
-    public init(category: RestaurantCategory?, longitude: Float?, latitude: Float?, maxDistance: Float?, next: String?, limit: Int?, orderBy: PostOrderBy) {
+    public init(category: RestaurantCategory?, longitude: Double?, latitude: Double?, maxDistance: Float?, next: String?, limit: Int?, orderBy: PostOrderBy) {
         self.category = category
         self.longitude = longitude
         self.latitude = latitude

@@ -10,11 +10,11 @@ public struct CreatePostRequest: Sendable {
     public let title: String
     public let content: String
     public let restaurantId: String
-    public let latitude: Float
-    public let longitude: Float
+    public let latitude: Double
+    public let longitude: Double
     public let files: [String]
     
-    public init(category: RestaurantCategory, title: String, content: String, restaurantId: String, latitude: Float, longitude: Float, files: [String]) {
+    public init(category: RestaurantCategory, title: String, content: String, restaurantId: String, latitude: Double, longitude: Double, files: [String]) {
         self.category = category
         self.title = title
         self.content = content

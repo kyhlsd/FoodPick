@@ -32,6 +32,11 @@ extension DependencyValues {
         get { self[CalculateDistanceFromCurrentKey.self] }
         set { self[CalculateDistanceFromCurrentKey.self] = newValue }
     }
+    
+    var fetchDirections: FetchDirectionsUseCase {
+        get { self[FetchDirectionsKey.self] }
+        set { self[FetchDirectionsKey.self] = newValue }
+    }
 }
 
 // MARK: - Keys
@@ -56,6 +61,13 @@ private enum UpdateLocationKey: DependencyKey {
 private enum CalculateDistanceFromCurrentKey: DependencyKey {
     static let liveValue: CalculateDistanceFromCurrentUseCase = {
         @Dependency(\.locationRepository) var locationRepository
-        return CalculateDistanceFromCurrentUseCaseImpl(repository: locationRepository)
+        return CalculateDistanceFromCurrentUseCaseImpl(locationRepository: locationRepository)
+    }()
+}
+
+private enum FetchDirectionsKey: DependencyKey {
+    static let liveValue: FetchDirectionsUseCase = {
+        @Dependency(\.locationRepository) var locationRepository
+        return FetchDirectionsUseCaseImpl(locationRepository: locationRepository)
     }()
 }

@@ -14,4 +14,5 @@ public protocol LocationRepository: Sendable {
     func getUserLocation() -> UserLocation?
     func clearUserLocation()
     func calculateDistance(from start: Geolocation, to end: Geolocation) -> Float
+    func fetchDirections(_ directionRequest: DirectionRequest) async throws -> DirectionResponse
 }

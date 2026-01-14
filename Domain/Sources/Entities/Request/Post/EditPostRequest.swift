@@ -10,11 +10,11 @@ public struct EditPostRequest: Sendable {
     public let title: String?
     public let content: String?
     public let restaurantId: String?
-    public let latitude: Float?
-    public let longitude: Float?
+    public let latitude: Double?
+    public let longitude: Double?
     public let files: [String]?
     
-    public init(category: RestaurantCategory? = nil, title: String? = nil, content: String? = nil, restaurantId: String? = nil, latitude: Float? = nil, longitude: Float? = nil, files: [String]? = nil) {
+    public init(category: RestaurantCategory? = nil, title: String? = nil, content: String? = nil, restaurantId: String? = nil, latitude: Double? = nil, longitude: Double? = nil, files: [String]? = nil) {
         self.category = category
         self.title = title
         self.content = content

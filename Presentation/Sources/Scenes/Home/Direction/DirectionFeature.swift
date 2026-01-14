@@ -14,9 +14,24 @@ struct DirectionFeature: Sendable {
     @ObservableState
     struct State: Sendable {
         var isLoading = true
-        let restaurantLocation: Geolocation
-        var myLocation: Geolocation?
+        let restaurantInfo: RestaurantDetail
+        var myGeolocation: Geolocation?
         var isTracking = false
+        var directions: DirectionResponse?
+        
+        var restaurantLocation: Geolocation {
+            return restaurantInfo.geolocation
+        }
+        
+        var totalTime: Int {
+            directions?.features.compactMap { $0.properties.totalTime }.reduce(0, +) ?? 0
+        }
+        
+        var totalDistance: Int {
+            directions?.features.compactMap { $0.properties.totalDistance }.reduce(0, +) ?? 0
+        }
+        
+        @Presents var alert: AlertState<DirectionFeature.Alert>?
     }
     
     // MARK: - Action
@@ -24,11 +39,16 @@ struct DirectionFeature: Sendable {
         case onAppear
         case mapInitialized
         case trackingTapped
+        case fetchDirections
+        case directionsLoaded(DirectionResponse)
+        case directionsFailed(Error)
         case dismiss
+        case alert(PresentationAction<DirectionFeature.Alert>)
     }
     
     // MARK: - Dependencies
     @Dependency(\.getUserLocation) var getUserLocation
+    @Dependency(\.fetchDirections) var fetchDirections
     @Dependency(\.dismiss) var dismiss
     
     // MARK: - Body
@@ -36,8 +56,7 @@ struct DirectionFeature: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                state.myLocation = getUserLocation.execute().geolocation
-                return .none
+                return .send(.fetchDirections)
                 
             case .mapInitialized:
                 state.isLoading = false
@@ -47,12 +66,53 @@ struct DirectionFeature: Sendable {
                 state.isTracking.toggle()
                 return .none
                 
+            case .fetchDirections:
+                let myLocation = getUserLocation.execute()
+                state.myGeolocation = myLocation.geolocation
+                let request = DirectionRequest(
+                    startX: myLocation.geolocation.longitude,
+                    startY: myLocation.geolocation.latitude,
+                    endX: state.restaurantLocation.longitude,
+                    endY: state.restaurantLocation.latitude,
+                    startName: myLocation.address,
+                    endName: state.restaurantInfo.address
+                )
+                return .run { send in
+                    do {
+                        let response = try await fetchDirections.execute(request)
+                        await send(.directionsLoaded(response))
+                    } catch {
+                        await send(.directionsFailed(error))
+                    }
+                }
+                
+            case let .directionsLoaded(directions):
+                state.directions = directions
+                return .none
+                
+            case let .directionsFailed(error):
+                state.isLoading = false
+                state.alert = AlertState {
+                    TextState("길찾기 실패")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("확인")
+                    }
+                } message: {
+                    TextState(error.localizedDescription)
+                }
+                return .none
+                
             case .dismiss:
                 return .run { _ in
                     await self.dismiss()
                 }
+                
+            case .alert:
+                return .none
             }
         }
+        .ifLet(\.alert, action: \.alert)
     }
     
     enum Alert: Sendable {}

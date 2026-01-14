@@ -8,8 +8,8 @@
 import Domain
 
 struct GeolocationDTO: ResponseDTO {
-    let longitude: Float
-    let latitude: Float
+    let longitude: Double
+    let latitude: Double
 }
 
 extension GeolocationDTO {

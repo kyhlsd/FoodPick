@@ -12,15 +12,15 @@ public protocol CalculateDistanceFromCurrentUseCase: Sendable {
 }
 
 public final class CalculateDistanceFromCurrentUseCaseImpl: CalculateDistanceFromCurrentUseCase {
-    private let repository: LocationRepository
+    private let locationRepository: LocationRepository
     
-    public init(repository: LocationRepository) {
-        self.repository = repository
+    public init(locationRepository: LocationRepository) {
+        self.locationRepository = locationRepository
     }
     
     public func execute(geoLocation: Geolocation) -> Float {
-        let current = repository.getUserLocation() ?? UserLocation.basic
-        let distance = repository.calculateDistance(from: current.geolocation, to: geoLocation)
+        let current = locationRepository.getUserLocation() ?? UserLocation.basic
+        let distance = locationRepository.calculateDistance(from: current.geolocation, to: geoLocation)
         
         return distance
     }

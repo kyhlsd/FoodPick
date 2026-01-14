@@ -18,12 +18,12 @@ struct DirectionView: View {
                 Color.custom(.brand(.brightSprout))
                     .ignoresSafeArea()
                 
-                if store.myLocation != nil {
+                if store.directions != nil {
                     KakaoMapView(store: store)
                         .ignoresSafeArea()
-                        .overlay(alignment: .bottomTrailing) {
-                            TrackingButton(store: store)
-                                .padding([.trailing, .bottom], .large)
+                        .overlay(alignment: .bottom) {
+                            GuideView(store: store)
+                                .padding([.bottom, .horizontal], .large)
                         }
                 } else {
                     LoadingView(title: "도보 길찾기 중...")
@@ -113,8 +113,8 @@ private struct KakaoMapView: UIViewRepresentable {
                 viewName: "mapview",
                 viewInfoName: "map",
                 defaultPosition: MapPoint(
-                    longitude: Double(coordinate.longitude),
-                    latitude: Double(coordinate.latitude)
+                    longitude: coordinate.longitude,
+                    latitude: coordinate.latitude
                 )
             )
             
@@ -180,17 +180,17 @@ private struct KakaoMapView: UIViewRepresentable {
             
             // 식당 핀
             let restaurantPoint = MapPoint(
-                longitude: Double(store.restaurantLocation.longitude),
-                latitude: Double(store.restaurantLocation.latitude)
+                longitude: store.restaurantLocation.longitude,
+                latitude: store.restaurantLocation.latitude
             )
             layer.addPoi(option: PoiOptions(styleID: "restaurantStyle"), at: restaurantPoint)?.show()
 
             // 내 위치 핀
-            guard let myLocation = store.myLocation else { return }
+            guard let myGeolocation = store.myGeolocation else { return }
             
             let myPoint = MapPoint(
-                longitude: Double(myLocation.longitude),
-                latitude: Double(myLocation.latitude)
+                longitude: myGeolocation.longitude,
+                latitude: myGeolocation.latitude
             )
             layer.addPoi(option: PoiOptions(styleID: "myLocationStyle"), at: myPoint)?.show()
             
@@ -256,6 +256,65 @@ private struct TrackingButton: View {
                             .stroke(.custom(.gray(.gray45)))
                     }
             }
+        }
+    }
+}
+
+// MARK: - Guide View {
+private struct GuideView: View {
+    @Perception.Bindable var store: StoreOf<DirectionFeature>
+    
+    var body: some View {
+        WithPerceptionTracking {
+            if !store.isLoading {
+                VStack(alignment: .trailing, spacing: AppPadding.small.value) {
+                    TrackingButton(store: store)
+                        .padding([.trailing, .bottom], .large)
+                    
+                    HStack(spacing: AppPadding.medium.value) {
+                        AuthenticatedImage(imagePath: store.restaurantInfo.restaurantImageURLs.first)
+                            .frame(width: 60, height: 60)
+                            .clipShape(
+                                RoundedRectangle(cornerRadius: 10)
+                            )
+                        
+                        Text(store.restaurantInfo.name)
+                            .font(.pretendard(size: .body1, weight: .semiBold))
+                            .foregroundStyle(.custom(.gray(.gray90)))
+                        
+                        Spacer()
+                        
+                        VStack(spacing: AppPadding.tiny.value) {
+                            Text(DistanceFormatter.format(Float(store.totalDistance)))
+                                .font(.pretendard(size: .body1, weight: .semiBold))
+                                .foregroundStyle(.custom(.brand(.blackSprout)))
+                            
+                            Text(formatTime(seconds: store.totalTime))
+                                .font(.pretendard(size: .body3, weight: .medium))
+                                .foregroundStyle(.custom(.gray(.gray75)))
+                        }
+                    }
+                    .padding(.all, .medium)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.custom(.gray(.gray0)))
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+            } else {
+                EmptyView()
+            }
+        }
+    }
+    
+    func formatTime(seconds: Int) -> String {
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        
+        if hours > 0 {
+            return "\(hours)시간 \(minutes)분"
+        } else {
+            return "\(minutes)분"
         }
     }
 }
