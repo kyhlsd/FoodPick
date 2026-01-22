@@ -8,6 +8,7 @@
 import SwiftUI
 import ComposableArchitecture
 import KakaoMapsSDK
+import Domain
 
 struct DirectionView: View {
     let store: StoreOf<DirectionFeature>
@@ -131,13 +132,17 @@ private struct KakaoMapView: UIViewRepresentable {
             
             // POI(핀) 표시
             displayMarkers(view)
+            
+            // 경로 표시
+            displayRoute(view)
         }
 
         // MARK: - Helper Methods
         private func setupLayersAndStyles(_ view: KakaoMap) {
             let labelManager = view.getLabelManager()
+            let routeManager =  view.getRouteManager()
             
-            // 레이어 생성
+            // POI 레이어 생성
             let layerOptions = LabelLayerOptions(
                 layerID: "directionLayer",
                 competitionType: .none,
@@ -146,6 +151,23 @@ private struct KakaoMapView: UIViewRepresentable {
                 zOrder: 1000
             )
             _ = labelManager.addLabelLayer(option: layerOptions)
+            
+            // 경로 레이어 생성
+            _ = routeManager.addRouteLayer(
+                layerID: "routeLayer",
+                zOrder: 500
+            )
+            
+            let perLevelStyle = PerLevelRouteStyle(
+                width: 15,
+                color: .systemBlue,
+                strokeWidth: 2,
+                strokeColor: .white,
+                level: 0
+            )
+            let routeStyle = RouteStyle(styles: [perLevelStyle])
+            let routeStyleSet = RouteStyleSet(styleID: "routeStyle", styles: [routeStyle])
+            routeManager.addRouteStyleSet(routeStyleSet)
             
             // 스타일 리사이징 및 등록
             let pinSize = CGSize(width: 40, height: 40)
@@ -193,23 +215,43 @@ private struct KakaoMapView: UIViewRepresentable {
                 latitude: myGeolocation.latitude
             )
             layer.addPoi(option: PoiOptions(styleID: "myLocationStyle"), at: myPoint)?.show()
+        }
+        
+        private func displayRoute(_ view: KakaoMap) {
+            guard let routeLayer = view.getRouteManager().getRouteLayer(layerID: "routeLayer"),
+            let directions = store.directions else { return }
             
-            // 여백을 상하좌우에 추가
-            let latDiff = abs(restaurantPoint.wgsCoord.latitude - myPoint.wgsCoord.latitude)
-            let lonDiff = abs(restaurantPoint.wgsCoord.longitude - myPoint.wgsCoord.longitude)
+            let routePaths = directions.features.compactMap { feature in
+                if case let .lineString(lineGeometry) = feature.geometry {
+                    return lineGeometry.coordinates.map {
+                        MapPoint(longitude: $0[0], latitude: $0[1])
+                    }
+                }
+                return nil
+            }
+            guard !routePaths.isEmpty else { return }
             
-            let margin = 0.2
-            let minLatitude = min(restaurantPoint.wgsCoord.latitude, myPoint.wgsCoord.latitude) - (latDiff * margin)
-            let maxLattitude = max(restaurantPoint.wgsCoord.latitude, myPoint.wgsCoord.latitude) + (latDiff * margin)
-            let minLongitude = min(restaurantPoint.wgsCoord.longitude, myPoint.wgsCoord.longitude) - (lonDiff * margin)
-            let maxLongitude = max(restaurantPoint.wgsCoord.longitude, myPoint.wgsCoord.longitude) + (lonDiff * margin)
+            let segments = routePaths.map {
+                RouteSegment(points: $0, styleIndex: 0)
+            }
+            let options = RouteOptions(
+                routeID: "walkingPath",
+                styleID: "routeStyle",
+                zOrder: 0
+            )
+            options.segments = segments
             
-            // 가상의 외곽 지점들로 영역 생성
-            let p1 = MapPoint(longitude: minLongitude, latitude: minLatitude)
-            let p2 = MapPoint(longitude: maxLongitude, latitude: maxLattitude)
+            if let route = routeLayer.addRoute(option: options) {
+                route.show()
+            }
             
-            let paddedArea = AreaRect(points: [p1, p2])
-            view.moveCamera(CameraUpdate.make(area: paddedArea))
+            moveCameraToFitRoute(view, allPoints: routePaths.flatMap { $0 })
+        }
+        
+        private func moveCameraToFitRoute(_ view: KakaoMap, allPoints: [MapPoint]) {
+            guard !allPoints.isEmpty else { return }
+            let area = AreaRect(points: allPoints)
+            view.moveCamera(CameraUpdate.make(area: area))
         }
     }
 }
