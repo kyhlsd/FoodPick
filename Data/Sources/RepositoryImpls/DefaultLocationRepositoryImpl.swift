@@ -45,6 +45,14 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
             lock.lock()
             _streamContinuation?.finish()
             _streamContinuation = continuation
+            
+            if let lastLocation = locationManager.location {
+                let geolocation = Geolocation(
+                    longitude: lastLocation.coordinate.longitude,
+                    latitude: lastLocation.coordinate.latitude
+                )
+                continuation.yield(geolocation)
+            }
             lock.unlock()
             
             // 스트림 종료 작업

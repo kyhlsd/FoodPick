@@ -15,17 +15,26 @@ struct DirectionView: View {
     
     var body: some View {
         WithPerceptionTracking {
+            @Perception.Bindable var store = store
             ZStack {
                 Color.custom(.brand(.brightSprout))
                     .ignoresSafeArea()
                 
                 if store.directions != nil {
-                    KakaoMapView(store: store)
-                        .ignoresSafeArea()
-                        .overlay(alignment: .bottom) {
-                            GuideView(store: store)
-                                .padding([.bottom, .horizontal], .large)
-                        }
+                    KakaoMapView(
+                        directions: store.directions,
+                        restaurantLocation: store.restaurantLocation,
+                        startLocation: store.startGeolocation,
+                        currentGeolocation: store.currentGeolocation,
+                        isTracking: store.isTracking
+                    ) {
+                        store.send(.mapInitialized)
+                    }
+                    .ignoresSafeArea()
+                    .overlay(alignment: .bottom) {
+                        GuideView(store: store)
+                            .padding([.bottom, .horizontal], .large)
+                    }
                 } else {
                     LoadingView(title: "도보 길찾기 중...")
                 }
@@ -53,7 +62,12 @@ struct DirectionView: View {
 }
 
 private struct KakaoMapView: UIViewRepresentable {
-    let store: StoreOf<DirectionFeature>
+    let directions: DirectionResponse?
+    let restaurantLocation: Geolocation
+    let startLocation: Geolocation?
+    let currentGeolocation: Geolocation?
+    let isTracking: Bool
+    let onMapInitialized: () -> Void
     
     func makeUIView(context: Context) -> KMViewContainer {
         let container = KMViewContainer()
@@ -62,33 +76,45 @@ private struct KakaoMapView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: KMViewContainer, context: Context) {
+        context.coordinator.directions = directions
+        context.coordinator.restaurantLocation = restaurantLocation
+        context.coordinator.startLocation = startLocation
+        
         Task { @MainActor in
             if uiView.bounds.width > 0 && uiView.bounds.height > 0 {
                 context.coordinator.prepareMap()
             }
             
-            if let location = store.myGeolocation {
+            context.coordinator.updateRouteAndFixedMarkers()
+            
+            if let currentGeolocation {
                 context.coordinator.updateUserMarker(
-                    location: location,
-                    isTracking: store.isTracking
+                    location: currentGeolocation,
+                    isTracking: isTracking
                 )
             }
         }
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(store: store)
+        Coordinator(onMapInitialized: onMapInitialized)
     }
     
     @MainActor
     final class Coordinator: NSObject, @MainActor MapControllerDelegate {
-        var store: StoreOf<DirectionFeature>
         var controller: KMController?
         var isEnginePrepared = false
         var isEngineActivated = false
+        var isRouteDrawn = false
+        let onMapInitialized: () -> Void
         
-        init(store: StoreOf<DirectionFeature>) {
-            self.store = store
+        var directions: DirectionResponse?
+        var restaurantLocation: Geolocation?
+        var startLocation: Geolocation?
+        private var lastDrawnDirectionID: String?
+                
+        init(onMapInitialized: @escaping () -> Void) {
+            self.onMapInitialized = onMapInitialized
         }
         
         func setUpController(_ viewContainer: KMViewContainer) {
@@ -99,49 +125,35 @@ private struct KakaoMapView: UIViewRepresentable {
         }
         
         func prepareMap() {
-            guard let controller else { return }
-            
-            if !isEnginePrepared {
-                controller.prepareEngine()
-                isEnginePrepared = true
-            }
+            guard let controller, !isEnginePrepared else { return }
+            controller.prepareEngine()
+            isEnginePrepared = true
         }
         
         func authenticationSucceeded() {
-            guard let controller else { return }
-            if !isEngineActivated {
-                controller.activateEngine()
-                isEngineActivated = true
-            }
+            guard let controller, !isEngineActivated else { return }
+            controller.activateEngine()
+            isEngineActivated = true
         }
         
         func addViews() {
-            let coordinate = store.restaurantLocation
             let mapviewInfo = MapviewInfo(
                 viewName: "mapview",
                 viewInfoName: "map",
                 defaultPosition: MapPoint(
-                    longitude: coordinate.longitude,
-                    latitude: coordinate.latitude
+                    longitude: 0,
+                    latitude: 0
                 )
             )
-            
             controller?.addView(mapviewInfo)
         }
         
         func addViewSucceeded(_ viewName: String, viewInfoName: String) {
-            store.send(.mapInitialized)
+            onMapInitialized()
             
             guard let view = controller?.getView(viewName) as? KakaoMap else { return }
-            
-            // 레이어 및 스타일 초기 설정
             setupLayersAndStyles(view)
-            
-            // POI(핀) 표시
-            displayMarkers(view)
-            
-            // 경로 표시
-            displayRoute(view)
+            updateRouteAndFixedMarkers()
         }
         
         func updateUserMarker(location: Geolocation, isTracking: Bool) {
@@ -178,7 +190,20 @@ private struct KakaoMapView: UIViewRepresentable {
                 }
             }
         }
-
+        
+        func updateRouteAndFixedMarkers() {
+            guard let view = controller?.getView("mapview") as? KakaoMap else { return }
+            guard let restaurant = restaurantLocation else { return }
+            
+            let currentID = "\(directions?.features.first?.properties.totalDistance ?? 0)"
+            
+            if directions != nil && lastDrawnDirectionID != currentID {
+                displayRoute(view, directions: directions)
+                displayMarkers(view, restaurant: restaurant, start: startLocation)
+                lastDrawnDirectionID = currentID
+            }
+        }
+        
         // MARK: - Helper Methods
         private func setupLayersAndStyles(_ view: KakaoMap) {
             let labelManager = view.getLabelManager()
@@ -213,6 +238,7 @@ private struct KakaoMapView: UIViewRepresentable {
             
             // 스타일 리사이징 및 등록
             let pinSize = CGSize(width: 40, height: 40)
+            let currentPinSize = CGSize(width: 24, height: 24)
             
             addPoiStyle(
                 labelManager,
@@ -229,7 +255,8 @@ private struct KakaoMapView: UIViewRepresentable {
             addPoiStyle(
                 labelManager,
                 styleID: "currentLocationStyle",
-                image: AppIcon.currentPin?.resized(to: pinSize)
+                image: AppIcon.currentPin?
+                    .resized(to: currentPinSize)
             )
         }
 
@@ -245,29 +272,39 @@ private struct KakaoMapView: UIViewRepresentable {
             manager.addPoiStyle(poiStyle)
         }
 
-        private func displayMarkers(_ view: KakaoMap) {
+        private func displayMarkers(_ view: KakaoMap, restaurant: Geolocation, start: Geolocation?) {
             guard let layer = view.getLabelManager().getLabelLayer(layerID: "directionLayer") else { return }
             
             // 식당 핀
             let restaurantPoint = MapPoint(
-                longitude: store.restaurantLocation.longitude,
-                latitude: store.restaurantLocation.latitude
+                longitude: restaurant.longitude,
+                latitude: restaurant.latitude
             )
-            layer.addPoi(option: PoiOptions(styleID: "restaurantStyle"), at: restaurantPoint)?.show()
-
-            // 시작 핀
-            guard let startLocation = store.myGeolocation else { return }
+            if let poi = layer.getPoi(poiID: "restaurantPOI") {
+                poi.moveAt(restaurantPoint, duration: 0)
+            } else {
+                layer.addPoi(option: PoiOptions(styleID: "restaurantStyle", poiID: "restaurantPOI"), at: restaurantPoint)?.show()
+            }
             
-            let startPoint = MapPoint(
-                longitude: startLocation.longitude,
-                latitude: startLocation.latitude
-            )
-            layer.addPoi(option: PoiOptions(styleID: "startLocationStyle"), at: startPoint)?.show()
+            // 시작 핀
+            if let start {
+                let startPoint = MapPoint(
+                    longitude: start.longitude,
+                    latitude: start.latitude
+                )
+                if let poi = layer.getPoi(poiID: "startPOI") {
+                    poi.moveAt(startPoint, duration: 0)
+                } else {
+                    layer.addPoi(option: PoiOptions(styleID: "startLocationStyle", poiID: "startPOI"), at: startPoint)?.show()
+                }
+            }
         }
         
-        private func displayRoute(_ view: KakaoMap) {
+        private func displayRoute(_ view: KakaoMap, directions: DirectionResponse?) {
             guard let routeLayer = view.getRouteManager().getRouteLayer(layerID: "routeLayer"),
-            let directions = store.directions else { return }
+                  let directions else { return }
+            
+            routeLayer.clearAllRoutes()
             
             let routePaths = directions.features.compactMap { feature in
                 if case let .lineString(lineGeometry) = feature.geometry {
@@ -277,10 +314,8 @@ private struct KakaoMapView: UIViewRepresentable {
                 }
                 return nil
             }
-            guard !routePaths.isEmpty else { return }
             
-            let segments = routePaths.map {
-                RouteSegment(points: $0, styleIndex: 0)
+            let segments = routePaths.map { RouteSegment(points: $0, styleIndex: 0)
             }
             let options = RouteOptions(
                 routeID: "walkingPath",
@@ -291,15 +326,11 @@ private struct KakaoMapView: UIViewRepresentable {
             
             if let route = routeLayer.addRoute(option: options) {
                 route.show()
+                let allPoints = routePaths.flatMap { $0 }
+                if !allPoints.isEmpty {
+                    view.moveCamera(CameraUpdate.make(area: AreaRect(points: allPoints)))
+                }
             }
-            
-            moveCameraToFitRoute(view, allPoints: routePaths.flatMap { $0 })
-        }
-        
-        private func moveCameraToFitRoute(_ view: KakaoMap, allPoints: [MapPoint]) {
-            guard !allPoints.isEmpty else { return }
-            let area = AreaRect(points: allPoints)
-            view.moveCamera(CameraUpdate.make(area: area))
         }
     }
 }

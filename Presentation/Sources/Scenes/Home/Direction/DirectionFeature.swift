@@ -15,7 +15,8 @@ struct DirectionFeature: Sendable {
     struct State: Sendable {
         var isLoading = true
         let restaurantInfo: RestaurantDetail
-        var myGeolocation: Geolocation?
+        var startGeolocation: Geolocation?
+        var currentGeolocation: Geolocation?
         var isTracking = false
         var directions: DirectionResponse?
         
@@ -69,7 +70,6 @@ struct DirectionFeature: Sendable {
                 
             case .trackingTapped:
                 state.isTracking.toggle()
-                
                 if state.isTracking {
                     return .run { send in
                         for await location in locationStream.execute() {
@@ -83,18 +83,18 @@ struct DirectionFeature: Sendable {
                 }
                 
             case let .userLocationUpdated(location):
-                state.myGeolocation = location
+                state.currentGeolocation = location
                 return .none
                 
             case .fetchDirections:
-                let myLocation = getUserLocation.execute()
-                state.myGeolocation = myLocation.geolocation
+                let startLocation = getUserLocation.execute()
+                state.startGeolocation = startLocation.geolocation
                 let request = DirectionRequest(
-                    startX: myLocation.geolocation.longitude,
-                    startY: myLocation.geolocation.latitude,
+                    startX: startLocation.geolocation.longitude,
+                    startY: startLocation.geolocation.latitude,
                     endX: state.restaurantLocation.longitude,
                     endY: state.restaurantLocation.latitude,
-                    startName: myLocation.address,
+                    startName: startLocation.address,
                     endName: state.restaurantInfo.address
                 )
                 return .run { send in
@@ -124,11 +124,13 @@ struct DirectionFeature: Sendable {
                 return .none
                 
             case .dismiss:
-                stopTracking.execute()
-                return .run { _ in
-                    await self.dismiss()
-                }
-                .merge(with: .cancel(id: CancelID.tracking))
+                return .merge(
+                    .cancel(id: CancelID.tracking),
+                    .run { _ in
+                        stopTracking.execute()
+                        await dismiss()
+                    }
+                )
                 
             case .alert:
                 return .none
