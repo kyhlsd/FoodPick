@@ -13,7 +13,7 @@ import Domain
 private actor RefreshCoordinator {
     private var isRefreshing = false
     private var requestsToRetry: [(RetryResult) -> Void] = []
-
+    
     func startRefresh(completion: @escaping (RetryResult) -> Void) -> Bool {
         requestsToRetry.append(completion)
         if isRefreshing {
@@ -35,6 +35,9 @@ final class AuthInterceptor: RequestInterceptor {
     private let tokenRepository: TokenRepository
     private let refreshCoordinator = RefreshCoordinator()
 
+    private let maxRetryCount = 3
+    private let retryDelay: TimeInterval = 0.5
+    
     init(tokenRepository: TokenRepository) {
         self.tokenRepository = tokenRepository
     }
@@ -66,7 +69,11 @@ final class AuthInterceptor: RequestInterceptor {
 
     func retry(_ request: Request, for session: Session, dueTo error: Error, completion: @escaping @Sendable (RetryResult) -> Void) {
         guard let response = request.task?.response as? HTTPURLResponse else {
-            completion(.doNotRetryWithError(error))
+            if request.retryCount < maxRetryCount {
+                completion(.retryWithDelay(retryDelay))
+            } else {
+                completion(.doNotRetryWithError(error))
+            }
             return
         }
 
@@ -102,6 +109,14 @@ final class AuthInterceptor: RequestInterceptor {
             }
             completion(.doNotRetryWithError(error))
 
+        case 500...599:
+            // 서버 에러
+            if request.retryCount < maxRetryCount {
+                completion(.retryWithDelay(retryDelay))
+            } else {
+                completion(.doNotRetryWithError(error))
+            }
+            
         default:
             completion(.doNotRetryWithError(error))
         }
