@@ -37,6 +37,16 @@ extension DependencyValues {
         get { self[FetchDirectionsKey.self] }
         set { self[FetchDirectionsKey.self] = newValue }
     }
+    
+    var locationStream: LocationStreamUseCase {
+        get { self[LocationStreamKey.self] }
+        set { self[LocationStreamKey.self] = newValue }
+    }
+    
+    var stopTracking: StopTrackingUseCase {
+        get { self[StopTrackingKey.self] }
+        set { self[StopTrackingKey.self] = newValue }
+    }
 }
 
 // MARK: - Keys
@@ -69,5 +79,19 @@ private enum FetchDirectionsKey: DependencyKey {
     static let liveValue: FetchDirectionsUseCase = {
         @Dependency(\.locationRepository) var locationRepository
         return FetchDirectionsUseCaseImpl(locationRepository: locationRepository)
+    }()
+}
+
+private enum LocationStreamKey: DependencyKey {
+    static let liveValue: LocationStreamUseCase = {
+        @Dependency(\.locationRepository) var locationRepository
+        return LocationStreamUseCaseImpl(locationRepository: locationRepository)
+    }()
+}
+
+private enum StopTrackingKey: DependencyKey {
+    static let liveValue: StopTrackingUseCase = {
+        @Dependency(\.locationRepository) var locationRepository
+        return StopTrackingUseCaseImpl(locationRepository: locationRepository)
     }()
 }

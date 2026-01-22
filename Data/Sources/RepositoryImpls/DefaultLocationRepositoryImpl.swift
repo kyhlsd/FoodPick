@@ -17,12 +17,17 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
     private let userLocationKey = "userLocation"
     private let locationManager = CLLocationManager()
     private let lock = NSLock()
+    
+    // 단발성 위치 조회
     private var _continuation: CheckedContinuation<Geolocation, Error>?
+    // 실시간 위치 스트림
+    private var _streamContinuation: AsyncStream<Geolocation>.Continuation?
     
     override private init() {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.distanceFilter = 5
     }
     
     public func fetchCurrentGeolocation() async throws -> Geolocation {
@@ -31,18 +36,42 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
             self._continuation = continuation
             lock.unlock()
             
-            let status = locationManager.authorizationStatus
+            checkAuthorizationAndStart()
+        }
+    }
+    
+    public func locationStream() -> AsyncStream<Geolocation> {
+        return AsyncStream { continuation in
+            lock.lock()
+            _streamContinuation?.finish()
+            _streamContinuation = continuation
+            lock.unlock()
             
-            switch status {
-            case .notDetermined:
-                locationManager.requestWhenInUseAuthorization()
-            case .restricted, .denied:
-                resumeWithError(LocationError.locationPermissionDenied)
-            case .authorizedAlways, .authorizedWhenInUse:
-                locationManager.startUpdatingLocation()
-            @unknown default:
-                resumeWithError(LocationError.unknown)
+            // 스트림 종료 작업
+            continuation.onTermination = { [weak self] _ in
+                guard let self else { return }
+                self.lock.lock()
+                self._streamContinuation = nil
+                self.lock.unlock()
+                
+                if self._continuation == nil {
+                    self.locationManager.stopUpdatingLocation()
+                }
             }
+            
+            checkAuthorizationAndStart()
+        }
+    }
+    
+    public func stopTracking() {
+        lock.lock()
+        defer { lock.unlock() }
+        
+        _streamContinuation?.finish()
+        _streamContinuation = nil
+        
+        if _continuation == nil {
+            locationManager.stopUpdatingLocation()
         }
     }
     
@@ -105,7 +134,6 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
 extension DefaultLocationRepositoryImpl: CLLocationManagerDelegate {
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        manager.stopUpdatingLocation()
         
         let geolocation = Geolocation(
             longitude: location.coordinate.longitude,
@@ -118,21 +146,57 @@ extension DefaultLocationRepositoryImpl: CLLocationManagerDelegate {
         resumeWithError(error)
     }
     
+    public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = locationManager.authorizationStatus
+        if status == .authorizedWhenInUse || status == .authorizedAlways {
+            locationManager.startUpdatingLocation()
+        }
+    }
+    
     // MARK: - Private Helpers
     private func resumeWithLocation(_ geolocation: Geolocation) {
         lock.lock()
         let continuation = _continuation
-        _continuation = nil
+        let streamContinuation = _streamContinuation
+        
+        if let continuation {
+            _continuation = nil
+            continuation.resume(returning: geolocation)
+        }
+        if let streamContinuation {
+            streamContinuation.yield(geolocation)
+        }
         lock.unlock()
-        continuation?.resume(returning: geolocation)
+        
+        if streamContinuation == nil && continuation != nil {
+            locationManager.stopUpdatingLocation()
+        }
     }
     
     private func resumeWithError(_ error: Error) {
         lock.lock()
         let continuation = _continuation
+        let streamContinuation = _streamContinuation
         _continuation = nil
+        _streamContinuation = nil
         lock.unlock()
         continuation?.resume(throwing: error)
+        streamContinuation?.finish()
+    }
+    
+    private func checkAuthorizationAndStart() {
+        let status = locationManager.authorizationStatus
+        
+        switch status {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            resumeWithError(LocationError.locationPermissionDenied)
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.startUpdatingLocation()
+        @unknown default:
+            resumeWithError(LocationError.unknown)
+        }
     }
 }
 
