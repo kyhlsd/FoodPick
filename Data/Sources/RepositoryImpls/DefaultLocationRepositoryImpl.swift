@@ -64,11 +64,14 @@ public final class DefaultLocationRepositoryImpl: NSObject, LocationRepository, 
     }
     
     public func stopTracking() {
-        lock.lock()
-        defer { lock.unlock() }
+        let streamContinuation: AsyncStream<Geolocation>.Continuation?
         
-        _streamContinuation?.finish()
+        lock.lock()
+        streamContinuation = _streamContinuation
         _streamContinuation = nil
+        lock.unlock()
+        
+        streamContinuation?.finish()
         
         if _continuation == nil {
             locationManager.stopUpdatingLocation()

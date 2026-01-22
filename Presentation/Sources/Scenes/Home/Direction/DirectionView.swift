@@ -66,6 +66,13 @@ private struct KakaoMapView: UIViewRepresentable {
             if uiView.bounds.width > 0 && uiView.bounds.height > 0 {
                 context.coordinator.prepareMap()
             }
+            
+            if let location = store.myGeolocation {
+                context.coordinator.updateUserMarker(
+                    location: location,
+                    isTracking: store.isTracking
+                )
+            }
         }
     }
     
@@ -136,11 +143,46 @@ private struct KakaoMapView: UIViewRepresentable {
             // 경로 표시
             displayRoute(view)
         }
+        
+        func updateUserMarker(location: Geolocation, isTracking: Bool) {
+            guard let view = controller?.getView("mapview") as? KakaoMap,
+            let layer = view.getLabelManager().getLabelLayer(layerID: "directionLayer") else {
+                return
+            }
+            
+            let currentPoint = MapPoint(
+                longitude: location.longitude,
+                latitude: location.latitude
+            )
+            
+            if isTracking {
+                // 트래킹 중이면 핀을 표시하거나 이동
+                if let poi = layer.getPoi(poiID: "currentLocationPOI") {
+                    poi.moveAt(currentPoint, duration: 200)
+                    poi.show()
+                } else {
+                    let options = PoiOptions(styleID: "currentLocationStyle", poiID: "currentLocationPOI")
+                    layer.addPoi(option: options, at: currentPoint)?.show()
+                }
+                
+                // 카메라 이동
+                let cameraUpdate = CameraUpdate.make(target: currentPoint, zoomLevel: 17, mapView: view)
+                view.animateCamera(
+                    cameraUpdate: cameraUpdate,
+                    options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: 200)
+                )
+            } else {
+                // 트래킹 중이 아니면 현재 위치 핀을 숨김
+                if let poi = layer.getPoi(poiID: "currentLocationPOI") {
+                    poi.hide()
+                }
+            }
+        }
 
         // MARK: - Helper Methods
         private func setupLayersAndStyles(_ view: KakaoMap) {
             let labelManager = view.getLabelManager()
-            let routeManager =  view.getRouteManager()
+            let routeManager = view.getRouteManager()
             
             // POI 레이어 생성
             let layerOptions = LabelLayerOptions(
@@ -180,8 +222,14 @@ private struct KakaoMapView: UIViewRepresentable {
             
             addPoiStyle(
                 labelManager,
-                styleID: "myLocationStyle",
+                styleID: "startLocationStyle",
                 image: AppIcon.startPin?.resized(to: pinSize)
+            )
+            
+            addPoiStyle(
+                labelManager,
+                styleID: "currentLocationStyle",
+                image: AppIcon.currentPin?.resized(to: pinSize)
             )
         }
 
@@ -207,14 +255,14 @@ private struct KakaoMapView: UIViewRepresentable {
             )
             layer.addPoi(option: PoiOptions(styleID: "restaurantStyle"), at: restaurantPoint)?.show()
 
-            // 내 위치 핀
-            guard let myGeolocation = store.myGeolocation else { return }
+            // 시작 핀
+            guard let startLocation = store.myGeolocation else { return }
             
-            let myPoint = MapPoint(
-                longitude: myGeolocation.longitude,
-                latitude: myGeolocation.latitude
+            let startPoint = MapPoint(
+                longitude: startLocation.longitude,
+                latitude: startLocation.latitude
             )
-            layer.addPoi(option: PoiOptions(styleID: "myLocationStyle"), at: myPoint)?.show()
+            layer.addPoi(option: PoiOptions(styleID: "startLocationStyle"), at: startPoint)?.show()
         }
         
         private func displayRoute(_ view: KakaoMap) {

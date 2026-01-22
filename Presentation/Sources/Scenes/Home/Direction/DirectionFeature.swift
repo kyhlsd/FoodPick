@@ -39,6 +39,7 @@ struct DirectionFeature: Sendable {
         case onAppear
         case mapInitialized
         case trackingTapped
+        case userLocationUpdated(Geolocation)
         case fetchDirections
         case directionsLoaded(DirectionResponse)
         case directionsFailed(Error)
@@ -49,7 +50,11 @@ struct DirectionFeature: Sendable {
     // MARK: - Dependencies
     @Dependency(\.getUserLocation) var getUserLocation
     @Dependency(\.fetchDirections) var fetchDirections
+    @Dependency(\.locationStream) var locationStream
+    @Dependency(\.stopTracking) var stopTracking
     @Dependency(\.dismiss) var dismiss
+    
+    private enum CancelID { case tracking }
     
     // MARK: - Body
     var body: some ReducerOf<Self> {
@@ -64,6 +69,21 @@ struct DirectionFeature: Sendable {
                 
             case .trackingTapped:
                 state.isTracking.toggle()
+                
+                if state.isTracking {
+                    return .run { send in
+                        for await location in locationStream.execute() {
+                            await send(.userLocationUpdated(location))
+                        }
+                    }
+                    .cancellable(id: CancelID.tracking)
+                } else {
+                    stopTracking.execute()
+                    return .cancel(id: CancelID.tracking)
+                }
+                
+            case let .userLocationUpdated(location):
+                state.myGeolocation = location
                 return .none
                 
             case .fetchDirections:
@@ -104,9 +124,11 @@ struct DirectionFeature: Sendable {
                 return .none
                 
             case .dismiss:
+                stopTracking.execute()
                 return .run { _ in
                     await self.dismiss()
                 }
+                .merge(with: .cancel(id: CancelID.tracking))
                 
             case .alert:
                 return .none

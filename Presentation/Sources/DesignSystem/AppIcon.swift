@@ -56,6 +56,7 @@ enum AppIcon {
     // Map
     static let startPin = UIImage(named: "StartPin", in: .module, with: nil)
     static let endPin = UIImage(named: "EndPin", in: .module, with: nil)
+    static let currentPin = UIImage(systemName: "figure.walk")
     
     // etc.
     static let kakao = Image("kakao", bundle: .module)
