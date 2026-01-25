@@ -72,7 +72,7 @@
 - Shape를 활용한 커스텀 TabBar, Cell 구성
 
 **Frameworks**  
-- SwiftUI(+UIKit), TCA, Alamofire, SocketIO, Kingfisher, CoreData, AVKit, AVFoundation, PhotosUI, FirebaseMessaging, KakaoMapsSDK
+- SwiftUI(+UIKit), TCA, Alamofire, SocketIO, FCM, Kingfisher, CoreData, AVKit, AVFoundation, PhotosUI, KakaoMapsSDK
 
 <br>
 
