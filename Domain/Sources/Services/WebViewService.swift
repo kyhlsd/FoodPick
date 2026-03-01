@@ -13,4 +13,5 @@ public protocol WebViewService: Sendable {
 
 public enum WebViewServiceError: Error {
     case invalidURL
+    case untrustedDomain
 }

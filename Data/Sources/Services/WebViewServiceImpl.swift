@@ -19,6 +19,12 @@ public final class WebViewServiceImpl: WebViewService {
         let router = PathRouter.webView(path: urlPath)
         let request = try router.asURLRequest()
 
+        guard let host = request.url?.host,
+              let allowedHost = URL(string: APIInfos.baseURL)?.host,
+              host == allowedHost else {
+            throw WebViewServiceError.untrustedDomain
+        }
+
         let accessToken = try await tokenRepository.getAccessToken()
 
         return (urlRequest: request, accessToken: accessToken)
